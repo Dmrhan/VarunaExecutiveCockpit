@@ -1,6 +1,9 @@
 export type ProductGroup = 'EnRoute' | 'Quest' | 'Stokbar' | 'Calldesk' | 'Varuna' | 'Unidox';
 
-export type DealStage = 'Lead' | 'Qualified' | 'Proposal' | 'Negotiation' | 'Order' | 'Lost';
+export type DealStage = 'Lead' | 'Qualified' | 'Proposal' | 'Negotiation' | 'Order' | 'Lost' |
+    'Teklif' | 'Sözleşme' | 'Konumlama' | 'Demo' | 'Kazanıldı' | 'Kaybedildi';
+
+export type DealSource = 'Univera Satış' | 'Univera İş Ortakları' | 'Univera EnRoute PY' | 'Univera Stokbar PY' | 'Univera Quest PY' | 'Diğer';
 
 export interface User {
     id: string;
@@ -28,6 +31,8 @@ export interface Deal {
     stage: DealStage;
     probability: number;
     ownerId: string;
+    source: DealSource;
+    topic: string;
     createdAt: string;
     expectedCloseDate: string;
     lastActivityDate: string;

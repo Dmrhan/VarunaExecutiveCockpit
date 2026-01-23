@@ -1,7 +1,9 @@
-import type { Deal, DealStage, ProductGroup, Activity, User } from '../types/crm';
+import type { Deal, DealStage, ProductGroup, Activity, User, DealSource } from '../types/crm';
 
-const PRODUCTS: ProductGroup[] = ['EnRoute', 'Quest', 'Stokbar', 'Calldesk', 'Varuna', 'Unidox'];
-const STAGES: DealStage[] = ['Lead', 'Qualified', 'Proposal', 'Negotiation', 'Order', 'Lost'];
+export const PRODUCTS: ProductGroup[] = ['EnRoute', 'Quest', 'Stokbar', 'Calldesk', 'Varuna', 'Unidox'];
+const SOURCES: DealSource[] = ['Univera Satış', 'Univera İş Ortakları', 'Univera EnRoute PY', 'Univera Stokbar PY', 'Univera Quest PY', 'Diğer'];
+const EXTENDED_STAGES: DealStage[] = ['Teklif', 'Sözleşme', 'Konumlama', 'Demo', 'Kazanıldı', 'Kaybedildi', 'Lead', 'Qualified', 'Proposal', 'Negotiation'];
+const TOPICS = ['BAT Enroute P...', 'Natura Gıda - ...', 'Dardanel - St...', 'HARIBO 2025 ...', 'JTI HOSTING ...', 'Mondelez - St...', 'JTI IRAN MAI...'];
 
 export const USERS: User[] = [
     { id: 'u1', name: 'Ali Yılmaz', avatar: 'https://i.pravatar.cc/150?u=1', role: 'sales_rep' },
@@ -14,14 +16,16 @@ const generateRandomDate = (start: Date, end: Date) => {
     return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime())).toISOString();
 };
 
-export const generateMockData = (count: number = 50): { deals: Deal[], activities: Activity[] } => {
+export const generateMockData = (count: number = 451): { deals: Deal[], activities: Activity[] } => {
     const deals: Deal[] = [];
     const activities: Activity[] = [];
 
     for (let i = 0; i < count; i++) {
         const createdAt = generateRandomDate(new Date('2023-01-01'), new Date());
-        const stage = STAGES[Math.floor(Math.random() * STAGES.length)];
+        const stage = EXTENDED_STAGES[Math.floor(Math.random() * EXTENDED_STAGES.length)];
         const owner = USERS[Math.floor(Math.random() * USERS.length)];
+        const source = SOURCES[Math.floor(Math.random() * SOURCES.length)];
+        const topic = TOPICS[Math.floor(Math.random() * TOPICS.length)];
 
         // Calculate simulated aging
         const createdDate = new Date(createdAt);
@@ -30,18 +34,20 @@ export const generateMockData = (count: number = 50): { deals: Deal[], activitie
 
         const deal: Deal = {
             id: `d${i}`,
-            title: `Deal #${i + 100}`,
+            title: `Opportunity ${i + 1}`,
             customerName: `Customer ${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${i}`,
             product: PRODUCTS[Math.floor(Math.random() * PRODUCTS.length)],
-            value: Math.floor(Math.random() * 500000) + 10000,
+            value: Math.floor(Math.random() * 5000000) + 50000,
             stage,
-            probability: Math.random() * 100,
+            probability: stage === 'Kazanıldı' ? 100 : stage === 'Kaybedildi' ? 0 : Math.random() * 80 + 10,
             ownerId: owner.id,
+            source,
+            topic,
             createdAt,
             expectedCloseDate: generateRandomDate(new Date(), new Date('2024-12-31')),
             lastActivityDate: generateRandomDate(new Date(createdAt), new Date()),
             aging: ageDays,
-            velocity: Math.floor(Math.random() * 10), // simplified velocity mock
+            velocity: Math.floor(Math.random() * 15),
             healthScore: Math.floor(Math.random() * 100),
         };
 
@@ -64,3 +70,12 @@ export const generateMockData = (count: number = 50): { deals: Deal[], activitie
 
     return { deals, activities };
 };
+
+export const { deals: mockDeals, activities: mockActivities } = generateMockData(451);
+
+// Simple mock performance data
+export const mockPerformance = [
+    { userId: 'u1', userName: 'Ali Yılmaz', quotaAttainment: 120000, dealsClosed: 12 },
+    { userId: 'u2', userName: 'Ayşe Demir', quotaAttainment: 98000, dealsClosed: 9 },
+    { userId: 'u3', userName: 'Mehmet Kaya', quotaAttainment: 85000, dealsClosed: 7 },
+];

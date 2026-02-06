@@ -4,17 +4,19 @@ import { useData } from '../../context/DataContext';
 import { generateExecutiveBrief } from '../../services/ExecutiveBriefService';
 import { cn } from '../../lib/utils';
 
-import type { Deal } from '../../types/crm';
+import type { Deal, Contract } from '../../types/crm';
 
 interface AIExecutiveBriefProps {
     deals?: Deal[];
+    contracts?: Contract[];
 }
 
-export function AIExecutiveBrief({ deals: propDeals }: AIExecutiveBriefProps) {
+export function AIExecutiveBrief({ deals: propDeals, contracts: propContracts }: AIExecutiveBriefProps) {
     const { t } = useTranslation();
-    const { deals: contextDeals } = useData();
+    const { deals: contextDeals, contracts: contextContracts } = useData();
     const deals = propDeals || contextDeals;
-    const { narrativeParams, kpis } = generateExecutiveBrief(deals, t);
+    const contracts = propContracts || contextContracts;
+    const { narrativeParams, kpis } = generateExecutiveBrief(deals, contracts, t);
 
     return (
         <div className="space-y-6">

@@ -58,11 +58,16 @@
     "opportunities": {
         "title": "Fırsatlar",
         "subtitle": "Pipeline analizi ve fırsat yönetimi.",
-        "totalOpportunities": "Toplam Fırsat",
+        "tooltips": {
+            "totalDeals": "Fırsat havuzundaki toplam kayıt sayısı",
+            "conversionRate": "Kapanan fırsatların kazanılma oranı",
+            "wonDetails": "{{value}} değerinde {{count}} kazanılan fırsat"
+        },
+        "totalDeals": "Toplam Fırsat",
         "conversionRate": "Dönüşüm Oranı",
-        "wonDeals": "Kazanılan Fırsatlar",
-        "lostDeals": "Kaybedilen Fırsatlar",
-        "pipelineRevenue": "Pipeline Cirosu",
+        "wonDeals": "Kazanılan",
+        "lostDeals": "Kaybedilen",
+        "pipelineRevenue": "Potansiyel Ciro",
         "listView": "Liste",
         "kanbanView": "Pano",
         "opportunityList": "Fırsat Listesi",
@@ -320,6 +325,10 @@
             "winRate": "Kazanma Oranı",
             "aboveIndustryAvg": "Sektör ortalaması üzeri"
         },
+        "sections": {
+            "salesPerformance": "Satış Performansı",
+            "revenueAssurance": "Gelir Güvencesi"
+        },
         "charts": {
             "revenueTrend": {
                 "title": "Gelir Trendi (Hedef vs Gerçekleşen)",
@@ -375,6 +384,11 @@
     "executiveBrief": {
         "title": "Yönetici Özeti",
         "subtitle": "Akıllı Özet",
+        "kpis": {
+            "totalARR": "TOPLAM YTG",
+            "renewalRisk": "YENİLEME RİSKİ",
+            "avgContractValue": "Ort. Sözleşme Değeri"
+        },
         "narrative": {
             "part1": "Bu dönemde fırsat hacmi <0>{{status}}</0> seyrediyor.",
             "part2": "Kazanılan fırsatlar <0>{{trend}}</0>,",

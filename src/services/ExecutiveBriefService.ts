@@ -1,4 +1,5 @@
-import type { Deal } from '../types/crm';
+import type { Deal, Contract } from '../types/crm';
+import { formatCurrency } from '../utils/formatters';
 import type { TFunction } from 'i18next';
 
 export interface KPIMetric {
@@ -22,7 +23,7 @@ export interface ExecutiveBriefData {
     kpis: KPIMetric[];
 }
 
-export const generateExecutiveBrief = (deals: Deal[], t: TFunction): ExecutiveBriefData => {
+export const generateExecutiveBrief = (deals: Deal[], contracts: Contract[] = [], t: TFunction): ExecutiveBriefData => {
     // Calculate current period metrics
     const totalDeals = deals.length;
     const wonDeals = deals.filter(d => d.stage === 'Kazanıldı' || d.stage === 'Order').length;
@@ -87,6 +88,40 @@ export const generateExecutiveBrief = (deals: Deal[], t: TFunction): ExecutiveBr
             tooltip: t('executiveBrief.kpis.tooltips.pipelineStrength')
         }
     ];
+
+    // Calculate Contract Metrics if contracts are provided
+    if (contracts.length > 0) {
+        const activeContracts = contracts.filter(c => c.status === 'Active');
+        const totalARR = activeContracts.reduce((sum, c) => sum + c.totalValueTL, 0);
+        const highRiskContracts = activeContracts.filter(c => c.riskLevel === 'High');
+        const highRiskValue = highRiskContracts.reduce((sum, c) => sum + c.totalValueTL, 0);
+        const avgContractValue = activeContracts.length > 0 ? totalARR / activeContracts.length : 0;
+
+        // Add Contract KPIs
+        kpis.push(
+            {
+                label: t('executiveBrief.kpis.totalARR'),
+                value: formatCurrency(totalARR),
+                trend: 'up',
+                trendValue: '+8%',
+                tooltip: t('executiveBrief.kpis.tooltips.totalARR')
+            },
+            {
+                label: t('executiveBrief.kpis.renewalRisk'),
+                value: formatCurrency(highRiskValue),
+                trend: highRiskValue > 5000000 ? 'down' : 'neutral',
+                trendValue: highRiskValue > 5000000 ? 'High' : 'Stable',
+                tooltip: t('executiveBrief.kpis.tooltips.renewalRisk')
+            },
+            {
+                label: t('executiveBrief.kpis.avgContractValue'),
+                value: formatCurrency(avgContractValue),
+                trend: 'up',
+                trendValue: '+5%',
+                tooltip: t('executiveBrief.kpis.tooltips.avgContractValue')
+            }
+        );
+    }
 
     return { narrativeParams, kpis };
 };

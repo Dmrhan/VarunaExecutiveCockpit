@@ -11,7 +11,7 @@ import { generateExecutiveBrief } from '../../services/ExecutiveBriefService';
 
 
 export function ExecutiveSummaryDashboard() {
-    const { deals, metrics, orders } = useData();
+    const { deals, metrics, orders, contracts } = useData();
     const { t } = useTranslation();
 
 
@@ -27,17 +27,26 @@ export function ExecutiveSummaryDashboard() {
         const activeDeals = deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi'].includes(d.stage)).length;
         const winRate = orders.filter(o => o.status === 'Closed').length / (orders.length || 1) * 100;
 
+        const totalARR = contracts.filter(c => c.status === 'Active').reduce((sum, c) => sum + c.totalValueTL, 0);
+        const renewalRiskValue = contracts.filter(c => c.status === 'Active' && c.riskLevel === 'High').reduce((sum, c) => sum + c.totalValueTL, 0);
+        // Active contracts count for avg calculation
+        const activeContractsCount = contracts.filter(c => c.status === 'Active').length;
+        const avgContractValue = activeContractsCount > 0 ? totalARR / activeContractsCount : 0;
+
         return {
             totalRevenue,
             pipelineValue,
             activeDeals,
-            winRate
+            winRate,
+            totalARR,
+            renewalRiskValue,
+            avgContractValue
         };
-    }, [deals, orders]);
+    }, [deals, orders, contracts]);
 
     // AI Intelligence Data
     const intelligence = useMemo(() => getManagementIntelligence(deals, t), [deals, t]);
-    const { narrativeParams } = useMemo(() => generateExecutiveBrief(deals, t), [deals, t]); // Re-use for base narrative values
+    const { narrativeParams } = useMemo(() => generateExecutiveBrief(deals, contracts, t), [deals, contracts, t]); // Re-use for base narrative values
 
     return (
         <div className="space-y-8 animate-in fade-in duration-700 max-w-7xl mx-auto pb-12">
@@ -93,59 +102,99 @@ export function ExecutiveSummaryDashboard() {
                 </div>
             </div>
 
-            {/* SECTION 2: KPI Summary (Preserved but refined) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="bg-white dark:bg-slate-800 border-none shadow-sm hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <p className="text-sm font-medium text-slate-500 uppercase">{t('executive.kpis.totalRevenue')}</p>
-                            <DollarSign size={18} className="text-emerald-500" />
-                        </div>
-                        <div className="flex items-end gap-2">
-                            <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{formatCurrencyMillions(execMetrics.totalRevenue)}</h3>
-                            <div className="flex items-center text-emerald-600 text-sm mb-1 font-medium bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded">
-                                <TrendingUp size={14} className="mr-1" />
-                                +12%
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+            {/* SECTION 2: KPI Summaries (Split) */}
+            <div className="space-y-6">
 
-                <Card className="bg-white dark:bg-slate-800 border-none shadow-sm hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <p className="text-sm font-medium text-slate-500 uppercase">{t('executive.kpis.pipelineValue')}</p>
-                            <Activity size={18} className="text-blue-500" />
-                        </div>
-                        <h3 className="text-3xl font-light text-slate-900 dark:text-white">{formatCurrencyMillions(execMetrics.pipelineValue)}</h3>
-                        <p className="text-sm text-slate-400 mt-2">{deals.length} {t('executive.kpis.totalOpportunities')}</p>
-                    </CardContent>
-                </Card>
+                {/* 2a: Sales Performance */}
+                <div>
+                    <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3 pl-1">{t('executive.sections.salesPerformance', { defaultValue: 'Commercial Performance' })}</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <Card className="bg-white dark:bg-slate-800 border-none shadow-sm hover:shadow-md transition-shadow">
+                            <CardContent className="p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <p className="text-sm font-medium text-slate-500 uppercase">{t('executive.kpis.totalRevenue')}</p>
+                                    <DollarSign size={18} className="text-emerald-500" />
+                                </div>
+                                <div className="flex items-end gap-2">
+                                    <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{formatCurrencyMillions(execMetrics.totalRevenue)}</h3>
+                                    <div className="flex items-center text-emerald-600 text-sm mb-1 font-medium bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded">
+                                        <TrendingUp size={14} className="mr-1" />
+                                        +12%
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
 
-                <Card className="bg-white dark:bg-slate-800 border-none shadow-sm hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <p className="text-sm font-medium text-slate-500 uppercase">{t('executive.kpis.activeDeals')}</p>
-                            <Target size={18} className="text-amber-500" />
-                        </div>
-                        <h3 className="text-3xl font-light text-slate-900 dark:text-white">{execMetrics.activeDeals}</h3>
-                        <div className="flex items-center gap-2 mt-2 text-amber-600 text-sm bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded w-fit">
-                            <AlertTriangle size={12} />
-                            <span>{metrics.stalledDealsCount} {t('executive.kpis.stalledDeals')}</span>
-                        </div>
-                    </CardContent>
-                </Card>
+                        <Card className="bg-white dark:bg-slate-800 border-none shadow-sm hover:shadow-md transition-shadow">
+                            <CardContent className="p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <p className="text-sm font-medium text-slate-500 uppercase">{t('executive.kpis.pipelineValue')}</p>
+                                    <Activity size={18} className="text-blue-500" />
+                                </div>
+                                <h3 className="text-3xl font-light text-slate-900 dark:text-white">{formatCurrencyMillions(execMetrics.pipelineValue)}</h3>
+                                <p className="text-sm text-slate-400 mt-2">{deals.length} {t('executive.kpis.totalOpportunities')}</p>
+                            </CardContent>
+                        </Card>
 
-                <Card className="bg-white dark:bg-slate-800 border-none shadow-sm hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <p className="text-sm font-medium text-slate-500 uppercase">{t('executive.kpis.winRate')}</p>
-                            <Users size={18} className="text-indigo-500" />
-                        </div>
-                        <h3 className="text-3xl font-bold text-slate-900 dark:text-white">%{execMetrics.winRate.toFixed(1)}</h3>
-                        <p className="text-sm text-emerald-600 mt-2 font-medium">{t('executive.kpis.aboveIndustryAvg')}</p>
-                    </CardContent>
-                </Card>
+                        <Card className="bg-white dark:bg-slate-800 border-none shadow-sm hover:shadow-md transition-shadow">
+                            <CardContent className="p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <p className="text-sm font-medium text-slate-500 uppercase">{t('executive.kpis.activeDeals')}</p>
+                                    <Target size={18} className="text-amber-500" />
+                                </div>
+                                <h3 className="text-3xl font-light text-slate-900 dark:text-white">{execMetrics.activeDeals}</h3>
+                                <div className="flex items-center gap-2 mt-2 text-amber-600 text-sm bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded w-fit">
+                                    <AlertTriangle size={12} />
+                                    <span>{metrics.stalledDealsCount} {t('executive.kpis.stalledDeals')}</span>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="bg-white dark:bg-slate-800 border-none shadow-sm hover:shadow-md transition-shadow">
+                            <CardContent className="p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <p className="text-sm font-medium text-slate-500 uppercase">{t('executive.kpis.winRate')}</p>
+                                    <Users size={18} className="text-indigo-500" />
+                                </div>
+                                <h3 className="text-3xl font-bold text-slate-900 dark:text-white">%{execMetrics.winRate.toFixed(1)}</h3>
+                                <p className="text-sm text-emerald-600 mt-2 font-medium">{t('executive.kpis.aboveIndustryAvg')}</p>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+
+                {/* 2b: Revenue Assurance */}
+                <div>
+                    <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3 pl-1">{t('executive.sections.revenueAssurance', { defaultValue: 'Revenue Assurance' })}</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Card className="bg-white dark:bg-slate-800 border-none shadow-sm hover:shadow-md transition-shadow">
+                            <CardContent className="p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <p className="text-sm font-medium text-slate-500 uppercase">{t('executiveBrief.kpis.totalARR', { defaultValue: 'Total ARR' })}</p>
+                                    <DollarSign size={18} className="text-violet-500" />
+                                </div>
+                                <div className="flex items-end gap-2">
+                                    <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{formatCurrencyMillions(execMetrics.totalARR)}</h3>
+                                    <div className="flex items-center text-emerald-600 text-sm mb-1 font-medium bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded">
+                                        <TrendingUp size={14} className="mr-1" />
+                                        +8%
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="bg-white dark:bg-slate-800 border-none shadow-sm hover:shadow-md transition-shadow">
+                            <CardContent className="p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <p className="text-sm font-medium text-slate-500 uppercase">{t('executiveBrief.kpis.renewalRisk', { defaultValue: 'Renewal Risk' })}</p>
+                                    <ShieldAlert size={18} className="text-rose-500" />
+                                </div>
+                                <h3 className="text-3xl font-light text-slate-900 dark:text-white">{formatCurrencyMillions(execMetrics.renewalRiskValue)}</h3>
+                                <p className="text-sm text-slate-400 mt-2">{t('executive.risk.title')}</p>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
             </div>
 
             {/* SECTION 3: Revenue Trend Section (Target vs Actual) */}

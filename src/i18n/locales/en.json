@@ -176,19 +176,25 @@
             }
         },
         "kpis": {
-            "totalDeals": "Total Deals",
+            "totalDeals": "Total Opportunities",
             "conversionRate": "Conversion Rate",
             "wonDeals": "Won Deals",
             "lostDeals": "Lost Deals",
-            "pipelineRevenue": "Pipeline Revenue",
+            "pipelineRevenue": "Pipeline Value",
+            "totalARR": "Total ARR",
+            "renewalRisk": "Renewal Risk",
+            "avgContractValue": "Avg Contract Value",
             "riskAnalysis": "Risk Analysis",
             "needsAttention": "Needs Attention",
             "acceptable": "Acceptable",
             "tooltips": {
-                "totalDeals": "12% increase vs previous period",
+                "totalDeals": "Total number of opportunities in the pipeline",
                 "conversionRate": "Target: >30%",
                 "pipelineStrength": "Active pipeline value signals strength",
-                "wonDetails": "{{count}} deals won, total value {{value}}"
+                "wonDetails": "{{count}} deals won, total value {{value}}",
+                "totalARR": "Total Annual Recurring Revenue from active contracts",
+                "renewalRisk": "Total value of contracts with High renewal risk",
+                "avgContractValue": "Average annual value per active contract"
             }
         }
     },
@@ -336,6 +342,10 @@
             "stalledDeals": "Stalled Deals",
             "winRate": "Win Rate",
             "aboveIndustryAvg": "Above Industry Avg"
+        },
+        "sections": {
+            "salesPerformance": "Commercial Performance",
+            "revenueAssurance": "Revenue Assurance"
         },
         "charts": {
             "revenueTrend": {

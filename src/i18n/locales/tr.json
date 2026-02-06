@@ -1,0 +1,617 @@
+{
+    "common": {
+        "close": "Kapat",
+        "save": "Kaydet",
+        "cancel": "İptal",
+        "delete": "Sil",
+        "edit": "Düzenle",
+        "search": "Ara",
+        "filter": "Filtrele",
+        "export": "Dışa Aktar",
+        "loading": "Yükleniyor...",
+        "refresh": "Yenile",
+        "apply": "Uygula",
+        "reset": "Sıfırla",
+        "copy": "Kopyala",
+        "copied": "Kopyalandı",
+        "viewDetails": "Detayı Gör",
+        "addToOffer": "Teklife Ekle",
+        "generate": "Oluştur",
+        "regenerate": "Yeniden Oluştur",
+        "selectDate": "Tarih Seçiniz",
+        "filters": {
+            "active30": "Aktif Dönem (30 Gün)",
+            "today": "Bugün",
+            "thisWeek": "Bu Hafta",
+            "thisMonth": "Bu Ay",
+            "thisQuarter": "Bu Çeyrek",
+            "custom": "Özel Tarih"
+        },
+        "days": "Gün",
+        "notFound": "Bulunamadı",
+        "total": "Toplam",
+        "risk": "Risk"
+    },
+    "period": {
+        "Monthly": "Aylık",
+        "Quarterly": "Çeyrek",
+        "Annual": "Yıllık",
+        "One-Time": "Tek Seferlik"
+    },
+    "navigation": {
+        "executive": "Yönetici",
+        "opportunities": "Fırsatlar",
+        "activities": "Aktiviteler",
+        "quotes": "Teklifler",
+        "orders": "Siparişler"
+    },
+    "dateFilters": {
+        "today": "Bugün",
+        "thisWeek": "Bu Hafta",
+        "thisMonth": "Bu Ay",
+        "thisQuarter": "Bu Çeyrek",
+        "ytd": "YTD",
+        "mtd": "MTD",
+        "all": "Tümü",
+        "custom": "Özel"
+    },
+    "opportunities": {
+        "title": "Fırsatlar",
+        "subtitle": "Pipeline analizi ve fırsat yönetimi.",
+        "totalOpportunities": "Toplam Fırsat",
+        "conversionRate": "Dönüşüm Oranı",
+        "wonDeals": "Kazanılan Fırsatlar",
+        "lostDeals": "Kaybedilen Fırsatlar",
+        "pipelineRevenue": "Pipeline Cirosu",
+        "listView": "Liste",
+        "kanbanView": "Pano",
+        "opportunityList": "Fırsat Listesi",
+        "customer": "Müşteri",
+        "product": "Ürün",
+        "value": "Değer",
+        "stage": "Aşama",
+        "probability": "Olasılık",
+        "owner": "Sorumlu",
+        "actions": "Aksiyon",
+        "risk": "Risk",
+        "aiResponse": "AI Yanıt Oluştur",
+        "funnelAnalysis": "Funnel Analizi",
+        "leaderboard": "Liderlik Tablosu",
+        "productPerformance": "Ürün Grubu Performansı",
+        "opportunityName": "Fırsat Adı",
+        "closeDate": "Kapanış Tarihi",
+        "daysOpen": "Açık Gün",
+        "opportunityCount": "Fırsat",
+        "probabilityShort": "Olasılık",
+        "createdAt": "Oluşturma Tarihi",
+        "expectedRevenue": "Beklenen Gelir",
+        "seller": "Satıcı",
+        "charts": {
+            "sourceTitle": "Fırsat Kaynağı",
+            "sourceInsight": "Müşteri referansları ve doğrudan satış kanalı, %42 oranla en büyük fırsat havuzunu oluşturuyor.",
+            "customerPotentialTitle": "Müşteri Potansiyeli",
+            "customerPotentialInsight": "En büyük hacimli 3 müşteri, toplam pipeline değerinin %28'ini temsil ediyor. Portföy çeşitlendirmesi önerilir."
+        }
+    },
+    "performance": {
+        "activeDeals": "aktif fırsat",
+        "activeOrders": "aktif sipariş",
+        "activeQuotes": "aktif teklif",
+        "productDetails": "Ürün Detayı",
+        "listingDetails": "{{count}} kayıt listeleniyor. Detaylı analiz ve aksiyonlar için AI asistanını kullanabilirsiniz.",
+        "trendTitle": "6 Aylık Trend Analizi",
+        "distributionTitle": "Durum Dağılımı",
+        "aiAnalysis": "AI Analiz",
+        "riskAnalysis": "Risk Analizi",
+        "emailDraft": "E-posta Taslağı",
+        "analyzingTitle": "Anomali & Risk Analizi",
+        "emailAssistant": "Akıllı E-posta Asistanı",
+        "insights": "Yapay zeka tabanlı öngörüler ve öneriler",
+        "speak": "Sesli Oku",
+        "analyzing": "Veriler analiz ediliyor...",
+        "riskLevel": "Risk Seviyesi",
+        "strategicAdvice": "Stratejik Tavsiye",
+        "subject": "Konu",
+        "send": "Gönder",
+        "deliveryDate": "Teslim Tarihi",
+        "validUntil": "Geçerlilik Tarihi"
+    },
+    "funnel": {
+        "title": "Satış Performansı & Uygulama Analizi",
+        "subtitle": "Olasılığa göre dizilmiş satış hunisi. Detaylar için katmanlara tıklayın.",
+        "totalVisibility": "Toplam Görünürlük",
+        "closeHint": "ESC veya dışarı tıklayarak kapatabilirsiniz"
+    },
+    "gamification": {
+        "title": "Oyunlaştırılmış Performans",
+        "subtitle": "Canlı Performans Liderlik Tablosu",
+        "score": "Puan",
+        "whyScore": "Neden Bu Skor?",
+        "revenueInsight": "Toplam ciro <1>{{revenue}}</1> ile takım ortalamasının <3>%{{percentage}}</3> üzerindesin.",
+        "winRateInsight": "Kazanma oranın <1>%{{rate}}</1> ile {{status}}.",
+        "trendingUp": "Performansın son 6 dönemdir yükseliş trendinde! 🚀",
+        "trendingDown": "Son dönemde hafif bir ivme kaybı var, takibe alalım.",
+        "revenueTrend": "Ciro Trendi",
+        "vsTeam": "takıma kıyasla",
+        "nextAction": "Sıradaki Hedef",
+        "closeDeal": "1 Fırsat Kapat",
+        "reachMaster": "'Order Master' seviyesine ulaş",
+        "badges": {
+            "mvp": {
+                "title": "MVP",
+                "desc": "Genel Skor: {{score}} - Takım Lideri"
+            },
+            "sniper": {
+                "title": "Keskin Nişancı",
+                "desc": "Yüksek isabet: %{{rate}} Kazanma Oranı"
+            },
+            "rainmaker": {
+                "title": "Yağmur Yağdıran",
+                "desc": "{{revenue}} ciro üretildi"
+            },
+            "streak": {
+                "title": "{{count}} Seri",
+                "desc": "Arka arkaya {{count}} fırsat kapandı!"
+            }
+        }
+    },
+    "recommendations": {
+        "title": "Akıllı Öneriler",
+        "types": {
+            "crossSell": "Cross-sell",
+            "upsell": "Upsell",
+            "gap": "Gap",
+            "benchmark": "Benchmark",
+            "reactivation": "Reactivation",
+            "pricing": "Fiyatlandırma",
+            "training": "Eğitim",
+            "process": "Süreç",
+            "resource": "Kaynak"
+        },
+        "aiPowered": "AI POWERED",
+        "detailedAnalysis": "Detaylı Analiz",
+        "confidence": {
+            "high": "Yüksek",
+            "medium": "Orta",
+            "low": "Düşük"
+        },
+        "impact": {
+            "operational": "Operational Efficiency",
+            "revenue": "Revenue Growth",
+            "retention": "Customer Retention"
+        },
+        "items": [
+            {
+                "id": "rec-1",
+                "title": "Perakende Segmentinde Gelir Fırsatı",
+                "description": "Bu sektörde benzer müşterilerin %61'i Quest ürününü mevcut çözümlerine ekliyor. Bu fırsat grubunda upsell potansiyeli yüksek.",
+                "type": "Cross-sell",
+                "context": "23 aktif fırsat • Ortalama deal size: $180K",
+                "actionLabel": "Detayı Gör"
+            },
+            {
+                "id": "rec-2",
+                "title": "Enterprise Segmentinde Hosting Boşluğu",
+                "description": "Büyük ölçekli müşterilerimizin %72'si altyapı hizmeti alıyor. 8 enterprise müşteride Hosting eksik.",
+                "type": "Gap",
+                "context": "Potansiyel gelir: $1.2M",
+                "actionLabel": "Kampanya Oluştur"
+            },
+            {
+                "id": "rec-3",
+                "title": "Stokbar Reactivation Fırsatı",
+                "description": "6 ay önce ilgilenip bütçe nedeniyle ertelenen 12 fırsatta yeni \"Hızlı Başlangıç\" paketi ile tekrar girilebilir.",
+                "type": "Reactivation",
+                "context": "Ortalama yaşlandırma: 180 gün",
+                "actionLabel": "Teklife Ekle"
+            },
+            {
+                "id": "rec-4",
+                "title": "Varuna ERP Benchmark Karşılaştırması",
+                "description": "Sektör ortalamasında $1M+ deal'larda Varuna adoption %85. Mevcut büyük fırsatlarda eksik.",
+                "type": "Benchmark",
+                "context": "5 fırsat için uygun",
+                "actionLabel": "Analiz Et"
+            },
+            {
+                "id": "rec-5",
+                "title": "ServiceCore CX Paketi Cross-sell",
+                "description": "EnRoute kullanan müşterilerin %68'i müşteri deneyimi için ServiceCore ekliyor. Operasyonel verimlilik artışı %40.",
+                "type": "Cross-sell",
+                "context": "15 hedef müşteri tespit edildi",
+                "actionLabel": "Listeyi Görüntüle"
+            }
+        ]
+    },
+    "opportunityModal": {
+        "smartRecommendations": "Akıllı Öneriler",
+        "aiAssistant": "AI Marka Asistanı",
+        "communicationTone": "İletişim Tonu",
+        "tones": {
+            "formal": "Resmi & Profesyonel",
+            "persuasive": "İkna Edici",
+            "friendly": "Samimi & Nazik",
+            "urgent": "Aciliyet Odaklı"
+        },
+        "placeholder": "Bir ton seçin ve \"Oluştur\" butonuna basın.",
+        "generating": "Yapay zeka yanıtı düşünüyor...",
+        "generateResponse": "Yanıt Oluştur"
+    },
+    "activities": {
+        "title": "Aktiviteler",
+        "subtitle": "Aksiyon ve etki odaklı yönetim merkezi.",
+        "aiBriefTitle": "AI Aktivite Özet Raporu",
+        "kpis": {
+            "total": "Toplam Temas",
+            "openTodos": "Açık Bekleyen To-Do",
+            "overdue": "Gecikmiş Aksiyonlar",
+            "winRate": "Temas > Kazanım",
+            "followUpTime": "Ort. Follow-up Süresi"
+        },
+        "sections": {
+            "actionList": "Öncelikli Aksiyon Listesi (To-Do)",
+            "impactAnalysis": "Etki & Sonuç Analizi",
+            "teamDiscipline": "Ekip Efor & Sonuç Matrisi",
+            "aiSuggestions": "Yönetici Aksiyon Önerileri"
+        },
+        "charts": {
+            "type": "Aktivite Tipi",
+            "detail": "Aktivite Detay",
+            "platform": "Aktivite Ortamı",
+            "customer": "Müşteri Dağılımı",
+            "heatmap": "Aktivite Yoğunluk Haritası",
+            "radar": "Ekip Yetkinlik Dağılımı",
+            "timeline": "Tüm Aktiviteler",
+            "winRateByType": "Kazanım Oranı (Tip Bazlı)",
+            "touchpoints": "Temas Sayısı Etkisi"
+        },
+        "types": {
+            "outbound_call": "Giden Arama",
+            "outbound_email": "Giden E-Posta",
+            "meeting": "Toplantı",
+            "inbound_call": "Gelen Telefon",
+            "sales": "Satış",
+            "inbound_email": "Gelen E-Posta",
+            "account_mgmt": "Müşteri Yönetimi",
+            "other": "Diğer",
+            "contract": "Sözleşme Takip",
+            "proposal": "Teklif",
+            "support": "Destek",
+            "renewal": "Yenileme",
+            "proposal_followup": "Teklif Takip",
+            "vacancy": "Boş",
+            "training": "Eğitim",
+            "linkedin": "LinkedIn",
+            "demo": "Demo",
+            "satisfaction": "Memnuniyet",
+            "field_sales": "Saha Satış Yönl.",
+            "proposal_verbal": "Teklif Sözlü",
+            "retention": "Tutundurma"
+        },
+        "outcomeReasons": {
+            "price": "Fiyatlandırma",
+            "product_gap": "Ürün Kapsamı",
+            "timing": "Zamanlama / Bütçe",
+            "competitor": "Rakip Tercihi",
+            "other": "Diğer Nedenler"
+        },
+        "columns": {
+            "rep": "Sorumlu",
+            "count": "Adet",
+            "customer": "Müşteri / Fırsat",
+            "subject": "Not / Konu",
+            "type": "Tip",
+            "date": "Tarih / Vade",
+            "detail": "Detay",
+            "status": "Durum",
+            "priority": "Öncelik"
+        }
+    },
+    "executive": {
+        "title": "Yönetici Zekası",
+        "subtitle": "Stratejik öngörüler ve yönetim raporu.",
+        "kpis": {
+            "totalRevenue": "Toplam Ciro",
+            "revenueIncrease": "Geçen aya göre artış",
+            "pipelineValue": "Pipeline Değeri",
+            "totalOpportunities": "Toplam Fırsat",
+            "activeDeals": "Aktif Fırsatlar",
+            "stalledDeals": "Bekleyen Fırsat",
+            "winRate": "Kazanma Oranı",
+            "aboveIndustryAvg": "Sektör ortalaması üzeri"
+        },
+        "charts": {
+            "revenueTrend": {
+                "title": "Gelir Trendi (Hedef vs Gerçekleşen)",
+                "actual": "Gerçekleşen",
+                "target": "Hedef"
+            },
+            "velocity": {
+                "title": "Satış Hızı Skoru",
+                "score": "Velocity Puanı",
+                "description": "Ortalama kapanış süresi <1>{{value}}</1> ile hedefin üzerindeyiz."
+            }
+        },
+        "risk": {
+            "title": "Risk ve Uyarı Analizi",
+            "stagnant": "Pipeline'ın %{{percent}}'si {{days}} gündür stage değiştirmedi. Bu oran geçen aya göre %{{change}} arttı.",
+            "pastDue": "Tahmini kapanış tarihi geçmiş {{count}} fırsat var. Toplam değer: {{value}}.",
+            "winRateDrop": "Kazanma oranı son çeyrekte %{{change}} düşüş gösterdi.",
+            "highConcentration": "Risk: Cironun %{{percent}}'i tek bir müşteriye bağlı."
+        },
+        "performance": {
+            "title": "Performans Dağılımı",
+            "concentration": "Toplam cironun %{{percent}}'i satış ekibinin %{{agentCount}}'i tarafından üretiliyor."
+        },
+        "forecast": {
+            "title": "Tahmin ve Güven",
+            "highConfidence": "Mevcut kapanma hızına göre hedefin %{{percent}}'i yüksek güvenle ulaşılabilir. Riskli senaryoda bu oran düşebilir.",
+            "confidenceScore": "Güven Skoru",
+            "bestCase": "En İyi Senaryo",
+            "worstCase": "En Kötü Senaryo",
+            "target": "Hedef"
+        },
+        "rootCause": {
+            "title": "Kayıp Analizi (Neden Kaybediyoruz?)",
+            "chartTitle": "Kayıp Nedenleri Dağılımı",
+            "impact": "Etki",
+            "reasons": {
+                "price": "Fiyat",
+                "decision_time": "Karar Süresi",
+                "product_gap": "Ürün Eksikliği",
+                "competitor": "Rakip"
+            }
+        },
+        "actions": {
+            "title": "Önerilen Aksiyonlar",
+            "pricing_title": "Fiyatlandırma Revizyonu",
+            "pricing_desc": "{{segment}} segmentinde fiyat kaynaklı kayıplar arttığı için paket revizyonu öneriliyor.",
+            "load_balance_title": "Yük Dengelemesi",
+            "load_balance_desc": "Pipeline'ın %{{percent}}'i tek satışçıda yoğunlaştı, yük dengesi riski var.",
+            "training_title": "Müzakere Eğitimi",
+            "training_desc": "Teklif aşamasındaki kayıplar için ekibe ileri düzey müzakere eğitimi planlanmalı."
+        }
+    },
+    "executiveBrief": {
+        "title": "Yönetici Özeti",
+        "subtitle": "Akıllı Özet",
+        "narrative": {
+            "part1": "Bu dönemde fırsat hacmi <0>{{status}}</0> seyrediyor.",
+            "part2": "Kazanılan fırsatlar <0>{{trend}}</0>,",
+            "part3": "kayıp oranı <0>{{status}}</0>.",
+            "part4": "Toplam ciro potansiyeli pipeline tarafında <0>{{strength}}</0> sinyal veriyor.",
+            "part5": "<0>{{product}}</0> ürün grubunda yoğunlaşma gözleniyor.",
+            "status": {
+                "high": "yüksek",
+                "stable": "stabil",
+                "needsAttention": "dikkat gerektiriyor",
+                "underControl": "kontrol altında"
+            },
+            "trend": {
+                "increasing": "artarken",
+                "stable": "stabil seyrederken",
+                "decreasing": "düşerken"
+            },
+            "strength": {
+                "strong": "güçlü",
+                "stable": "stabil",
+                "weak": "zayıf"
+            }
+        }
+    },
+    "quotes": {
+        "title": "Teklifler",
+        "subtitle": "Teklif yönetimi ve dönüşüm analizi.",
+        "poolAnalysis": {
+            "title": "Teklif Havuz Analizi",
+            "subtitle": "Statüler arası gelir dağılımı ve yoğunluk",
+            "heightParams": "Yükseklik gelir hacmini, renkler statü gruplarını temsil eder."
+        },
+        "status": {
+            "Draft": "Taslak",
+            "Review": "İnceleme",
+            "Sent": "Gönderildi",
+            "Accepted": "Kabul Edildi",
+            "Approved": "Onaylandı",
+            "Rejected": "Reddedildi",
+            "Denied": "Geri Çevrildi"
+        },
+        "list": {
+            "title": "Teklif Listesi",
+            "customerSearch": "Müşteri ara...",
+            "allStatuses": "Tüm Statüler",
+            "listView": "Liste",
+            "boardView": "Pano",
+            "showing": "Gösterilen"
+        },
+        "table": {
+            "name": "Teklif Adı",
+            "customer": "Müşteri",
+            "status": "Statü",
+            "amount": "Tutar",
+            "actions": "İşlemler"
+        },
+        "charts": {
+            "statusRevenue": "Teklif Statüsü / Beklenen Gelir",
+            "customerRevenue": "Müşteri / Beklenen Ciro",
+            "insights": {
+                "status": "Onaylı ve Bekleyen teklifler, toplam pipeline hacminin %68'ini oluşturuyor.",
+                "customer": "Top 5 müşteri, teklif edilen toplam tutarın %45'ine sahip. Portföy dengesi iyi durumda."
+            }
+        },
+        "kpis": {
+            "totalCount": "TEKLİF ADETİ",
+            "lost": "KAYIP TEKLİFLER",
+            "won": "KAZANILAN",
+            "open": "AÇIK BEKLEYEN",
+            "totalPotential": "TOPLAM POTANSİYEL"
+        }
+    },
+    "orders": {
+        "title": "Siparişler",
+        "subtitle": "Sipariş takibi ve gelir analizi.",
+        "kpis": {
+            "totalCount": "SİPARİŞ ADETİ",
+            "pendingAmount": "BEKLEYEN TUTAR",
+            "completedAmount": "TAMAMLANAN",
+            "totalRevenue": "TOPLAM CİRO"
+        },
+        "charts": {
+            "statusDistribution": "Sipariş Statüsü Dağılımı",
+            "statusInsight": "Siparişlerin %72'si başarıyla kapatılmış durumda. Lojistik performansı üst seviyede.",
+            "customerVolume": "Müşteri Bazlı Sipariş Hacmi",
+            "customerInsight": "Ana müşterilerimizden gelen sipariş hacmi geçen aya göre %12 artış gösterdi."
+        },
+        "poolAnalysis": {
+            "title": "Sipariş Dağılım Analizi",
+            "subtitle": "Statülere göre gelir dağılımı ve yoğunluk",
+            "heightParams": "Yükseklik gelir hacmini, renkler statü gruplarını temsil eder."
+        },
+        "units": {
+            "count": "Adet"
+        },
+        "list": {
+            "title": "Sipariş Listesi",
+            "searchPlaceholder": "Müşteri ara...",
+            "allStatuses": "Tüm Durumlar",
+            "orderName": "Sipariş Adı",
+            "customer": "Müşteri",
+            "status": "Durum",
+            "amount": "Tutar",
+            "actions": "İşlemler",
+            "ref": "REF"
+        },
+        "aiPanel": {
+            "title": "AI SİPARİŞ ÖZETİ",
+            "volumeChange": "HACİM DEĞİŞİMİ",
+            "topCustomer": "TOP MÜŞTERİ",
+            "cancellations": "İPTALLER",
+            "volumeUp": "Sipariş hacmi %{{value}} arttı.",
+            "volumeDown": "Sipariş hacmi %{{value}} azaldı.",
+            "topBuyer": "\"{{name}}\" en çok sipariş veren müşteri.",
+            "canceledCount": "{{count}} sipariş iptal edildi."
+        }
+    },
+    "status": {
+        "Open": "Açık",
+        "Closed": "Kapalı",
+        "Canceled": "İptal",
+        "Active": "Aktif",
+        "Negotiation": "Görüşme",
+        "Draft": "Taslak",
+        "Archived": "Arşivlenmiş",
+        "Terminated": "Sonlandırıldı",
+        "Collected": "Tahsil Edildi",
+        "Overdue": "Gecikmiş",
+        "Pending": "Bekliyor"
+    },
+    "contracts": {
+        "title": "Gelir Güvencesi & Sözleşmeler",
+        "subtitle": "Portföy sağlığı, yenileme riskleri ve faturalama projeksiyonları",
+        "kpis": {
+            "activeContracts": "Aktif Sözleşmeler",
+            "totalValue": "Toplam Sözleşme Değeri",
+            "renewalRisk": "Yenileme Riski (90 Gün)",
+            "executionHealth": "Uygulama Sağlığı",
+            "sub": {
+                "autoRenew": "{{count}} otomatik yenileme",
+                "annualized": "Yıllıklandırılmış Gelir",
+                "atRisk": "Risk altındaki değer: {{value}}",
+                "onTrack": "Faturalama ve Kilometre Taşları yolunda"
+            }
+        },
+        "risk": {
+            "title": "Yenileme Risk Analizi",
+            "totalValue": "Toplam Değer",
+            "criticalAttention": "Kritik Dikkat Gerekenler",
+            "daysLeft": "gün kaldı",
+            "noCritical": "Kritik risk bulunmadı"
+        },
+        "enrichment": {
+            "renewalHistory": "Yenileme Geçmişi",
+            "paymentDiscipline": "Ödeme Disiplini",
+            "noRenewalHistory": "Geçmiş yenileme kaydı bulunamadı.",
+            "priceChange": "Fiyat",
+            "avgDelay": "Ort. Gecikme",
+            "consistency": "Tutarlılık",
+            "trend": "Eğilim",
+            "aiInsight": "Müşteri genellikle zamanında ödeme yapıyor, ancak S4'te tutarlılık düştü. Erken fatura hatırlatması önerilir.",
+            "trends": {
+                "Improving": "İyileşiyor",
+                "Stable": "Stabil",
+                "Declining": "Düşüşte"
+            }
+        },
+        "ownership": {
+            "title": "Sözleşme Sahipliği & Risk",
+            "subtitle": "Yaklaşan yenilemeler için sorumluluk"
+        },
+        "calendar": {
+            "title": "Aylık Yenileme Hedefleri",
+            "target": "Hedef",
+            "contracts": "Sözleşme",
+            "highRisk": "Yüksek Risk"
+        },
+        "section": {
+            "planning": "Taktiksel Planlama"
+        },
+        "pagination": {
+            "showing": "Gösterilen",
+            "to": "-",
+            "of": "/",
+            "results": "sonuç",
+            "page": "Sayfa"
+        },
+        "sidebar": {
+            "customers": "Müşteriler",
+            "searchPlaceholder": "Sözleşme ara..."
+        },
+        "viewMode": {
+            "overview": "Genel Bakış",
+            "details": "Detaylar"
+        },
+        "emptyState": {
+            "title": "Sözleşme Detayı Görüntüle",
+            "desc": "Detaylarını incelemek ve tahsilat analizi yapmak için soldaki listeden bir müşteri seçiniz."
+        },
+        "list": {
+            "header": {
+                "customerTitle": "Müşteri / Başlık",
+                "product": "Ürün",
+                "status": "Durum",
+                "value": "Değer (TL)",
+                "renewalIn": "Yenileme",
+                "risk": "Risk",
+                "salesOwner": "Satış Sorumlusu"
+            },
+            "filters": {
+                "allStatuses": "Tüm Durumlar",
+                "searchPlaceholder": "Müşteri, sözleşme ara..."
+            }
+        },
+        "details": {
+            "termsTitle": "Sözleşme Koşulları",
+            "totalValue": "Toplam Değer",
+            "startDate": "Başlangıç Tarihi",
+            "billingFreq": "Fatura Periyodu",
+            "renewal": "Yenileme Tarihi"
+        },
+        "analysis": {
+            "title": "Tahsilat Analizi",
+            "analyzeBtn": "Analiz Et",
+            "analyzing": "Analiz Ediliyor...",
+            "emptyStateTitle": "Henüz Analiz Yapılmadı",
+            "emptyStateDesc": "Yapay zeka analizini çalıştırmak için butona tıklayın.",
+            "riskScore": "Risk Skoru",
+            "insights": "Öngörüler",
+            "recommendations": "Tavsiyeler"
+        },
+        "paymentPlan": {
+            "title": "Ödeme Planı",
+            "date": "Tarih",
+            "amount": "Tutar",
+            "status": "Durum",
+            "invoice": "Fatura No"
+        }
+    }
+}

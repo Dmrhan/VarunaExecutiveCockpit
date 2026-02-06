@@ -1,10 +1,13 @@
 import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
-import type { Deal, Activity, User, DashboardMetrics, DealStage } from '../types/crm';
+import type { Deal, Activity, User, DashboardMetrics, DealStage, Quote, Order, Contract } from '../types/crm';
 import { generateMockData, USERS } from '../data/mockData';
 
 interface DataContextType {
     deals: Deal[];
     activities: Activity[];
+    quotes: Quote[];
+    orders: Order[];
+    contracts: Contract[];
     users: User[];
     metrics: DashboardMetrics;
     isLoading: boolean;
@@ -16,15 +19,21 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [deals, setDeals] = useState<Deal[]>([]);
     const [activities, setActivities] = useState<Activity[]>([]);
+    const [quotes, setQuotes] = useState<Quote[]>([]);
+    const [orders, setOrders] = useState<Order[]>([]);
+    const [contracts, setContracts] = useState<Contract[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const refreshData = () => {
         setIsLoading(true);
         // Simulate API call
         setTimeout(() => {
-            const { deals: newDeals, activities: newActivities } = generateMockData(100);
+            const { deals: newDeals, activities: newActivities, quotes: newQuotes, orders: newOrders, contracts: newContracts } = generateMockData(451);
             setDeals(newDeals);
             setActivities(newActivities);
+            setQuotes(newQuotes);
+            setOrders(newOrders);
+            setContracts(newContracts);
             setIsLoading(false);
         }, 800);
     };
@@ -38,17 +47,17 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // Calculate stalled deals (mock logic: aging > 30 days in non-closed stage)
         const stalledDealsCount = deals.filter(d =>
-            !['Order', 'Lost'].includes(d.stage) && d.aging > 30
+            !['Order', 'Lost', 'Kazanıldı', 'Kaybedildi'].includes(d.stage) && d.aging > 30
         ).length;
 
         // leakage by stage (mock logic)
         const leakageByStage = deals.reduce((acc, deal) => {
-            acc[deal.stage] = (acc[deal.stage] || 0) + (deal.stage === 'Lost' ? 1 : 0);
+            acc[deal.stage] = (acc[deal.stage] || 0) + (['Lost', 'Kaybedildi'].includes(deal.stage) ? 1 : 0);
             return acc;
         }, {} as Record<DealStage, number>);
 
         // Execution Confidence Score (mock: % of open deals with activity in last 14 days)
-        const openDeals = deals.filter(d => !['Order', 'Lost'].includes(d.stage));
+        const openDeals = deals.filter(d => !['Order', 'Lost', 'Kazanıldı', 'Kaybedildi'].includes(d.stage));
         const recentActivityThreshold = new Date();
         recentActivityThreshold.setDate(recentActivityThreshold.getDate() - 14);
 
@@ -73,7 +82,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [deals, activities]);
 
     return (
-        <DataContext.Provider value={{ deals, activities, users: USERS, metrics, isLoading, refreshData }}>
+        <DataContext.Provider value={{ deals, activities, quotes, orders, contracts, users: USERS, metrics, isLoading, refreshData }}>
             {children}
         </DataContext.Provider>
     );

@@ -18,7 +18,7 @@ export function DealList({ deals }: DealListProps) {
     return (
         <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
-                <thead className="text-xs text-slate-500 uppercase bg-slate-50 dark:bg-slate-800/50">
+                <thead className="text-xs text-slate-500 uppercase bg-slate-50 dark:bg-slate-700/50">
                     <tr>
                         <th className="px-4 py-3 rounded-l-lg">Deal</th>
                         <th className="px-4 py-3">Stage</th>

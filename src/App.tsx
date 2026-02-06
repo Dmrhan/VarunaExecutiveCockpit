@@ -2,62 +2,36 @@
 import { useState } from 'react';
 import { DataProvider } from './context/DataContext';
 import { Shell } from './components/layout/Shell';
-import { InsightPanel } from './features/dashboard/InsightPanel';
-import { ConfidenceWidget } from './features/dashboard/ConfidenceWidget';
-import { FunnelChart } from './features/dashboard/FunnelChart';
-import { ProductPerformance } from './features/dashboard/ProductPerformance';
-import { VelocityMeter } from './features/dashboard/VelocityMeter';
-import { Leaderboard } from './features/dashboard/Leaderboard';
-import { OpportunityDashboard } from './features/dashboard/OpportunityDashboard';
-import { MarketIntelligence } from './features/dashboard/MarketIntelligence';
-
-function Dashboard() {
-  return (
-    <div className="space-y-6">
-      {/* Top Row: AI Narrative */}
-      <div className="grid grid-cols-1">
-        <InsightPanel />
-      </div>
-
-      {/* Product Strip */}
-      <div className="grid grid-cols-1">
-        <ProductPerformance />
-      </div>
-
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 auto-rows-[minmax(180px,auto)]">
-
-        {/* Row 1 of Grid */}
-        <div className="col-span-1 lg:col-span-1 h-full">
-          <ConfidenceWidget />
-        </div>
-        <div className="col-span-1 lg:col-span-3 h-full">
-          <FunnelChart />
-        </div>
-
-        {/* Row 2 of Grid: Now split into Velocity, Leaderboard and Market Intelligence */}
-        <div className="col-span-1 lg:col-span-1 h-full">
-          <VelocityMeter />
-        </div>
-        <div className="col-span-1 lg:col-span-1 h-full">
-          <Leaderboard />
-        </div>
-        <div className="col-span-1 lg:col-span-2 h-full">
-          <MarketIntelligence />
-        </div>
-      </div>
-    </div>
-  );
-}
+import { ExecutiveSummaryDashboard } from './features/dashboard/ExecutiveSummaryDashboard';
+import { OpportunitiesDashboard } from './features/dashboard/OpportunitiesDashboard';
+import { ActivitiesDashboard } from './features/dashboard/ActivitiesDashboard';
+import { QuotesDashboard } from './features/dashboard/QuotesDashboard';
+import { OrdersDashboard } from './features/dashboard/OrdersDashboard';
+import { ContractsDashboard } from './features/dashboard/ContractsDashboard';
+import { RunaAIBot } from './components/RunaAIBot';
 
 function App() {
-  const [activeView, setActiveView] = useState('Cockpit');
+  // Store key instead of translated label to persist view across language changes
+  const [activeView, setActiveView] = useState('executive');
+
+  const renderContent = () => {
+    switch (activeView) {
+      case 'executive': return <ExecutiveSummaryDashboard />;
+      case 'opportunities': return <OpportunitiesDashboard />;
+      case 'activities': return <ActivitiesDashboard />;
+      case 'quotes': return <QuotesDashboard />;
+      case 'orders': return <OrdersDashboard />;
+      case 'contracts': return <ContractsDashboard />;
+      default: return <ExecutiveSummaryDashboard />;
+    }
+  };
 
   return (
     <DataProvider>
       <Shell activeView={activeView} onViewChange={setActiveView}>
-        {activeView === 'Cockpit' ? <Dashboard /> : <OpportunityDashboard />}
+        {renderContent()}
       </Shell>
+      <RunaAIBot />
     </DataProvider>
   );
 }

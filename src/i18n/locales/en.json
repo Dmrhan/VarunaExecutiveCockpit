@@ -1,0 +1,615 @@
+{
+    "common": {
+        "close": "Close",
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "edit": "Edit",
+        "search": "Search",
+        "filter": "Filter",
+        "export": "Export",
+        "loading": "Loading...",
+        "refresh": "Refresh",
+        "apply": "Apply",
+        "reset": "Reset",
+        "copy": "Copy",
+        "copied": "Copied",
+        "viewDetails": "View Details",
+        "addToOffer": "Add to Offer",
+        "generate": "Generate",
+        "regenerate": "Regenerate",
+        "selectDate": "Select Date",
+        "filters": {
+            "active30": "Active Window (30 Days)",
+            "today": "Today",
+            "thisWeek": "This Week",
+            "thisMonth": "This Month",
+            "thisQuarter": "This Quarter",
+            "custom": "Custom"
+        }
+    },
+    "sidebar": {
+        "orders": "Orders",
+        "quotes": "Quotes"
+    },
+    "navigation": {
+        "executive": "Executive",
+        "opportunities": "Opportunities",
+        "activities": "Activities",
+        "quotes": "Quotes",
+        "orders": "Orders"
+    },
+    "dateFilters": {
+        "today": "Today",
+        "thisWeek": "This Week",
+        "thisMonth": "This Month",
+        "thisQuarter": "This Quarter",
+        "ytd": "YTD",
+        "mtd": "MTD",
+        "all": "All",
+        "custom": "Custom"
+    },
+    "opportunities": {
+        "title": "Opportunities",
+        "subtitle": "Pipeline analysis and opportunity management.",
+        "totalOpportunities": "Total Opportunities",
+        "conversionRate": "Conversion Rate",
+        "wonDeals": "Won Deals",
+        "lostDeals": "Lost Deals",
+        "pipelineRevenue": "Pipeline Revenue",
+        "listView": "List",
+        "kanbanView": "Board",
+        "opportunityList": "Opportunity List",
+        "customer": "Customer",
+        "product": "Product",
+        "value": "Value",
+        "stage": "Stage",
+        "probability": "Probability",
+        "owner": "Owner",
+        "actions": "Actions",
+        "risk": "Risk",
+        "aiResponse": "Generate AI Response",
+        "funnelAnalysis": "Funnel Analysis",
+        "leaderboard": "Leaderboard",
+        "productPerformance": "Product Group Performance",
+        "opportunityName": "Opportunity Name",
+        "closeDate": "Close Date",
+        "daysOpen": "Days Open",
+        "opportunityCount": "Deal",
+        "probabilityShort": "Prob",
+        "createdAt": "Created Date",
+        "expectedRevenue": "Expected Revenue",
+        "seller": "Seller",
+        "charts": {
+            "sourceTitle": "Opportunity Source",
+            "sourceInsight": "Customer references and direct sales channel constitute the largest opportunity pool with 42%.",
+            "customerPotentialTitle": "Customer Potential",
+            "customerPotentialInsight": "The 3 largest volume customers represent 28% of total pipeline value. Portfolio diversification is recommended."
+        }
+    },
+    "performance": {
+        "activeDeals": "active deals",
+        "activeOrders": "active orders",
+        "activeQuotes": "active quotes",
+        "productDetails": "Product Details",
+        "listingDetails": "Listing {{count}} records. Use AI assistant for detailed analysis and actions.",
+        "trendTitle": "6-Month Trend Analysis",
+        "distributionTitle": "Status Distribution",
+        "aiAnalysis": "AI Analysis",
+        "riskAnalysis": "Risk Analysis",
+        "emailDraft": "Email Draft",
+        "analyzingTitle": "Anomaly & Risk Analysis",
+        "emailAssistant": "Smart Email Assistant",
+        "insights": "AI-driven insights and recommendations",
+        "speak": "Read Aloud",
+        "analyzing": "Analyzing data...",
+        "riskLevel": "Risk Level",
+        "strategicAdvice": "Strategic Advice",
+        "subject": "Subject",
+        "send": "Send",
+        "deliveryDate": "Delivery Date",
+        "validUntil": "Valid Until"
+    },
+    "funnel": {
+        "title": "Sales Performance & Execution Insights",
+        "subtitle": "Sales funnel sorted by probability. Click layers for details.",
+        "totalVisibility": "Total Visibility",
+        "closeHint": "Press ESC or click outside to close"
+    },
+    "gamification": {
+        "title": "Gamified Performance",
+        "subtitle": "Live Performance Leaderboard",
+        "score": "Score",
+        "whyScore": "Why This Score?",
+        "revenueInsight": "Total revenue <1>{{revenue}}</1> is <3>{{percentage}}%</3> above team average.",
+        "winRateInsight": "Win rate is <1>{{rate}}%</1> which is {{status}}.",
+        "trendingUp": "Performance is trending up in last 6 periods! 🚀",
+        "trendingDown": "Slight momentum loss recently, needs attention.",
+        "revenueTrend": "Revenue Trend",
+        "vsTeam": "vs Team",
+        "nextAction": "Next Action",
+        "closeDeal": "Close 1 Deal",
+        "reachMaster": "to reach 'Order Master'",
+        "badges": {
+            "mvp": {
+                "title": "MVP",
+                "desc": "Overall Score: {{score}} - Team Leader"
+            },
+            "sniper": {
+                "title": "Sniper",
+                "desc": "High precision: {{rate}}% Win Rate"
+            },
+            "rainmaker": {
+                "title": "Rainmaker",
+                "desc": "Generated {{revenue}} revenue"
+            },
+            "streak": {
+                "title": "{{count}} Streak",
+                "desc": "{{count}} deals closed in a row!"
+            }
+        }
+    },
+    "executiveBrief": {
+        "title": "Executive Brief",
+        "subtitle": "Smart Summary",
+        "narrative": {
+            "part1": "Opportunity volume is <0>{{status}}</0> this period.",
+            "part2": "Won deals remain <0>{{trend}}</0>,",
+            "part3": "loss rate is <0>{{status}}</0>.",
+            "part4": "Total pipeline revenue signals <0>{{strength}}</0> potential.",
+            "part5": "Concentration observed in <0>{{product}}</0> product group.",
+            "status": {
+                "high": "high",
+                "stable": "stable",
+                "needsAttention": "needing attention",
+                "underControl": "under control"
+            },
+            "trend": {
+                "increasing": "increasing",
+                "stable": "stable",
+                "decreasing": "decreasing"
+            },
+            "strength": {
+                "strong": "strong",
+                "stable": "stable",
+                "weak": "weak"
+            }
+        },
+        "kpis": {
+            "totalDeals": "Total Deals",
+            "conversionRate": "Conversion Rate",
+            "wonDeals": "Won Deals",
+            "lostDeals": "Lost Deals",
+            "pipelineRevenue": "Pipeline Revenue",
+            "riskAnalysis": "Risk Analysis",
+            "needsAttention": "Needs Attention",
+            "acceptable": "Acceptable",
+            "tooltips": {
+                "totalDeals": "12% increase vs previous period",
+                "conversionRate": "Target: >30%",
+                "pipelineStrength": "Active pipeline value signals strength",
+                "wonDetails": "{{count}} deals won, total value {{value}}"
+            }
+        }
+    },
+    "recommendations": {
+        "title": "Smart Recommendations",
+        "suggestionCount": "suggestions",
+        "types": {
+            "crossSell": "Cross-sell",
+            "upsell": "Upsell",
+            "gap": "Gap",
+            "benchmark": "Benchmark",
+            "reactivation": "Reactivation",
+            "pricing": "Pricing",
+            "training": "Training",
+            "process": "Process",
+            "resource": "Resource"
+        },
+        "aiPowered": "AI POWERED",
+        "detailedAnalysis": "Detailed Analysis",
+        "confidence": {
+            "high": "High",
+            "medium": "Medium",
+            "low": "Low"
+        },
+        "impact": {
+            "operational": "Operational Efficiency",
+            "revenue": "Revenue Growth",
+            "retention": "Customer Retention"
+        },
+        "items": [
+            {
+                "id": "rec-1",
+                "title": "Revenue Opportunity in Retail Segment",
+                "description": "61% of similar customers in this sector add Quest product to their current solutions. High upsell potential in this opportunity group.",
+                "type": "Cross-sell",
+                "context": "23 active opportunities • Avg deal size: $180K",
+                "actionLabel": "View Details"
+            },
+            {
+                "id": "rec-2",
+                "title": "Hosting Gap in Enterprise Segment",
+                "description": "72% of our large-scale customers receive infrastructure services. Hosting is missing in 8 enterprise customers.",
+                "type": "Gap",
+                "context": "Potential revenue: $1.2M",
+                "actionLabel": "Create Campaign"
+            },
+            {
+                "id": "rec-3",
+                "title": "Stockbar Reactivation Opportunity",
+                "description": "12 opportunities postponed due to budget 6 months ago can be re-entered with the new \"Quick Start\" package.",
+                "type": "Reactivation",
+                "context": "Avg aging: 180 days",
+                "actionLabel": "Add to Offer"
+            },
+            {
+                "id": "rec-4",
+                "title": "Varuna ERP Benchmark Comparison",
+                "description": "Varuna adoption is 85% in $1M+ deals in sector average. Missing in current large opportunities.",
+                "type": "Benchmark",
+                "context": "Suitable for 5 opportunities",
+                "actionLabel": "Analyze"
+            },
+            {
+                "id": "rec-5",
+                "title": "ServiceCore CX Package Cross-sell",
+                "description": "68% of customers using EnRoute add ServiceCore for customer experience. Operational efficiency increase 40%.",
+                "type": "Cross-sell",
+                "context": "15 target customers identified",
+                "actionLabel": "View List"
+            }
+        ]
+    },
+    "opportunityModal": {
+        "smartRecommendations": "Smart Recommendations",
+        "aiAssistant": "AI Brand Assistant",
+        "communicationTone": "Communication Tone",
+        "tones": {
+            "formal": "Formal & Professional",
+            "persuasive": "Persuasive",
+            "friendly": "Friendly & Kind",
+            "urgent": "Urgency-Focused"
+        },
+        "placeholder": "Select a tone and click \"Generate\" button.",
+        "generating": "AI is generating response...",
+        "generateResponse": "Generate Response"
+    },
+    "activities": {
+        "title": "Activities",
+        "subtitle": "Action and impact focused management center.",
+        "aiBriefTitle": "AI Activity Executive Brief",
+        "kpis": {
+            "total": "Total Touchpoints",
+            "openTodos": "Open Pending To-Do",
+            "overdue": "Overdue Actions",
+            "winRate": "Touchpoint > Win Rate",
+            "followUpTime": "Avg. Follow-up Time"
+        },
+        "sections": {
+            "actionList": "Priority Action List (To-Do)",
+            "impactAnalysis": "Impact & Result Analysis",
+            "teamDiscipline": "Team Effort & Result Matrix",
+            "aiSuggestions": "Executive Action Suggestions"
+        },
+        "charts": {
+            "type": "Activity Type",
+            "detail": "Activity Detail",
+            "platform": "Activity Platform",
+            "customer": "Customer Distribution",
+            "heatmap": "Activity Heatmap",
+            "radar": "Team Proficiency",
+            "timeline": "All Activities",
+            "winRateByType": "Win Rate (By Type)",
+            "touchpoints": "Touchpoint Impact"
+        },
+        "types": {
+            "call": "Call",
+            "email": "Email",
+            "meeting": "Meeting",
+            "demo": "Demo",
+            "task": "Task",
+            "lunch": "Lunch",
+            "other": "Other"
+        },
+        "columns": {
+            "rep": "Representative",
+            "count": "Count",
+            "customer": "Customer / Deal",
+            "subject": "Note / Subject",
+            "type": "Type",
+            "date": "Date / Due Date",
+            "detail": "Detail",
+            "status": "Status",
+            "priority": "Priority"
+        }
+    },
+    "executive": {
+        "title": "Management Intelligence",
+        "subtitle": "Strategic insights and executive reporting.",
+        "kpis": {
+            "totalRevenue": "Total Revenue",
+            "revenueIncrease": "Increase vs last month",
+            "pipelineValue": "Pipeline Value",
+            "totalOpportunities": "Total Opportunities",
+            "activeDeals": "Active Deals",
+            "stalledDeals": "Stalled Deals",
+            "winRate": "Win Rate",
+            "aboveIndustryAvg": "Above Industry Avg"
+        },
+        "charts": {
+            "revenueTrend": {
+                "title": "Revenue Trend (Target vs Actual)",
+                "actual": "Actual",
+                "target": "Target"
+            },
+            "velocity": {
+                "title": "Sales Velocity Score",
+                "score": "Velocity Score",
+                "description": "Average cycle time is <1>{{value}}</1> faster than target."
+            }
+        },
+        "risk": {
+            "title": "Risk & Warning Intelligence",
+            "stagnant": "%{{percent}} of pipeline has not changed stage for {{days}} days. This increased by %{{change}} vs last month.",
+            "pastDue": "{{count}} deals are past expected close date. Total value: {{value}}.",
+            "winRateDrop": "Win rate dropped by %{{change}} in the last quarter.",
+            "highConcentration": "Risk: %{{percent}} of revenue depends on a single customer."
+        },
+        "performance": {
+            "title": "Performance Distribution",
+            "concentration": "%{{percent}} of total revenue is generated by %{{agentCount}} of the sales team."
+        },
+        "forecast": {
+            "title": "Forecast & Confidence",
+            "highConfidence": "%{{percent}} of target is achievable with high confidence based on current velocity. Risk scenarios may lower this.",
+            "confidenceScore": "Confidence Score",
+            "bestCase": "Best Case",
+            "worstCase": "Worst Case",
+            "target": "Target"
+        },
+        "rootCause": {
+            "title": "Loss Analysis (Why are we losing?)",
+            "chartTitle": "Loss Reason Distribution",
+            "impact": "Impact",
+            "reasons": {
+                "price": "Pricing",
+                "decision_time": "Decision Time",
+                "product_gap": "Product Gap",
+                "competitor": "Competitor"
+            }
+        },
+        "actions": {
+            "title": "Suggested Actions",
+            "pricing_title": "Pricing Revision",
+            "pricing_desc": "Package revision recommended due to increasing price-related losses in {{segment}} segment.",
+            "load_balance_title": "Load Balancing",
+            "load_balance_desc": "%{{percent}} of pipeline is concentrated on a single rep, indicating load balance risk.",
+            "training_title": "Negotiation Training",
+            "training_desc": "Advanced negotiation training recommended for the team due to losses at proposal stage."
+        }
+    },
+    "quotes": {
+        "title": "Quotes",
+        "subtitle": "Quote management and conversion analysis.",
+        "poolAnalysis": {
+            "title": "Quote Pool Analysis",
+            "subtitle": "Revenue distribution and density by status",
+            "heightParams": "Height represents revenue volume, colors represent status groups."
+        },
+        "status": {
+            "Draft": "Draft",
+            "Review": "Review",
+            "Sent": "Sent",
+            "Accepted": "Accepted",
+            "Approved": "Approved",
+            "Rejected": "Rejected",
+            "Denied": "Denied"
+        },
+        "list": {
+            "title": "Quote List",
+            "customerSearch": "Search customer...",
+            "allStatuses": "All Statuses",
+            "listView": "List",
+            "boardView": "Board",
+            "showing": "Showing"
+        },
+        "table": {
+            "name": "Quote Name",
+            "customer": "Customer",
+            "status": "Status",
+            "amount": "Amount",
+            "actions": "Actions"
+        },
+        "charts": {
+            "statusRevenue": "Quote Status / Expected Revenue",
+            "customerRevenue": "Customer / Expected Revenue",
+            "insights": {
+                "status": "Approved and Pending quotes make up 68% of total pipeline volume.",
+                "customer": "Top 5 customers hold 45% of total quoted amount. Portfolio balance is healthy."
+            }
+        },
+        "kpis": {
+            "totalCount": "TOTAL QUOTES",
+            "lost": "LOST QUOTES",
+            "won": "WON",
+            "open": "OPEN PENDING",
+            "totalPotential": "TOTAL POTENTIAL"
+        }
+    },
+    "orders": {
+        "title": "Orders",
+        "subtitle": "Order tracking and revenue analysis.",
+        "kpis": {
+            "totalCount": "TOTAL ORDERS",
+            "pendingAmount": "PENDING AMOUNT",
+            "completedAmount": "COMPLETED",
+            "totalRevenue": "TOTAL REVENUE"
+        },
+        "charts": {
+            "statusDistribution": "Order Status Distribution",
+            "statusInsight": "72% of orders are successfully closed. Logistics performance is at top level.",
+            "customerVolume": "Order Volume by Customer",
+            "customerInsight": "Order volume from key customers increased by 12% compared to last month."
+        },
+        "poolAnalysis": {
+            "title": "Order Distribution Analysis",
+            "subtitle": "Revenue distribution and density by status",
+            "heightParams": "Height represents revenue volume, colors represent status groups."
+        },
+        "units": {
+            "count": "Count"
+        },
+        "list": {
+            "title": "Order List",
+            "searchPlaceholder": "Search customer...",
+            "allStatuses": "All Statuses",
+            "orderName": "Order Name",
+            "customer": "Customer",
+            "status": "Status",
+            "amount": "Amount",
+            "actions": "Actions",
+            "ref": "REF"
+        },
+        "aiPanel": {
+            "title": "AI ORDER BRIEF",
+            "volumeChange": "VOLUME CHANGE",
+            "topCustomer": "TOP CUSTOMER",
+            "cancellations": "CANCELLATIONS",
+            "volumeUp": "Order volume up by %{{value}}.",
+            "volumeDown": "Order volume down by %{{value}}.",
+            "topBuyer": "\"{{name}}\" is the top buyer.",
+            "canceledCount": "{{count}} orders canceled."
+        },
+        "productPerformance": "Product Group Performance"
+    },
+    "status": {
+        "Open": "Open",
+        "Closed": "Closed",
+        "Canceled": "Canceled",
+        "Active": "Active",
+        "Negotiation": "Negotiation",
+        "Draft": "Draft",
+        "Archived": "Archived",
+        "Terminated": "Terminated"
+    },
+    "contracts": {
+        "title": "Revenue Assurance & Contracts",
+        "subtitle": "Portfolio health, renewal risks, and billing projections",
+        "kpis": {
+            "activeContracts": "Active Contracts",
+            "totalValue": "Total Contract Value",
+            "renewalRisk": "Renewal Risk (90 Days)",
+            "executionHealth": "Execution Health",
+            "sub": {
+                "autoRenew": "{{count}} set to auto-renew",
+                "annualized": "Annualized Revenue",
+                "atRisk": "Value at risk: {{value}}",
+                "onTrack": "Billing & Milestones on track"
+            }
+        },
+        "charts": {
+            "radarTitle": "Renewal Risk Radar",
+            "radarSubtitle": "Bubble size = Contract Value • Color = Risk Level",
+            "revenueProjection": "Revenue Projection",
+            "portfolioOwnership": "Portfolio Ownership",
+            "daysToRenewal": "Days to Renewal",
+            "contractValue": "Contract Value (k)",
+            "projectedRev": "Projected Rev",
+            "expectedBilling": "Expected Billing",
+            "statusDistribution": "Contract Status Distribution"
+        },
+        "list": {
+            "header": {
+                "customerTitle": "Customer / Title",
+                "product": "Product",
+                "status": "Status",
+                "value": "Value (TL)",
+                "renewalIn": "Renewal In",
+                "risk": "Risk",
+                "salesOwner": "Sales Owner"
+            },
+            "filters": {
+                "allStatuses": "All Statuses",
+                "searchPlaceholder": "Search customer, contract..."
+            }
+        },
+        "risk": {
+            "title": "Renewal Risk Analysis",
+            "totalValue": "Total Value",
+            "criticalAttention": "Critical Attention Needed",
+            "daysLeft": "days left",
+            "noCritical": "No critical risks detected"
+        },
+        "productHealth": {
+            "title": "Product Contract Performance"
+        },
+        "calendar": {
+            "title": "Monthly Renewal Targets",
+            "target": "Target",
+            "contracts": "Contracts",
+            "highRisk": "High Risk"
+        },
+        "section": {
+            "planning": "Tactical Planning"
+        },
+        "pagination": {
+            "showing": "Showing",
+            "to": "-",
+            "of": "/",
+            "results": "results",
+            "page": "Page"
+        },
+        "sidebar": {
+            "customers": "Customers",
+            "searchPlaceholder": "Search contracts..."
+        },
+        "viewMode": {
+            "overview": "Overview",
+            "details": "Details"
+        },
+        "emptyState": {
+            "title": "View Contract Details",
+            "desc": "Select a customer from the left list to view details and collection analysis."
+        },
+        "details": {
+            "termsTitle": "Contract Terms",
+            "totalValue": "Total Value",
+            "startDate": "Start Date",
+            "billingFreq": "Billing Frequency",
+            "renewal": "Renewal Date"
+        },
+        "analysis": {
+            "title": "Collection Analysis",
+            "analyzeBtn": "Analyze",
+            "analyzing": "Analyzing...",
+            "emptyStateTitle": "No Analysis Yet",
+            "emptyStateDesc": "Click the button to run AI analysis.",
+            "riskScore": "Risk Score",
+            "insights": "Insights",
+            "recommendations": "Recommendations"
+        },
+        "paymentPlan": {
+            "title": "Payment Plan",
+            "date": "Date",
+            "amount": "Amount",
+            "status": "Status",
+            "invoice": "Invoice No"
+        },
+        "enrichment": {
+            "renewalHistory": "Renewal History",
+            "paymentDiscipline": "Payment Discipline",
+            "noRenewalHistory": "No previous renewal records found.",
+            "priceChange": "Price",
+            "avgDelay": "Avg Delay",
+            "consistency": "Consistency",
+            "trend": "Trend",
+            "aiInsight": "Customer typically pays on time...",
+            "trends": {
+                "Improving": "Improving",
+                "Stable": "Stable",
+                "Declining": "Declining"
+            }
+        }
+    }
+}

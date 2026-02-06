@@ -54,7 +54,7 @@ export function VelocityMeter() {
                                 if (active && payload && payload.length) {
                                     const d = payload[0].payload;
                                     return (
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-xl shadow-lg">
+                                        <div className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 p-3 rounded-xl shadow-lg">
                                             <p className="font-semibold">{d.stage}</p>
                                             <p className="text-sm">Avg Age: <span className="font-mono font-bold text-amber-500">{d.avgDays} days</span></p>
                                             <p className="text-xs text-slate-500">{d.count} deals</p>

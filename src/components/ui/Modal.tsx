@@ -40,10 +40,10 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
                 ref={overlayRef}
             />
             <div className={cn(
-                "relative w-full max-w-2xl max-h-[85vh] overflow-y-auto bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-200",
+                "relative w-full max-w-2xl max-h-[85vh] overflow-y-auto bg-white dark:bg-slate-700 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-600 animate-in fade-in zoom-in-95 duration-200",
                 className
             )}>
-                <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md">
+                <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-600 bg-white/80 dark:bg-slate-700/80 backdrop-blur-md">
                     <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{title}</h2>
                     <button
                         onClick={onClose}

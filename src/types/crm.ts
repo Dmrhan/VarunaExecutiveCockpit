@@ -27,7 +27,7 @@ export interface Activity {
     completedAt?: string;
 }
 
-export interface Deal {
+export type Deal = {
     id: string;
     title: string;
     customerName: string;
@@ -41,6 +41,12 @@ export interface Deal {
     createdAt: string;
     expectedCloseDate: string;
     lastActivityDate: string;
+    updatedAt?: string;
+    notes?: string;
+    currency: 'TRY' | 'USD' | 'EUR';
+
+    // Computed fields
+    weightedValue: number; // value * (probability / 100)
 
     // Computed fields (for analytics)
     aging: number; // days in current stage

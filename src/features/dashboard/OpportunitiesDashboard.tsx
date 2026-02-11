@@ -21,6 +21,7 @@ import { OpportunityDetailModal } from './OpportunityDetailModal';
 import { FunnelChart } from './FunnelChart';
 import { GamifiedLeaderboard } from './GamifiedLeaderboard';
 import { ProductPerformance } from './ProductPerformance';
+import { OpportunityForecast } from './OpportunityForecast';
 
 import type { Deal } from '../../types/crm';
 
@@ -104,7 +105,7 @@ const StatCard = ({ label, value, colorClass }: { label: string; value: string; 
 );
 
 
-export function OpportunitiesDashboard() {
+export function OpportunitiesDashboard({ onAddOpportunity }: { onAddOpportunity?: () => void }) {
     const { t } = useTranslation();
     const { deals, users } = useData();
     const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
@@ -130,6 +131,9 @@ export function OpportunitiesDashboard() {
         maxProb: '',
     });
 
+    // --- Forecast State ---
+    const [forecastMonthFilter, setForecastMonthFilter] = useState<Date | null>(null);
+
     const handleSort = (key: keyof Deal | 'ownerName') => {
         setSortConfig(prev => {
             if (prev?.key === key) {
@@ -142,6 +146,25 @@ export function OpportunitiesDashboard() {
     const handleOpenResponseModal = (deal: Deal) => {
         setSelectedDealForResponse(deal);
         setIsResponseModalOpen(true);
+    };
+
+    const handleForecastMonthClick = (date: Date) => {
+        if (forecastMonthFilter &&
+            date.getMonth() === forecastMonthFilter.getMonth() &&
+            date.getFullYear() === forecastMonthFilter.getFullYear()) {
+            setForecastMonthFilter(null);
+        } else {
+            setForecastMonthFilter(date);
+            // Optional: Scroll to list?
+            // window.scrollTo({ top: 500, behavior: 'smooth' });
+
+            // If we are filtering by a specific month in the future, 
+            // the "Created Date" filter might hide everything. 
+            // Let's reset it to 'all' to ensure the user sees the forecasted deals.
+            if (dateFilter !== 'all') {
+                setDateFilter('all');
+            }
+        }
     };
 
 
@@ -220,15 +243,53 @@ export function OpportunitiesDashboard() {
             result = result.filter(d => d.value <= Number(columnFilters.maxValue));
         }
 
-        if (columnFilters.minProb) {
-            result = result.filter(d => d.probability >= Number(columnFilters.minProb));
-        }
         if (columnFilters.maxProb) {
             result = result.filter(d => d.probability <= Number(columnFilters.maxProb));
         }
 
+        // 3. Forecast Month Filter
+        if (forecastMonthFilter) {
+            result = result.filter(d => {
+                if (!d.expectedCloseDate) return false;
+                const closeDate = new Date(d.expectedCloseDate);
+                return closeDate.getMonth() === forecastMonthFilter.getMonth() &&
+                    closeDate.getFullYear() === forecastMonthFilter.getFullYear();
+            });
+        }
+
         return result;
-    }, [dateFilter, customRange, deals, columnFilters, users]);
+    }, [dateFilter, customRange, deals, columnFilters, users, forecastMonthFilter]);
+
+    // Deals specifically for the Forecast Component
+    // (Ignores "Created Date" filter to show future pipeline, but respects Owner/Product/Value filters)
+    const forecastDeals = useMemo(() => {
+        let result = deals;
+
+        // Apply ONLY Column Filters (Entity filters)
+        if (columnFilters.customer) {
+            const search = columnFilters.customer.toLowerCase();
+            result = result.filter(d =>
+                d.customerName.toLowerCase().includes(search) ||
+                d.title.toLowerCase().includes(search)
+            );
+        }
+        if (columnFilters.stage !== 'all') {
+            result = result.filter(d => d.stage === columnFilters.stage);
+        }
+        if (columnFilters.owner) {
+            const search = columnFilters.owner.toLowerCase();
+            result = result.filter(d => {
+                const ownerName = users.find(u => u.id === d.ownerId)?.name.toLowerCase() || '';
+                return ownerName.includes(search);
+            });
+        }
+        if (columnFilters.minValue) result = result.filter(d => d.value >= Number(columnFilters.minValue));
+        if (columnFilters.maxValue) result = result.filter(d => d.value <= Number(columnFilters.maxValue));
+        if (columnFilters.minProb) result = result.filter(d => d.probability >= Number(columnFilters.minProb));
+        if (columnFilters.maxProb) result = result.filter(d => d.probability <= Number(columnFilters.maxProb));
+
+        return result;
+    }, [deals, columnFilters, users]);
 
     const metrics = useMemo(() => {
         const count = filteredDeals.length;
@@ -335,6 +396,15 @@ export function OpportunitiesDashboard() {
                 </div>
 
                 <div className="flex flex-col md:flex-row gap-2">
+                    {onAddOpportunity && (
+                        <button
+                            onClick={onAddOpportunity}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors flex items-center gap-2 shadow-sm shadow-indigo-200 dark:shadow-none"
+                        >
+                            <Sparkles size={16} />
+                            Yeni Fırsat
+                        </button>
+                    )}
                     {/* Date Filter Buttons */}
                     <div className="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-xl items-center gap-1 overflow-x-auto scrollbar-hide">
                         {[
@@ -433,6 +503,13 @@ export function OpportunitiesDashboard() {
 
             <div className="border-t border-slate-200 dark:border-slate-600 my-8"></div>
 
+            {/* Forecast Section */}
+            <OpportunityForecast
+                deals={forecastDeals}
+                onMonthClick={handleForecastMonthClick}
+                activeFilterMonth={forecastMonthFilter}
+            />
+
             {/* Content Area (List/Kanban) */}
             {
                 viewMode === 'list' ? (
@@ -464,6 +541,7 @@ export function OpportunitiesDashboard() {
                                             { label: t('opportunities.stage'), key: 'stage' as const },
                                             { label: t('opportunities.probability'), key: 'probability' as const },
                                             { label: t('opportunities.value'), key: 'value' as const },
+                                            { label: 'Tahmini Kapanış', key: 'expectedCloseDate' as const },
                                             { label: t('opportunities.owner'), key: 'ownerName' as const }
                                         ].map(col => (
                                             <th
@@ -534,6 +612,9 @@ export function OpportunitiesDashboard() {
                                             </div>
                                         </th>
                                         <th className="p-2 border-r border-slate-100 dark:border-white/5">
+                                            {/* Date filter placeholder or actual date picker could go here */}
+                                        </th>
+                                        <th className="p-2 border-r border-slate-100 dark:border-white/5">
                                             <input
                                                 type="text"
                                                 placeholder="Sahibi..."
@@ -570,6 +651,16 @@ export function OpportunitiesDashboard() {
                                                 </td>
                                                 <td className="p-4 font-mono font-medium text-slate-700 dark:text-slate-300">
                                                     ${(deal.value).toLocaleString()}
+                                                </td>
+                                                <td className="p-4">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                                                            {new Date(deal.expectedCloseDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                        </span>
+                                                        <span className="text-[10px] text-slate-400">
+                                                            Tahmini
+                                                        </span>
+                                                    </div>
                                                 </td>
                                                 <td className="p-4">
                                                     <div className="flex items-center gap-2">
@@ -688,6 +779,8 @@ export function OpportunitiesDashboard() {
                     </div>
                 )
             }
+
+
 
 
 

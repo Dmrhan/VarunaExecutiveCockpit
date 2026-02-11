@@ -10,6 +10,8 @@ import { OrdersDashboard } from './features/dashboard/OrdersDashboard';
 import { ContractsDashboard } from './features/dashboard/ContractsDashboard';
 import { RunaAIBot } from './components/RunaAIBot';
 
+import { OpportunityForm } from './features/dashboard/OpportunityForm';
+
 function App() {
   // Store key instead of translated label to persist view across language changes
   const [activeView, setActiveView] = useState('executive');
@@ -17,7 +19,8 @@ function App() {
   const renderContent = () => {
     switch (activeView) {
       case 'executive': return <ExecutiveSummaryDashboard />;
-      case 'opportunities': return <OpportunitiesDashboard />;
+      case 'opportunities': return <OpportunitiesDashboard onAddOpportunity={() => setActiveView('opportunity-new')} />;
+      case 'opportunity-new': return <OpportunityForm onClose={() => setActiveView('opportunities')} />;
       case 'activities': return <ActivitiesDashboard />;
       case 'quotes': return <QuotesDashboard />;
       case 'orders': return <OrdersDashboard />;

@@ -1,10 +1,10 @@
-import type { Deal, DealStage, ProductGroup, Activity, User, DealSource, Contract, ContractType, ContractStatus, BillingStatus } from '../types/crm';
+import type { Deal, Activity, User, ProductGroup, DealSource, DealStage, Contract, ContractType, ContractStatus, BillingStatus } from '../types/crm';
 
 export const PRODUCTS: ProductGroup[] = ['EnRoute', 'Quest', 'Stokbar', 'ServiceCore', 'Varuna', 'Hosting'];
-const SOURCES: DealSource[] = ['Univera Satış', 'Univera İş Ortakları', 'Univera EnRoute PY', 'Univera Stokbar PY', 'Univera Quest PY', 'Diğer'];
-const EXTENDED_STAGES: DealStage[] = ['Teklif', 'Sözleşme', 'Konumlama', 'Demo', 'Kazanıldı', 'Kaybedildi', 'Lead', 'Qualified', 'Proposal', 'Negotiation'];
+export const SOURCES: DealSource[] = ['Univera Satış', 'Univera İş Ortakları', 'Univera EnRoute PY', 'Univera Stokbar PY', 'Univera Quest PY', 'Diğer'];
+export const STAGES: DealStage[] = ['Teklif', 'Sözleşme', 'Konumlama', 'Demo', 'Kazanıldı', 'Kaybedildi', 'Lead', 'Qualified', 'Proposal', 'Negotiation'];
 
-const CORPORATE_CUSTOMERS = [
+export const CORPORATE_CUSTOMERS = [
     'Koç Holding', 'Sabancı Sanayi', 'Türkiye İş Bankası', 'Garanti BBVA', 'Akbank',
     'Türk Telekom', 'Turkcell', 'Pegasus Hava Yolları', 'Şişecam', 'Eczacıbaşı Grup',
     'Migros Ticaret', 'Anadolu Efes', 'Arçelik Global', 'Vestel Elektronik', 'Ford Otosan',
@@ -71,7 +71,7 @@ export const generateMockData = (count: number = 451): { deals: Deal[], activiti
 
     for (let i = 0; i < count; i++) {
         const createdAt = generateRandomDate(new Date('2023-01-01'), new Date());
-        const stage = EXTENDED_STAGES[Math.floor(Math.random() * EXTENDED_STAGES.length)];
+        const stage = STAGES[Math.floor(Math.random() * STAGES.length)];
         const owner = USERS[Math.floor(Math.random() * USERS.length)];
         const source = SOURCES[Math.floor(Math.random() * SOURCES.length)];
 
@@ -85,20 +85,27 @@ export const generateMockData = (count: number = 451): { deals: Deal[], activiti
         const topics = PROJECT_TOPICS[product] || ['Sistem Geliştirme'];
         const randomTopic = topics[Math.floor(Math.random() * topics.length)];
 
+        const value = Math.floor(Math.random() * 5000000) + 50000;
+        const probability = stage === 'Kazanıldı' || stage === 'Sözleşme' ? 100 : stage === 'Kaybedildi' ? 0 : Math.floor(Math.random() * 80 + 10);
+
         const deal: Deal = {
             id: `d${i}`,
             title: `${customerName} - ${randomTopic}`,
             customerName,
             product,
-            value: Math.floor(Math.random() * 5000000) + 50000,
+            value,
             stage,
-            probability: stage === 'Kazanıldı' || stage === 'Sözleşme' ? 100 : stage === 'Kaybedildi' ? 0 : Math.random() * 80 + 10,
+            probability,
             ownerId: owner.id,
             source,
             topic: `${product} ${randomTopic}`,
             createdAt,
-            expectedCloseDate: generateRandomDate(new Date(), new Date('2025-12-31')),
+            expectedCloseDate: generateRandomDate(new Date(), new Date('2026-12-31')),
             lastActivityDate: generateRandomDate(new Date(createdAt), new Date()),
+            currency: 'TRY',
+            weightedValue: Math.round(value * (probability / 100)),
+            notes: 'Generated mock deal.',
+            updatedAt: new Date().toISOString(),
             aging: ageDays,
             velocity: Math.floor(Math.random() * 15),
             healthScore: Math.floor(Math.random() * 100),
@@ -333,7 +340,92 @@ export const generateMockData = (count: number = 451): { deals: Deal[], activiti
 
     }
 
-    // Add specific "Story" Contracts for Demo Purposes
+    // --- Generate "Story" Deals for Forecast Demo ---
+    // Ensure we have data in specific future months
+    const storyDeals: Deal[] = [];
+    const today = new Date();
+
+    // 1. Next Month "Big Deal"
+    const nextMonth = new Date(today);
+    nextMonth.setMonth(today.getMonth() + 1);
+    storyDeals.push({
+        id: 'story-deal-1',
+        title: 'Koç Holding - Dijital Dönüşüm Ana Fazı',
+        customerName: 'Koç Holding',
+        product: 'Varuna',
+        value: 8500000,
+        stage: 'Negotiation',
+        probability: 90,
+        ownerId: 'u1',
+        source: 'Univera Satış',
+        topic: 'Varuna Dijital Dönüşüm Ana Fazı',
+        createdAt: new Date(today.getFullYear(), today.getMonth() - 2, 15).toISOString(),
+        expectedCloseDate: nextMonth.toISOString(),
+        lastActivityDate: new Date().toISOString(),
+        currency: 'TRY',
+        weightedValue: 4500000 * 0.75,
+        notes: 'Strategic partnership for AI transformation.',
+        updatedAt: new Date().toISOString(),
+        aging: 15,
+        velocity: 12,
+        healthScore: 95
+    });
+
+    // 2. 3 Months out "Risk" Deal
+    const threeMonths = new Date(today);
+    threeMonths.setMonth(today.getMonth() + 3);
+    storyDeals.push({
+        id: 'story-deal-2',
+        title: 'Migros - Lojistik Optimizasyonu',
+        customerName: 'Migros Ticaret',
+        product: 'Stokbar',
+        value: 12000000,
+        stage: 'Proposal',
+        probability: 60,
+        ownerId: 'u4',
+        source: 'Univera Stokbar PY',
+        topic: 'Stokbar Lojistik Optimizasyonu',
+        createdAt: new Date(today.getFullYear(), today.getMonth() - 1, 10).toISOString(),
+        expectedCloseDate: threeMonths.toISOString(),
+        lastActivityDate: new Date(today.getFullYear(), today.getMonth(), 1).toISOString(), // Old activity
+        currency: 'TRY',
+        weightedValue: 12000000 * 0.60,
+        notes: 'Warehouse automation project.',
+        updatedAt: new Date().toISOString(),
+        aging: 45,
+        velocity: 20,
+        healthScore: 40 // Low health
+    });
+
+    // 3. 6 Months out "Pipeline Builder"
+    const sixMonths = new Date(today);
+    sixMonths.setMonth(today.getMonth() + 6);
+    storyDeals.push({
+        id: 'story-deal-3',
+        title: 'THY - Global Lisans Genişletme',
+        customerName: 'Türk Hava Yolları',
+        product: 'EnRoute',
+        value: 25000000,
+        stage: 'Qualified',
+        probability: 40,
+        ownerId: 'u2',
+        source: 'Univera EnRoute PY',
+        topic: 'EnRoute Global Lisans Genişletme',
+        createdAt: new Date().toISOString(),
+        expectedCloseDate: sixMonths.toISOString(),
+        lastActivityDate: new Date().toISOString(),
+        currency: 'TRY',
+        weightedValue: 850000 * 0.90,
+        notes: 'Field sales optimization.',
+        updatedAt: new Date().toISOString(),
+        aging: 5,
+        velocity: 5,
+        healthScore: 85
+    });
+
+    deals.push(...storyDeals);
+
+    // Add contracts (keeping existing story contracts logic if needed, but return deals mainly)
     const storyContracts: Contract[] = [
         {
             id: 'cnt-story-1',
@@ -443,3 +535,4 @@ export const mockPerformance = [
     { userId: 'u2', userName: 'Ayşe Demir', quotaAttainment: 98000, dealsClosed: 9 },
     { userId: 'u3', userName: 'Mehmet Kaya', quotaAttainment: 85000, dealsClosed: 7 },
 ];
+

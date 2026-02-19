@@ -309,7 +309,79 @@
             "date": "Tarih / Vade",
             "detail": "Detay",
             "status": "Durum",
-            "priority": "Öncelik"
+            "priority": "Öncelik",
+            "nextStep": "Sıradaki Adım"
+        },
+        "stats": {
+            "total": "Toplam Temas",
+            "trendSuffix": "geçen döneme göre",
+            "meeting": "Toplantı",
+            "email": "E-Posta",
+            "call": "Arama",
+            "proposal": "Teklif",
+            "other": "Diğer",
+            "pendingTasks": "Bekleyen İşler",
+            "overdue": "Gecikmiş",
+            "touchpointToWin": "Temas > Kazanım"
+        },
+        "aiSection": {
+            "title": "AI Aktivite Özet Raporu",
+            "strategicTitle": "Stratejik Aktivite Analizi & İçgörüler",
+            "momentum": "Momentum",
+            "risk": "Risk",
+            "delays": "Gecikmeler",
+            "high": "Yüksek",
+            "summaryHTML": "Bu hafta ekip aktivite yoğunluğu <1>artış trendinde</1>. Özellikle Pazartesi günü yapılan 45 arama, <3>3 yeni fırsat</3> yarattı. Ancak, <5>{{count}} gecikmiş aksiyon</5> risk oluşturuyor."
+        },
+        "grid": {
+            "title": "Aktivite Kayıtları",
+            "subtitle": "Tüm temas geçmişi ve detaylar",
+            "placeholders": {
+                "search": "Genel Arama...",
+                "filter": "Filtrele...",
+                "type": "Tip...",
+                "rep": "Temsilci..."
+            },
+            "actions": {
+                "lossAnalysis": "Kayıp Analizi",
+                "shareNotes": "Tutanak Paylaş",
+                "followUp": "Takip Et",
+                "requestDecision": "Karar İste",
+                "checkResponse": "Yanıt Kontrol",
+                "addNote": "Not Ekle",
+                "plan": "Planlama Yap"
+            },
+            "empty": "Aradığınız kriterlere uygun aktivite bulunamadı.",
+            "footer": "Toplam {{count}} kayıt listeleniyor"
+        },
+        "matrix": {
+            "title": "Ekip Efor & Sonuç Matrisi (Detaylı)",
+            "heatmap": "Isı Haritası",
+            "intensity": "Yoğunluk",
+            "totalActivity": "Toplam Aktivite",
+            "scrollHint": "← Tabloyu yana kaydırarak tüm aktivite tiplerini görebilirsiniz →"
+        },
+        "charts_extended": {
+            "newCustomerInteraction": "Yeni Müşteri Etkileşimi",
+            "uniqueCustomer": "Benzersiz Müşteri",
+            "conversion": "Dönüşüm",
+            "recentInteractions": "Son Etkileşimler",
+            "more": "daha",
+            "customerLeaders": "Müşteri İletişim Liderleri",
+            "activity": "Aktivite",
+            "teamPerformance": "Takım Performansı",
+            "sellerLeaderboard": "Satıcı Liderlik Tablosu",
+            "win": "Kazanım",
+            "productInterest": "Ürün İlgi Dağılımı",
+            "lossAnalysis": "Kayıp Nedeni Analizi",
+            "insights": {
+                "newCustomers": "Bu dönemde {{count}} farklı müşteri ile temas kuruldu. Satış ekibi liderliğinde %{{rate}} dönüşüm başarısı yakalandı.",
+                "topCustomer": "{{name}} ile yoğun teknik toplantı trafiği var. Fırsat kapanış olasılığı %80 seviyesinde.",
+                "team": "İş Ortakları (Partners) ekibinin aktivite hacmi yüksek, ancak dönüşümde Satış ekibinin %15 gerisindeler.",
+                "seller": "{{leader}} hacim lideri ancak {{runnerUp}} daha verimli çalışıyor.",
+                "product": "İlginin %48'i Stokbar ürününde yoğunlaşıyor. Hosting ürün grubu aktiviteleri bu ay %20 düşüş trendinde.",
+                "loss": "Olumsuz sonuçların %37'si Fiyat kaynaklı. Özellikle Enterprise segmentinde 'Ürün Kapsamı' itirazları artışta."
+            }
         }
     },
     "executive": {
@@ -626,6 +698,78 @@
             "amount": "Tutar",
             "status": "Durum",
             "invoice": "Fatura No"
+        }
+    },
+    "dashboardV2": {
+        "title": "Yönetici Zekası",
+        "subtitle": "Uçtan Uca Yürütme & Nakit Akışı İzleme",
+        "role": {
+            "gm": "GM Görünümü",
+            "salesManager": "Satış Müdürü"
+        },
+        "filters": {
+            "allTeams": "Tüm Ekipler",
+            "allPersons": "Tüm Kişiler",
+            "custom": "Özel"
+        },
+        "metrics": {
+            "activeOpps": "Aktif Fırsatlar",
+            "pendingQuotes": "Bekleyen Teklifler",
+            "openOrders": "Açık Siparişler",
+            "collectionRisk": "Tahsilat Riski",
+            "avgCollectionTime": "Ort. Tahsilat Süresi",
+            "vsLastMonth": "geçen aya göre",
+            "volume": "Hacim",
+            "criticalActions": "Kritik Aksiyon Gerekiyor",
+            "overdueInvoices": "Gecikmiş Fatura",
+            "target": "Hedef",
+            "fast": "hızlı"
+        },
+        "pipeline": {
+            "step1": "Fırsat",
+            "step2": "Teklif Açıldı",
+            "step3": "Kabul Edildi",
+            "step4": "Sipariş İşleme",
+            "step5": "Faturalandı",
+            "goal": "HEDEF",
+            "conversion": "DÖNÜŞÜM",
+            "daysAvg": "gün ort.",
+            "records": "Kayıt",
+            "deals": "Fırsat"
+        },
+        "blockers": {
+            "title": "Sipariş Hızı Engelleri",
+            "impact": "Etki",
+            "orders": "Sipariş",
+            "viewDetailed": "Detaylı Engel Analizini Gör"
+        },
+        "collections": {
+            "title": "Kritik Tahsilat Riskleri",
+            "viewReport": "Tam Raporu Gör",
+            "table": {
+                "entity": "Müşteri Varlığı",
+                "invoiceRef": "Fatura Ref",
+                "aging": "Yaşlandırma",
+                "amount": "Tutar",
+                "riskLevel": "Risk Seviyesi",
+                "premiumAccount": "Premium Hesap",
+                "days": "g"
+            },
+            "risk": {
+                "critical": "KRİTİK",
+                "high": "YÜKSEK"
+            }
+        },
+        "drilldown": {
+            "details": "Detayları",
+            "showingRecords": "Bu metriği etkileyen {{count}} kayıt gösteriliyor",
+            "searchPlaceholder": "Kayıt ara...",
+            "columns": {
+                "record": "Kayıt",
+                "owner": "Sorumlu",
+                "dateStatus": "Tarih/Durum",
+                "value": "Değer"
+            }
         }
     }
 }

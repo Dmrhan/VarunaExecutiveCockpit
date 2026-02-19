@@ -3,7 +3,11 @@ export type ProductGroup = 'EnRoute' | 'Quest' | 'Stokbar' | 'ServiceCore' | 'Va
 export type DealStage = 'Lead' | 'Qualified' | 'Proposal' | 'Negotiation' | 'Order' | 'Lost' |
     'Teklif' | 'Sözleşme' | 'Konumlama' | 'Demo' | 'Kazanıldı' | 'Kaybedildi';
 
-export type DealSource = 'Univera Satış' | 'Univera İş Ortakları' | 'Univera EnRoute PY' | 'Univera Stokbar PY' | 'Univera Quest PY' | 'Diğer';
+export type DealSource =
+    'Univera Satış' | 'Univera İş Ortakları' |
+    'Univera EnRoute PY' | 'Univera Stokbar PY' | 'Univera Quest PY' | 'Univera ServiceCore PY' | 'Univera Varuna PY' |
+    'Pazarlama (Web)' | 'Pazarlama (LinkedIn)' | 'Pazarlama (Etkinlik)' |
+    'Mevcut Müşteri (Upsell)' | 'Referans' | 'Diğer';
 
 export interface User {
     id: string;
@@ -19,6 +23,7 @@ export interface Activity {
     date: string; // ISO date (Scheduled or Completed date)
     dealId: string;
     userId: string;
+    subject?: string;
     notes?: string;
     outcome?: 'positive' | 'neutral' | 'negative';
     outcomeReason?: 'price' | 'product_gap' | 'timing' | 'competitor' | 'other';
@@ -52,6 +57,23 @@ export type Deal = {
     aging: number; // days in current stage
     velocity: number; // average days per stage
     healthScore: number; // 0-100
+}
+
+export interface Contact {
+    id: string;
+    opportunityId: string;
+    name: string;
+    role: string;
+    email: string;
+    phone: string;
+}
+
+export interface OpportunityNote {
+    id: string;
+    opportunityId: string;
+    content: string;
+    createdAt: string;
+    createdBy: string;
 }
 
 export type QuoteStatus = 'Draft' | 'Review' | 'Approved' | 'Rejected' | 'Sent' | 'Accepted' | 'Denied';

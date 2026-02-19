@@ -69,13 +69,32 @@ async function setup() {
       velocity INTEGER,
       health_score INTEGER,
       notes TEXT
-    )
+    );
+
+    CREATE TABLE IF NOT EXISTS contacts (
+      id TEXT PRIMARY KEY,
+      opportunity_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      role TEXT,
+      email TEXT,
+      phone TEXT,
+      FOREIGN KEY(opportunity_id) REFERENCES opportunities(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS opportunity_notes (
+      id TEXT PRIMARY KEY,
+      opportunity_id TEXT NOT NULL,
+      content TEXT NOT NULL,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      created_by TEXT,
+      FOREIGN KEY(opportunity_id) REFERENCES opportunities(id)
+    );
   `);
 
     const countQuery = await db.get('SELECT COUNT(*) as count FROM opportunities');
 
     if (countQuery.count === 0) {
-        console.log('Seeding database...');
+        console.log('Seeding opportunities...');
 
         // Generate 100 mock deals
         for (let i = 0; i < 100; i++) {
@@ -90,6 +109,7 @@ async function setup() {
             const value = Math.floor(Math.random() * 5000000) + 50000;
             const probability = stage === 'Kazanıldı' ? 100 : stage === 'Kaybedildi' ? 0 : Math.floor(Math.random() * 80 + 10);
             const weightedValue = Math.round(value * (probability / 100));
+            const dealId = `deal-${i}`;
 
             await db.run(
                 `INSERT INTO opportunities (
@@ -98,7 +118,7 @@ async function setup() {
                 currency, weighted_value, aging, velocity, health_score, notes
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
-                    `deal-${i}`,
+                    dealId,
                     `${customerName} - ${randomTopic}`,
                     customerName,
                     product,
@@ -120,9 +140,54 @@ async function setup() {
                 ]
             );
         }
-        console.log('Database seeded successfully.');
+        console.log('Opportunities seeded successfully.');
     } else {
-        console.log('Database already has data. Skipping seed.');
+        console.log('Opportunities already exist. Skipping seed.');
+    }
+
+    // Seed Contacts & Notes if empty
+    const contactCount = await db.get('SELECT COUNT(*) as count FROM contacts');
+    if (contactCount.count === 0) {
+        console.log('Seeding contacts and notes...');
+        const opportunities = await db.all('SELECT id FROM opportunities');
+
+        for (const opp of opportunities) {
+            // Add 1-3 contacts
+            const numContacts = Math.floor(Math.random() * 3) + 1;
+            for (let c = 0; c < numContacts; c++) {
+                const contactNames = ['Ahmet', 'Mehmet', 'Ayşe', 'Fatma', 'Can', 'Cem', 'Deniz', 'Ece'];
+                const surNames = ['Yılmaz', 'Kaya', 'Demir', 'Çelik', 'Şahin', 'Koç', 'Öztürk', 'Arslan'];
+                const name = `${contactNames[Math.floor(Math.random() * contactNames.length)]} ${surNames[Math.floor(Math.random() * surNames.length)]}`;
+
+                await db.run(
+                    `INSERT INTO contacts (id, opportunity_id, name, role, email, phone) VALUES (?, ?, ?, ?, ?, ?)`,
+                    [
+                        `contact-${opp.id}-${c}`,
+                        opp.id,
+                        name,
+                        ['Decision Maker', 'Influencer', 'Champion', 'User'][Math.floor(Math.random() * 4)],
+                        `${name.toLowerCase().replace(' ', '.')}@company.com`,
+                        `+90 5${Math.floor(Math.random() * 100)} 123 45 67`
+                    ]
+                );
+            }
+
+            // Add 1-5 notes
+            const numNotes = Math.floor(Math.random() * 5) + 1;
+            for (let n = 0; n < numNotes; n++) {
+                await db.run(
+                    `INSERT INTO opportunity_notes (id, opportunity_id, content, created_at, created_by) VALUES (?, ?, ?, ?, ?)`,
+                    [
+                        `note-${opp.id}-${n}`,
+                        opp.id,
+                        ['Meeting notes: Positive feedback', 'Sent proposal revision', 'Follow-up call scheduled', 'Budget approved', 'Technical demo completed'][Math.floor(Math.random() * 5)],
+                        generateRandomDate(new Date('2025-01-01'), new Date()),
+                        USERS[Math.floor(Math.random() * USERS.length)].id
+                    ]
+                );
+            }
+        }
+        console.log('Contacts and Notes seeded.');
     }
 }
 

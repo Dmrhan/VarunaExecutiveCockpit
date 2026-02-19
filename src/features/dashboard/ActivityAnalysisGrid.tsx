@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { useData } from '../../context/DataContext';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, Legend } from 'recharts';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell } from 'recharts';
 import { useTranslation } from 'react-i18next';
-import { TrendingUp, AlertTriangle, Users, Package, Activity, Info, Trophy, Target, ArrowUp } from 'lucide-react';
+import { TrendingUp, AlertTriangle, Users, Package, Info, Trophy, Target, ArrowUp } from 'lucide-react';
 
 interface ActivityAnalysisGridProps {
     filteredActivities: any[];
@@ -26,7 +26,6 @@ export function ActivityAnalysisGrid({ filteredActivities }: ActivityAnalysisGri
 
         const newTouchpointsCount = activeCustomerNames.length;
         // Breakdown by Team
-        const teamTouchCount: Record<string, number> = {};
         const activeDeals = new Set(filteredActivities.map(a => a.dealId));
         const wonDealsFromActive = deals.filter(d => activeDeals.has(d.id) && (d.stage === 'Kazanıldı' || d.stage === 'Order')).length;
         const conversionRate = activeDeals.size > 0 ? Math.round((wonDealsFromActive / activeDeals.size) * 100) : 0;
@@ -147,21 +146,21 @@ export function ActivityAnalysisGrid({ filteredActivities }: ActivityAnalysisGri
 
             {/* 1. New Customer Analysis - Modernized */}
             <Card className="bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow">
-                <ModernCardHeader title="Yeni Müşteri Etkileşimi" icon={Target} colorClass="bg-emerald-500 text-emerald-600" />
+                <ModernCardHeader title={t('activities.charts_extended.newCustomerInteraction')} icon={Target} colorClass="bg-emerald-500 text-emerald-600" />
                 <CardContent className="p-5 flex flex-col h-[340px]">
                     <div className="flex justify-between items-center mb-6">
                         <div>
                             <h3 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                                 {analytics.newTouchpointsCount}
                             </h3>
-                            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Benzersiz Müşteri</p>
+                            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">{t('activities.charts_extended.uniqueCustomer')}</p>
                         </div>
                         <div className="text-right">
                             <div className="flex items-center justify-end gap-1 text-emerald-600 mb-1">
                                 <ArrowUp size={16} strokeWidth={3} />
                                 <span className="text-xl font-bold">%{analytics.conversionRate}</span>
                             </div>
-                            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Dönüşüm</p>
+                            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{t('activities.charts_extended.conversion')}</p>
                         </div>
                     </div>
 
@@ -173,7 +172,7 @@ export function ActivityAnalysisGrid({ filteredActivities }: ActivityAnalysisGri
                     </div>
 
                     <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
-                        <div className="text-[10px] font-bold text-slate-400 mb-3 uppercase tracking-widest">Son Etkileşimler</div>
+                        <div className="text-[10px] font-bold text-slate-400 mb-3 uppercase tracking-widest">{t('activities.charts_extended.recentInteractions')}</div>
                         <div className="flex flex-wrap gap-2 overflow-y-auto content-start pr-1">
                             {analytics.activeCustomerNames.slice(0, 10).map((name, i) => (
                                 <span key={i} className="px-2.5 py-1.5 rounded-full text-[10px] font-semibold bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-colors cursor-default">
@@ -181,17 +180,17 @@ export function ActivityAnalysisGrid({ filteredActivities }: ActivityAnalysisGri
                                 </span>
                             ))}
                             {analytics.activeCustomerNames.length > 10 && (
-                                <span className="px-2 py-1 text-[10px] text-slate-400 font-medium">+{analytics.activeCustomerNames.length - 10} daha</span>
+                                <span className="px-2 py-1 text-[10px] text-slate-400 font-medium">+{analytics.activeCustomerNames.length - 10} {t('activities.charts_extended.more')}</span>
                             )}
                         </div>
                     </div>
-                    <AIInsight text={`Bu dönemde ${analytics.newTouchpointsCount} farklı müşteri ile temas kuruldu. Satış ekibi liderliğinde %65 dönüşüm başarısı yakalandı.`} />
+                    <AIInsight text={t('activities.charts_extended.insights.newCustomers', { count: analytics.newTouchpointsCount, rate: 65 })} />
                 </CardContent>
             </Card>
 
             {/* 2. Top Customers - Modernized List */}
             <Card className="bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow">
-                <ModernCardHeader title="Müşteri İletişim Liderleri" icon={TrendingUp} colorClass="bg-indigo-500 text-indigo-600" />
+                <ModernCardHeader title={t('activities.charts_extended.customerLeaders')} icon={TrendingUp} colorClass="bg-indigo-500 text-indigo-600" />
                 <CardContent className="p-0 flex flex-col h-[340px]">
                     <div className="flex-1 overflow-auto px-1 py-2">
                         {analytics.topCustomers.map((c, i) => (
@@ -207,20 +206,20 @@ export function ActivityAnalysisGrid({ filteredActivities }: ActivityAnalysisGri
                                 </div>
                                 <div className="text-right">
                                     <div className="text-sm font-bold text-indigo-600 dark:text-indigo-400">{c.count}</div>
-                                    <div className="text-[9px] text-slate-400">Aktivite</div>
+                                    <div className="text-[9px] text-slate-400">{t('activities.charts_extended.activity')}</div>
                                 </div>
                             </div>
                         ))}
                     </div>
                     <div className="px-5 pb-5 mt-auto">
-                        <AIInsight text={`${analytics.topCustomers[0]?.name} ile yoğun teknik toplantı trafiği var. Fırsat kapanış olasılığı %80 seviyesinde.`} />
+                        <AIInsight text={t('activities.charts_extended.insights.topCustomer', { name: analytics.topCustomers[0]?.name || 'Customer' })} />
                     </div>
                 </CardContent>
             </Card>
 
             {/* 3. Team Visibility - Modernized Chart */}
             <Card className="bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow">
-                <ModernCardHeader title="Takım Performansı" icon={Users} colorClass="bg-blue-500 text-blue-600" />
+                <ModernCardHeader title={t('activities.charts_extended.teamPerformance')} icon={Users} colorClass="bg-blue-500 text-blue-600" />
                 <CardContent className="h-[340px] p-5 flex flex-col">
                     <div className="flex-1 w-full min-h-0">
                         <ResponsiveContainer width="100%" height="100%">
@@ -235,13 +234,13 @@ export function ActivityAnalysisGrid({ filteredActivities }: ActivityAnalysisGri
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
-                    <AIInsight text="İş Ortakları (Partners) ekibinin aktivite hacmi yüksek, ncak dönüşümde Satış ekibinin %15 gerisindeler." />
+                    <AIInsight text={t('activities.charts_extended.insights.team')} />
                 </CardContent>
             </Card>
 
             {/* 4. Seller Intensity - Leaderboard */}
             <Card className="bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow">
-                <ModernCardHeader title="Satıcı Liderlik Tablosu" icon={Trophy} colorClass="bg-amber-500 text-amber-600" />
+                <ModernCardHeader title={t('activities.charts_extended.sellerLeaderboard')} icon={Trophy} colorClass="bg-amber-500 text-amber-600" />
                 <CardContent className="p-0 flex flex-col h-[340px]">
                     <div className="flex-1 overflow-auto px-1 py-2">
                         {analytics.topSellers.map((s, i) => (
@@ -260,20 +259,20 @@ export function ActivityAnalysisGrid({ filteredActivities }: ActivityAnalysisGri
                                 </div>
                                 <div className="ml-3 text-right">
                                     <div className="text-xs font-bold text-emerald-600">%{s.winRate}</div>
-                                    <div className="text-[9px] text-emerald-600/70">Kazanım</div>
+                                    <div className="text-[9px] text-emerald-600/70">{t('activities.charts_extended.win')}</div>
                                 </div>
                             </div>
                         ))}
                     </div>
                     <div className="px-5 pb-5 mt-auto">
-                        <AIInsight text={`${analytics.topSellers[0]?.name} hacim lideri ancak ${analytics.topSellers[1]?.name} daha verimli çalışıyor.`} />
+                        <AIInsight text={t('activities.charts_extended.insights.seller', { leader: analytics.topSellers[0]?.name, runnerUp: analytics.topSellers[1]?.name })} />
                     </div>
                 </CardContent>
             </Card>
 
             {/* 5. Product Analysis - Donut Chart */}
             <Card className="bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow">
-                <ModernCardHeader title="Ürün İlgi Dağılımı" icon={Package} colorClass="bg-purple-500 text-purple-600" />
+                <ModernCardHeader title={t('activities.charts_extended.productInterest')} icon={Package} colorClass="bg-purple-500 text-purple-600" />
                 <CardContent className="h-[340px] p-5 flex flex-col">
                     <div className="flex-1 relative">
                         <ResponsiveContainer width="100%" height="100%">
@@ -286,8 +285,8 @@ export function ActivityAnalysisGrid({ filteredActivities }: ActivityAnalysisGri
                                     dataKey="value"
                                     stroke="none"
                                 >
-                                    {analytics.productData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} cornerRadius={4} />
+                                    {analytics.productData.map((_entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                 </Pie>
                                 <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
@@ -298,7 +297,7 @@ export function ActivityAnalysisGrid({ filteredActivities }: ActivityAnalysisGri
                             <span className="text-2xl font-bold text-slate-800 dark:text-white">
                                 {analytics.productData.reduce((acc, curr) => acc + curr.value, 0)}
                             </span>
-                            <span className="text-[10px] text-slate-400 uppercase tracking-wider">Aktivite</span>
+                            <span className="text-[10px] text-slate-400 uppercase tracking-wider">{t('activities.charts_extended.activity')}</span>
                         </div>
                     </div>
                     <div className="flex flex-wrap justify-center gap-3 mb-2">
@@ -309,13 +308,13 @@ export function ActivityAnalysisGrid({ filteredActivities }: ActivityAnalysisGri
                             </div>
                         ))}
                     </div>
-                    <AIInsight text={`İlginin %48'i Stokbar ürününde yoğunlaşıyor. Hosting ürün grubu aktiviteleri bu ay %20 düşüş trendinde.`} />
+                    <AIInsight text={t('activities.charts_extended.insights.product')} />
                 </CardContent>
             </Card>
 
             {/* 6. Negative Analysis - Modern Bars */}
             <Card className="bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow">
-                <ModernCardHeader title="Kayıp Nedeni Analizi" icon={AlertTriangle} colorClass="bg-red-500 text-red-600" />
+                <ModernCardHeader title={t('activities.charts_extended.lossAnalysis')} icon={AlertTriangle} colorClass="bg-red-500 text-red-600" />
                 <CardContent className="h-[340px] p-5 flex flex-col">
                     <div className="flex-1 w-full min-h-0">
                         <ResponsiveContainer width="100%" height="100%">
@@ -330,15 +329,15 @@ export function ActivityAnalysisGrid({ filteredActivities }: ActivityAnalysisGri
                                     tickLine={false}
                                 />
                                 <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
-                                <Bar dataKey="value" fill="#ef4444" radius={[0, 4, 4, 0]} barSize={12} background={{ fill: '#f1f5f9', radius: [0, 4, 4, 0] }}>
-                                    {analytics.negativeData.map((entry, index) => (
+                                <Bar dataKey="value" fill="#ef4444" radius={4} barSize={12} background={{ fill: '#f1f5f9', radius: 4 }}>
+                                    {analytics.negativeData.map((_entry, index) => (
                                         <Cell key={`cell-${index}`} fill={NEGATIVE_COLORS[index % NEGATIVE_COLORS.length]} />
                                     ))}
                                 </Bar>
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
-                    <AIInsight text="Olumsuz sonuçların %37'si Fiyat kaynaklı. Özellikle Enterprise segmentinde 'Ürün Kapsamı' itirazları artışta." />
+                    <AIInsight text={t('activities.charts_extended.insights.loss')} />
                 </CardContent>
             </Card>
 

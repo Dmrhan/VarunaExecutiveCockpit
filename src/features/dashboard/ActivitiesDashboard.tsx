@@ -7,7 +7,7 @@ import { Phone, Mail, Users, Presentation, Video, CheckSquare, Clock, Activity a
 import { cn } from '../../lib/utils';
 import { format, isSameDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, subDays, startOfQuarter, endOfQuarter, startOfYear, endOfYear } from 'date-fns';
 import { tr, enUS } from 'date-fns/locale';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import { DateRangePicker } from '../../components/ui/DateRangePicker';
 import { ActivityAnalysisGrid } from './ActivityAnalysisGrid';
 import { SellerActivityMatrix } from './SellerActivityMatrix';
@@ -150,16 +150,16 @@ export function ActivitiesDashboard() {
         return {
             total: { value: curr.total, trend: calcTrend(curr.total, prev.total) },
             activities: [
-                { label: 'Toplantı', value: curr.meeting, trend: calcTrend(curr.meeting, prev.meeting), icon: Users, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20' },
-                { label: 'E-Posta', value: curr.email, trend: calcTrend(curr.email, prev.email), icon: Mail, color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-900/20' },
-                { label: 'Arama', value: curr.call, trend: calcTrend(curr.call, prev.call), icon: Phone, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
-                { label: 'Teklif', value: curr.proposal, trend: calcTrend(curr.proposal, prev.proposal), icon: CheckSquare, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-                { label: 'Diğer', value: curr.other, trend: calcTrend(curr.other, prev.other), icon: Sparkles, color: 'text-slate-600', bg: 'bg-slate-100 dark:bg-slate-800' },
+                { label: t('activities.stats.meeting'), value: curr.meeting, trend: calcTrend(curr.meeting, prev.meeting), icon: Users, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20' },
+                { label: t('activities.stats.email'), value: curr.email, trend: calcTrend(curr.email, prev.email), icon: Mail, color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-900/20' },
+                { label: t('activities.stats.call'), value: curr.call, trend: calcTrend(curr.call, prev.call), icon: Phone, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
+                { label: t('activities.stats.proposal'), value: curr.proposal, trend: calcTrend(curr.proposal, prev.proposal), icon: CheckSquare, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+                { label: t('activities.stats.other'), value: curr.other, trend: calcTrend(curr.other, prev.other), icon: Sparkles, color: 'text-slate-600', bg: 'bg-slate-100 dark:bg-slate-800' },
             ],
             tasks: [
-                { label: 'Bekleyen İşler', value: curr.pending, trend: calcTrend(curr.pending, prev.pending), icon: ListTodo, color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
-                { label: 'Gecikmiş', value: curr.overdue, trend: calcTrend(curr.overdue, prev.overdue), icon: AlertCircle, color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-900/20' },
-                { label: 'Temas > Kazanım', value: `%${curr.winRate}`, trend: calcTrend(curr.winRate, prev.winRate), icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
+                { label: t('activities.stats.pendingTasks'), value: curr.pending, trend: calcTrend(curr.pending, prev.pending), icon: ListTodo, color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
+                { label: t('activities.stats.overdue'), value: curr.overdue, trend: calcTrend(curr.overdue, prev.overdue), icon: AlertCircle, color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-900/20' },
+                { label: t('activities.stats.touchpointToWin'), value: `%${curr.winRate}`, trend: calcTrend(curr.winRate, prev.winRate), icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
             ]
         };
     }, [filteredActivities, activities, deals, dateFilter]);
@@ -238,13 +238,13 @@ export function ActivitiesDashboard() {
                             <ActivityIcon size={80} />
                         </div>
                         <div>
-                            <p className="text-indigo-100 text-xs font-medium mb-1">Toplam Temas</p>
+                            <p className="text-indigo-100 text-xs font-medium mb-1">{t('activities.stats.total')}</p>
                             <h3 className="text-3xl font-bold">{headerStats.total.value}</h3>
                         </div>
                         <div className="mt-4 flex items-center text-xs font-medium text-indigo-100 bg-white/20 w-fit px-2 py-1 rounded">
                             {headerStats.total.trend >= 0 ? <ArrowUp size={12} className="mr-1" /> : <ArrowDown size={12} className="mr-1" />}
                             %{Math.abs(headerStats.total.trend)}
-                            <span className="opacity-70 ml-1">geçen döneme göre</span>
+                            <span className="opacity-70 ml-1">{t('activities.stats.trendSuffix')}</span>
                         </div>
                     </div>
                 </div>
@@ -300,17 +300,25 @@ export function ActivitiesDashboard() {
                 <div className="relative z-10">
                     <div className="flex items-center gap-2 mb-2">
                         <Sparkles size={16} className="text-indigo-600 dark:text-indigo-400" />
-                        <h3 className="text-sm font-bold text-indigo-900 dark:text-indigo-300 uppercase tracking-wider">{t('activities.aiBriefTitle')}</h3>
+                        <h3 className="text-sm font-bold text-indigo-900 dark:text-indigo-300 uppercase tracking-wider">{t('activities.aiSection.title')}</h3>
                     </div>
                     <p className="text-slate-700 dark:text-slate-300 text-lg leading-relaxed">
-                        "Bu hafta ekip aktivite yoğunluğu <span className="font-semibold text-emerald-600">artış trendinde</span>. Özellikle Pazartesi günü yapılan 45 arama, <span className="font-semibold text-indigo-600">3 yeni fırsat</span> yarattı. Ancak, <span className="font-semibold text-rose-600">{metrics.overdue} gecikmiş aksiyon</span> risk oluşturuyor. Finans sektöründeki 2 büyük toplantı kritik öneme sahip."
+                        <Trans
+                            i18nKey="activities.aiSection.summaryHTML"
+                            values={{ count: metrics.overdue }}
+                            components={{
+                                1: <span className="font-semibold text-emerald-600" />,
+                                3: <span className="font-semibold text-indigo-600" />,
+                                5: <span className="font-semibold text-rose-600" />
+                            }}
+                        />
                     </p>
                     <div className="mt-4 flex gap-3">
                         <div className="px-3 py-1 bg-white/60 dark:bg-white/10 rounded-full text-xs font-medium text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800">
-                            🚀 Momentum: Yüksek
+                            🚀 {t('activities.aiSection.momentum')}: {t('activities.aiSection.high')}
                         </div>
                         <div className="px-3 py-1 bg-white/60 dark:bg-white/10 rounded-full text-xs font-medium text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-900">
-                            ⚠️ Risk: Gecikmeler
+                            ⚠️ {t('activities.aiSection.risk')}: {t('activities.aiSection.delays')}
                         </div>
                     </div>
                 </div>
@@ -337,7 +345,7 @@ export function ActivitiesDashboard() {
             <div>
                 <div className="mb-4 mt-8 flex items-center gap-2">
                     <Sparkles size={18} className="text-indigo-500" />
-                    <h2 className="text-lg font-medium text-slate-800 dark:text-white">Stratejik Aktivite Analizi & İçgörüler</h2>
+                    <h2 className="text-lg font-medium text-slate-800 dark:text-white">{t('activities.aiSection.strategicTitle')}</h2>
                 </div>
                 <ActivityAnalysisGrid filteredActivities={filteredActivities} />
             </div>

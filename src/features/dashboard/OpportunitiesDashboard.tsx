@@ -105,7 +105,7 @@ const StatCard = ({ label, value, colorClass }: { label: string; value: string; 
 );
 
 
-export function OpportunitiesDashboard({ onAddOpportunity }: { onAddOpportunity?: () => void }) {
+export function OpportunitiesDashboard() {
     const { t } = useTranslation();
     const { deals, users } = useData();
     const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
@@ -396,15 +396,7 @@ export function OpportunitiesDashboard({ onAddOpportunity }: { onAddOpportunity?
                 </div>
 
                 <div className="flex flex-col md:flex-row gap-2">
-                    {onAddOpportunity && (
-                        <button
-                            onClick={onAddOpportunity}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors flex items-center gap-2 shadow-sm shadow-indigo-200 dark:shadow-none"
-                        >
-                            <Sparkles size={16} />
-                            Yeni Fırsat
-                        </button>
-                    )}
+
                     {/* Date Filter Buttons */}
                     <div className="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-xl items-center gap-1 overflow-x-auto scrollbar-hide">
                         {[

@@ -1,7 +1,12 @@
 import type { Deal, Activity, User, ProductGroup, DealSource, DealStage, Contract, ContractType, ContractStatus, BillingStatus } from '../types/crm';
 
 export const PRODUCTS: ProductGroup[] = ['EnRoute', 'Quest', 'Stokbar', 'ServiceCore', 'Varuna', 'Hosting'];
-export const SOURCES: DealSource[] = ['Univera Satış', 'Univera İş Ortakları', 'Univera EnRoute PY', 'Univera Stokbar PY', 'Univera Quest PY', 'Diğer'];
+export const SOURCES: DealSource[] = [
+    'Univera Satış', 'Univera İş Ortakları',
+    'Univera EnRoute PY', 'Univera Stokbar PY', 'Univera Quest PY', 'Univera ServiceCore PY', 'Univera Varuna PY',
+    'Pazarlama (Web)', 'Pazarlama (LinkedIn)', 'Pazarlama (Etkinlik)',
+    'Mevcut Müşteri (Upsell)', 'Referans', 'Diğer'
+];
 export const STAGES: DealStage[] = ['Teklif', 'Sözleşme', 'Konumlama', 'Demo', 'Kazanıldı', 'Kaybedildi', 'Lead', 'Qualified', 'Proposal', 'Negotiation'];
 
 export const CORPORATE_CUSTOMERS = [
@@ -60,9 +65,69 @@ const generateRandomDate = (start: Date, end: Date) => {
     return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime())).toISOString();
 };
 
+export const generateActivitiesForDeals = (deals: Deal[]): Activity[] => {
+    const activities: Activity[] = [];
+    const subjects = [
+        'Proje kapsamı değerlendirmesi', 'Fiyat teklifi revizyonu', 'Sözleşme taslağı incelemesi',
+        'Teknik demosunun yapılması', 'Rakip analizi ve karşılaştırma', 'Yıllık bütçe planlaması',
+        'Stok entegrasyon süreçleri', 'Mobil uygulama gereksinimleri', 'Bulut geçiş stratejisi',
+        'Lisans yenileme görüşmesi'
+    ];
+
+    deals.forEach((deal, _i) => {
+        // Generate some activities for this deal
+        const activityCount = Math.floor(Math.random() * 8) + 1; // 1-8 activities per deal
+        for (let j = 0; j < activityCount; j++) {
+            // Determine activity status logic
+            const isActivityFuture = Math.random() > 0.8; // 20% future activities
+            const isOverdue = !isActivityFuture && Math.random() > 0.9; // Of past, 10% are overdue
+
+            let status: 'completed' | 'pending' | 'overdue' = 'completed';
+            let activityDate = generateRandomDate(new Date(deal.createdAt), new Date());
+
+            if (isActivityFuture) {
+                status = 'pending';
+                activityDate = generateRandomDate(new Date(), new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)); // Next 30 days
+            } else if (isOverdue) {
+                status = 'overdue';
+                // Date remains in past, but status is overdue
+            } else {
+                status = 'completed';
+            }
+
+            const outcome = status === 'completed' ? ['positive', 'neutral', 'negative'][Math.floor(Math.random() * 3)] as any : undefined;
+            const outcomeReason = outcome === 'negative'
+                ? ['price', 'product_gap', 'timing', 'competitor', 'other'][Math.floor(Math.random() * 5)]
+                : undefined;
+
+            const type = ['outbound_call', 'outbound_email', 'meeting', 'inbound_call', 'sales', 'inbound_email', 'account_mgmt', 'other', 'contract', 'proposal', 'support', 'renewal', 'proposal_followup', 'vacancy', 'training', 'linkedin', 'demo', 'satisfaction', 'field_sales', 'proposal_verbal', 'retention'][Math.floor(Math.random() * 21)] as any;
+
+            // Dynamic Subject/Note
+            const subject = subjects[Math.floor(Math.random() * subjects.length)];
+            const note = `${deal.customerName} ile ${subject.toLowerCase()} hakkında ${type.replace('_', ' ')} işlemi.`;
+
+            activities.push({
+                id: `a${deal.id}-${j}`,
+                dealId: deal.id,
+                userId: deal.ownerId,
+                type: type,
+                date: activityDate,
+                dueDate: isActivityFuture || isOverdue ? activityDate : undefined,
+                completedAt: status === 'completed' ? activityDate : undefined,
+                subject: subject,
+                notes: note,
+                outcome: outcome as any,
+                outcomeReason: outcomeReason as any,
+                status: status
+            });
+        }
+    });
+
+    return activities.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+};
+
 export const generateMockData = (count: number = 451): { deals: Deal[], activities: Activity[], quotes: any[], orders: any[], contracts: Contract[] } => {
     const deals: Deal[] = [];
-    const activities: Activity[] = [];
     const quotes: any[] = [];
     const orders: any[] = [];
 
@@ -112,46 +177,6 @@ export const generateMockData = (count: number = 451): { deals: Deal[], activiti
         };
 
         deals.push(deal);
-
-        // Generate some activities for this deal
-        const activityCount = Math.floor(Math.random() * 5);
-        for (let j = 0; j < activityCount; j++) {
-            // Determine activity status logic
-            const isActivityFuture = Math.random() > 0.8; // 20% future activities
-            const isOverdue = !isActivityFuture && Math.random() > 0.9; // Of past, 10% are overdue
-
-            let status: 'completed' | 'pending' | 'overdue' = 'completed';
-            let activityDate = generateRandomDate(new Date(createdAt), new Date());
-
-            if (isActivityFuture) {
-                status = 'pending';
-                activityDate = generateRandomDate(new Date(), new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)); // Next 30 days
-            } else if (isOverdue) {
-                status = 'overdue';
-                // Date remains in past, but status is overdue
-            } else {
-                status = 'completed';
-            }
-
-            const outcome = status === 'completed' ? ['positive', 'neutral', 'negative'][Math.floor(Math.random() * 3)] as any : undefined;
-            const outcomeReason = outcome === 'negative'
-                ? ['price', 'product_gap', 'timing', 'competitor', 'other'][Math.floor(Math.random() * 5)]
-                : undefined;
-
-            activities.push({
-                id: `a${i}-${j}`,
-                dealId: deal.id,
-                userId: owner.id,
-                type: ['outbound_call', 'outbound_email', 'meeting', 'inbound_call', 'sales', 'inbound_email', 'account_mgmt', 'other', 'contract', 'proposal', 'support', 'renewal', 'proposal_followup', 'vacancy', 'training', 'linkedin', 'demo', 'satisfaction', 'field_sales', 'proposal_verbal', 'retention'][Math.floor(Math.random() * 21)] as any,
-                date: activityDate,
-                dueDate: isActivityFuture || isOverdue ? activityDate : undefined,
-                completedAt: status === 'completed' ? activityDate : undefined,
-                notes: 'Simulated activity note...',
-                outcome: outcome as any,
-                outcomeReason: outcomeReason as any,
-                status: status
-            });
-        }
 
         // Generate Quotes (approx 50% of deals have quotes)
         if (Math.random() > 0.5) {
@@ -425,6 +450,9 @@ export const generateMockData = (count: number = 451): { deals: Deal[], activiti
 
     deals.push(...storyDeals);
 
+    // Apply the extracted activity generation
+    const activities = generateActivitiesForDeals(deals);
+
     // Add contracts (keeping existing story contracts logic if needed, but return deals mainly)
     const storyContracts: Contract[] = [
         {
@@ -527,12 +555,15 @@ const generatePaymentPlan = (startDate: string, totalValue: number, currency: 'T
     return plan;
 };
 
-export const { deals: mockDeals, activities: mockActivities, quotes: mockQuotes, orders: mockOrders, contracts: mockContracts } = generateMockData(451);
+// Increased default count for richer data
+export const { deals: mockDeals, activities: mockActivities, quotes: mockQuotes, orders: mockOrders, contracts: mockContracts } = generateMockData(850);
 
 // Simple mock performance data
 export const mockPerformance = [
     { userId: 'u1', userName: 'Ali Yılmaz', quotaAttainment: 120000, dealsClosed: 12 },
     { userId: 'u2', userName: 'Ayşe Demir', quotaAttainment: 98000, dealsClosed: 9 },
     { userId: 'u3', userName: 'Mehmet Kaya', quotaAttainment: 85000, dealsClosed: 7 },
+    { userId: 'u4', userName: 'Zeynep Çelik', quotaAttainment: 110000, dealsClosed: 10 },
+    { userId: 'u6', userName: 'Begüm Hayta', quotaAttainment: 92000, dealsClosed: 8 },
 ];
 

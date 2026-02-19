@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
 import type { Deal, Activity, User, DashboardMetrics, DealStage, Quote, Order, Contract } from '../types/crm';
-import { generateMockData, USERS } from '../data/mockData';
+import { generateMockData, generateActivitiesForDeals, USERS } from '../data/mockData';
 import { OpportunityService } from '../services/OpportunityService';
 
 interface DataContextType {
@@ -32,34 +32,26 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const fetchedDeals = await OpportunityService.getAll();
             setDeals(fetchedDeals);
 
-            // Keep other data mock for now (or move to services if needed later)
-            const { activities: newActivities, quotes: newQuotes, orders: newOrders, contracts: newContracts } = generateMockData(0); // 0 because we only want aux data
-            // actually generateMockData generates everything tightly coupled. 
-            // Let's just generate aux data separately or accept that we might desync slightly for this demo.
-            // BETTER: generateMockData gives us everything. Let's just Initialize OpportunityService WITH that data if empty.
-            // OpportunityService.getAll() internally calls initDatabase() which calls generateMockData(451).
+            // Generate activities linked to fetched deals
+            const newActivities = generateActivitiesForDeals(fetchedDeals);
+            setActivities(newActivities);
 
-            // So we just need to get the REST of the data (Activities, etc) consistent with those deals?
-            // The current generateMockData(451) creates deals AND activities linked to them.
-            // If we split them, we might lose the link.
-            // PROPOSAL: Let DataProvider rely on OpportunityService for deals, and use a separate simpler mock for others for now, 
-            // OR just accept that for this "Opportunity Management" task, the focus is on Deals.
-
-            // Let's rely on the fact that existing generateMockData is deterministic-ish or we just generate new aux data.
-            // For now, I will just call generateMockData(451) inside the service to init, and then here I need aux data.
-            // Actually, if I call generateMockData in Service, I can't easily get the activities out.
-
-            // REVISION: I will update refreshData to:
-            // 1. Get Deals from OpportunityService.
-            // 2. Generate other mock data independently for now (it's visual noise mostly).
-
-            setActivities(generateMockData(50).activities); // Temporary fix to get some activities
-            setQuotes(generateMockData(20).quotes);
-            setOrders(generateMockData(20).orders);
-            setContracts(generateMockData(20).contracts);
+            // Generate other auxiliary data (Quotes, Orders, Contracts)
+            // Note: For now, we generate them independently, but ideally they should also be linked.
+            // However, the main issue was Activities showing "Unknown".
+            const auxMock = generateMockData(850);
+            setQuotes(auxMock.quotes);
+            setOrders(auxMock.orders);
+            setContracts(auxMock.contracts);
 
         } catch (error) {
-            console.error("Failed to fetch data", error);
+            console.error("Failed to fetch data, falling back to mock data", error);
+            const mock = generateMockData(850);
+            setDeals(mock.deals);
+            setActivities(mock.activities);
+            setQuotes(mock.quotes);
+            setOrders(mock.orders);
+            setContracts(mock.contracts);
         } finally {
             setIsLoading(false);
         }

@@ -327,7 +327,79 @@
             "date": "Date / Due Date",
             "detail": "Detail",
             "status": "Status",
-            "priority": "Priority"
+            "priority": "Priority",
+            "nextStep": "Next Step"
+        },
+        "stats": {
+            "total": "Total Touchpoints",
+            "trendSuffix": "vs last period",
+            "meeting": "Meeting",
+            "email": "Email",
+            "call": "Call",
+            "proposal": "Proposal",
+            "other": "Other",
+            "pendingTasks": "Pending Tasks",
+            "overdue": "Overdue",
+            "touchpointToWin": "Touchpoint > Win"
+        },
+        "aiSection": {
+            "title": "AI Activity Executive Brief",
+            "strategicTitle": "Strategic Activity Analysis & Insights",
+            "momentum": "Momentum",
+            "risk": "Risk",
+            "delays": "Delays",
+            "high": "High",
+            "summaryHTML": "Activity volume is <1>trending up</1>. 45 calls on Monday created <3>3 new opportunities</3>. However, <5>{{count}} overdue actions</5> pose a risk."
+        },
+        "grid": {
+            "title": "Activity Records",
+            "subtitle": "All touchpoint history and details",
+            "placeholders": {
+                "search": "Global Search...",
+                "filter": "Filter...",
+                "type": "Type...",
+                "rep": "Rep..."
+            },
+            "actions": {
+                "lossAnalysis": "Loss Analysis",
+                "shareNotes": "Share Notes",
+                "followUp": "Follow Up",
+                "requestDecision": "Request Decision",
+                "checkResponse": "Check Response",
+                "addNote": "Add Note",
+                "plan": "Plan"
+            },
+            "empty": "No activities found matching your criteria.",
+            "footer": "Showing total {{count}} records"
+        },
+        "matrix": {
+            "title": "Team Effort & Result Matrix (Detailed)",
+            "heatmap": "Heatmap",
+            "intensity": "Intensity",
+            "totalActivity": "Total Activity",
+            "scrollHint": "← Scroll table sideways to view all activity types →"
+        },
+        "charts_extended": {
+            "newCustomerInteraction": "New Customer Interaction",
+            "uniqueCustomer": "Unique Customer",
+            "conversion": "Conversion",
+            "recentInteractions": "Recent Interactions",
+            "more": "more",
+            "customerLeaders": "Customer Communication Leaders",
+            "activity": "Activity",
+            "teamPerformance": "Team Performance",
+            "sellerLeaderboard": "Seller Leaderboard",
+            "win": "Win",
+            "productInterest": "Product Interest Distribution",
+            "lossAnalysis": "Loss Reason Analysis",
+            "insights": {
+                "newCustomers": "{{count}} unique customers touched this period. %{{rate}} conversion achieved under Sales team leadership.",
+                "topCustomer": "Heavy technical meeting traffic with {{name}}. Opportunity closing probability at 80%.",
+                "team": "Partners team has high activity volume, but trails Sales team by 15% in conversion.",
+                "seller": "{{leader}} is volume leader but {{runnerUp}} is working more efficiently.",
+                "product": "48% of interest is concentrated on Stockbar product. Hosting product group activities are trending down 20% this month.",
+                "loss": "37% of negative results are Price related. 'Product Scope' objections are increasing in Enterprise segment."
+            }
         }
     },
     "executive": {
@@ -619,6 +691,78 @@
                 "Improving": "Improving",
                 "Stable": "Stable",
                 "Declining": "Declining"
+            }
+        }
+    },
+    "dashboardV2": {
+        "title": "Management Intelligence",
+        "subtitle": "End-to-End Execution & Cash Flow Monitor",
+        "role": {
+            "gm": "GM View",
+            "salesManager": "Sales Manager"
+        },
+        "filters": {
+            "allTeams": "All Teams",
+            "allPersons": "All Persons",
+            "custom": "Custom"
+        },
+        "metrics": {
+            "activeOpps": "Active Opportunities",
+            "pendingQuotes": "Pending Quotes",
+            "openOrders": "Open Orders",
+            "collectionRisk": "Collection Risk",
+            "avgCollectionTime": "Avg Collection Time",
+            "vsLastMonth": "vs last month",
+            "volume": "Volume",
+            "criticalActions": "Critical Actions Required",
+            "overdueInvoices": "Overdue Invoices",
+            "target": "Target",
+            "fast": "fast"
+        },
+        "pipeline": {
+            "step1": "Opportunity",
+            "step2": "Quote Opened",
+            "step3": "Accepted",
+            "step4": "Order Processing",
+            "step5": "Invoiced",
+            "goal": "GOAL",
+            "conversion": "CONVERSION",
+            "daysAvg": "days avg.",
+            "records": "Records",
+            "deals": "Deals"
+        },
+        "blockers": {
+            "title": "Order Velocity Blockers",
+            "impact": "Impact",
+            "orders": "Orders",
+            "viewDetailed": "View Detailed Barrier Analysis"
+        },
+        "collections": {
+            "title": "Critical Collection Risks",
+            "viewReport": "View Full Report",
+            "table": {
+                "entity": "Customer Entity",
+                "invoiceRef": "Invoice Ref",
+                "aging": "Aging",
+                "amount": "Amount",
+                "riskLevel": "Risk Level",
+                "premiumAccount": "Premium Account",
+                "days": "d"
+            },
+            "risk": {
+                "critical": "CRITICAL",
+                "high": "HIGH"
+            }
+        },
+        "drilldown": {
+            "details": "Details",
+            "showingRecords": "Showing {{count}} records affecting this metric",
+            "searchPlaceholder": "Search records...",
+            "columns": {
+                "record": "Record",
+                "owner": "Owner",
+                "dateStatus": "Date/Status",
+                "value": "Value"
             }
         }
     }

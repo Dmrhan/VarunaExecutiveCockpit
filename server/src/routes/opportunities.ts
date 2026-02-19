@@ -5,14 +5,103 @@ import { getDb } from '../database/db';
 const router = Router();
 
 // GET /api/opportunities
+import { parseODataToSql, ODataQuery } from '../utils/odataParser';
+
+// GET /api/opportunities
 router.get('/', async (req: Request, res: Response) => {
     try {
         const db = await getDb();
-        const opportunities = await db.all('SELECT * FROM opportunities ORDER BY created_at DESC');
-        res.json(opportunities);
+        const odataQuery = req.query as unknown as ODataQuery;
+
+        const { select, where, orderBy, limit, offset, params } = parseODataToSql(odataQuery);
+
+        const query = `SELECT ${select} FROM opportunities ${where} ORDER BY ${orderBy} LIMIT ${limit} OFFSET ${offset}`;
+
+        console.log('Executing SQL:', query, params);
+
+        const opportunities = await db.all(query, params);
+
+        // Handle $count if requested
+        if (odataQuery.$count === 'true') {
+            const countResult = await db.get(`SELECT COUNT(*) as count FROM opportunities ${where}`, params);
+            // ODATA format for count is usually just the array (v4 doesn't wrap in value unless specific format)
+            // But often it's { "@odata.count": 100, "value": [...] }
+            // For this sim, let's wrap it if count is requested, or just header.
+            // Simplest: Return wrapped object if count requested.
+            res.json({
+                '@odata.count': countResult.count,
+                value: opportunities
+            });
+        } else {
+            res.json(opportunities);
+        }
+
     } catch (error) {
         console.error('Error fetching opportunities:', error);
         res.status(500).json({ error: 'Failed to fetch opportunities' });
+    }
+});
+
+// GET /api/opportunities/:id/contacts
+router.get('/:id/contacts', async (req: Request, res: Response) => {
+    try {
+        const db = await getDb();
+        const odataQuery = req.query as unknown as ODataQuery;
+        const { id } = req.params;
+
+        const { select, where, orderBy, limit, offset, params } = parseODataToSql(odataQuery, 'contacts', 'name ASC');
+
+        // Combine opportunity_id filter with ODATA Query
+        let finalWhere = where;
+        if (finalWhere) {
+            finalWhere = finalWhere.replace('WHERE', 'WHERE opportunity_id = ? AND');
+        } else {
+            finalWhere = 'WHERE opportunity_id = ?';
+        }
+
+        // Add ID to params at the beginning (for opp_id) or end?
+        // SQLite params order matches the ? order.
+        // If I replaced WHERE with WHERE opp_id=? AND ..., then opp_id is the FIRST param.
+        // parseODataToSql returns params for the ODATA filter.
+        // So I need to unshift id to params.
+
+        const finalParams = [id, ...params];
+
+        const query = `SELECT ${select} FROM contacts ${finalWhere} ORDER BY ${orderBy} LIMIT ${limit} OFFSET ${offset}`;
+
+        const contacts = await db.all(query, finalParams);
+        res.json(contacts);
+    } catch (error) {
+        console.error('Error fetching opportunity contacts:', error);
+        res.status(500).json({ error: 'Failed to fetch contacts' });
+    }
+});
+
+// GET /api/opportunities/:id/notes
+router.get('/:id/notes', async (req: Request, res: Response) => {
+    try {
+        const db = await getDb();
+        const odataQuery = req.query as unknown as ODataQuery;
+        const { id } = req.params;
+
+        const { select, where, orderBy, limit, offset, params } = parseODataToSql(odataQuery, 'opportunity_notes');
+
+        let finalWhere = where;
+        if (finalWhere) {
+            finalWhere = finalWhere.replace('WHERE', 'WHERE opportunity_id = ? AND');
+        } else {
+            finalWhere = 'WHERE opportunity_id = ?';
+        }
+
+        const finalParams = [id, ...params];
+
+        const query = `SELECT ${select} FROM opportunity_notes ${finalWhere} ORDER BY ${orderBy} LIMIT ${limit} OFFSET ${offset}`;
+
+        const notes = await db.all(query, finalParams);
+        res.json(notes);
+    } catch (error) {
+        console.error('Error fetching opportunity notes:', error);
+        res.status(500).json({ error: 'Failed to fetch notes' });
     }
 });
 

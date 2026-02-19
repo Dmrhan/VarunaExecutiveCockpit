@@ -62,26 +62,26 @@ export function ActivityLogGrid({ activities }: ActivityLogGridProps) {
     };
 
     const getNextAction = (type: string, outcome?: string) => {
-        if (outcome === 'negative') return { label: 'Kayıp Analizi', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' };
+        if (outcome === 'negative') return { label: t('activities.grid.actions.lossAnalysis'), color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' };
 
         switch (type.toLowerCase()) {
             case 'meeting':
             case 'toplantı':
-                return { label: 'Tutanak Paylaş', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' };
+                return { label: t('activities.grid.actions.shareNotes'), color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' };
             case 'offer':
             case 'proposal':
             case 'teklif':
-                return { label: 'Takip Et', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' };
+                return { label: t('activities.grid.actions.followUp'), color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' };
             case 'demo':
-                return { label: 'Karar İste', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' };
+                return { label: t('activities.grid.actions.requestDecision'), color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' };
             case 'email':
             case 'e-posta':
-                return { label: 'Yanıt Kontrol', color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400' };
+                return { label: t('activities.grid.actions.checkResponse'), color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400' };
             case 'call':
             case 'arama':
-                return { label: 'Not Ekle', color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' };
+                return { label: t('activities.grid.actions.addNote'), color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' };
             default:
-                return { label: 'Planlama Yap', color: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400' };
+                return { label: t('activities.grid.actions.plan'), color: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400' };
         }
     };
 
@@ -94,9 +94,9 @@ export function ActivityLogGrid({ activities }: ActivityLogGridProps) {
                     </div>
                     <div>
                         <CardTitle className="text-base font-bold text-slate-800 dark:text-white">
-                            Aktivite Kayıtları
+                            {t('activities.grid.title')}
                         </CardTitle>
-                        <p className="text-xs text-slate-500 mt-0.5">Tüm temas geçmişi ve detaylar</p>
+                        <p className="text-xs text-slate-500 mt-0.5">{t('activities.grid.subtitle')}</p>
                     </div>
                 </div>
 
@@ -104,7 +104,7 @@ export function ActivityLogGrid({ activities }: ActivityLogGridProps) {
                     <Search className="absolute left-2.5 top-2.5 text-slate-400" size={14} />
                     <input
                         type="text"
-                        placeholder="Genel Arama..."
+                        placeholder={t('activities.grid.placeholders.search')}
                         value={filters.global}
                         onChange={(e) => handleFilterChange('global', e.target.value)}
                         className="w-full pl-8 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400"
@@ -120,7 +120,7 @@ export function ActivityLogGrid({ activities }: ActivityLogGridProps) {
                             <th className="p-3 border-b dark:border-slate-700 w-[30%]">{t('activities.columns.subject')} / Not</th>
                             <th className="p-3 border-b dark:border-slate-700 whitespace-nowrap">{t('activities.columns.type')}</th>
                             <th className="p-3 border-b dark:border-slate-700 whitespace-nowrap">{t('activities.columns.date')}</th>
-                            <th className="p-3 border-b dark:border-slate-700 whitespace-nowrap">Sıradaki Adım</th>
+                            <th className="p-3 border-b dark:border-slate-700 whitespace-nowrap">{t('activities.columns.nextStep')}</th>
                             <th className="p-3 border-b dark:border-slate-700">{t('activities.columns.rep')}</th>
                         </tr>
                         {/* Column Filters Row */}
@@ -128,7 +128,7 @@ export function ActivityLogGrid({ activities }: ActivityLogGridProps) {
                             <th className="p-2 pl-4">
                                 <input
                                     type="text"
-                                    placeholder="Filtrele..."
+                                    placeholder={t('activities.grid.placeholders.filter')}
                                     value={filters.customer}
                                     onChange={(e) => handleFilterChange('customer', e.target.value)}
                                     className="w-full px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded text-[10px] focus:outline-none focus:border-indigo-500 placeholder:text-slate-300 font-normal"
@@ -137,7 +137,7 @@ export function ActivityLogGrid({ activities }: ActivityLogGridProps) {
                             <th className="p-2">
                                 <input
                                     type="text"
-                                    placeholder="Filtrele..."
+                                    placeholder={t('activities.grid.placeholders.filter')}
                                     value={filters.note}
                                     onChange={(e) => handleFilterChange('note', e.target.value)}
                                     className="w-full px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded text-[10px] focus:outline-none focus:border-indigo-500 placeholder:text-slate-300 font-normal"
@@ -146,7 +146,7 @@ export function ActivityLogGrid({ activities }: ActivityLogGridProps) {
                             <th className="p-2">
                                 <input
                                     type="text"
-                                    placeholder="Tip..."
+                                    placeholder={t('activities.grid.placeholders.type')}
                                     value={filters.type}
                                     onChange={(e) => handleFilterChange('type', e.target.value)}
                                     className="w-full px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded text-[10px] focus:outline-none focus:border-indigo-500 placeholder:text-slate-300 font-normal"
@@ -161,7 +161,7 @@ export function ActivityLogGrid({ activities }: ActivityLogGridProps) {
                             <th className="p-2 pr-4">
                                 <input
                                     type="text"
-                                    placeholder="Temsilci..."
+                                    placeholder={t('activities.grid.placeholders.rep')}
                                     value={filters.rep}
                                     onChange={(e) => handleFilterChange('rep', e.target.value)}
                                     className="w-full px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded text-[10px] focus:outline-none focus:border-indigo-500 placeholder:text-slate-300 font-normal"
@@ -227,7 +227,7 @@ export function ActivityLogGrid({ activities }: ActivityLogGridProps) {
                         ) : (
                             <tr>
                                 <td colSpan={6} className="p-8 text-center text-slate-400 italic">
-                                    Aradığınız kriterlere uygun aktivite bulunamadı.
+                                    {t('activities.grid.empty')}
                                 </td>
                             </tr>
                         )}
@@ -235,7 +235,7 @@ export function ActivityLogGrid({ activities }: ActivityLogGridProps) {
                 </table>
             </div>
             <div className="p-2 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 rounded-b-lg flex justify-between items-center text-[10px] text-slate-400 px-4">
-                <span>Toplam {filteredData.length} kayıt listeleniyor</span>
+                <span>{t('activities.grid.footer', { count: filteredData.length })}</span>
             </div>
         </Card>
     );

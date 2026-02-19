@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { useData } from '../../context/DataContext';
 import { cn } from '../../lib/utils';
 import { useTranslation } from 'react-i18next';
-import { ArrowUpDown } from 'lucide-react';
 
 interface SellerActivityMatrixProps {
     filteredActivities: any[];
@@ -79,10 +78,10 @@ export function SellerActivityMatrix({ filteredActivities }: SellerActivityMatri
         <div className="overflow-hidden bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 h-full flex flex-col">
             <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800">
                 <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2">
-                    Ekip Efor & Sonuç Matrisi (Detaylı)
+                    {t('activities.matrix.title')}
                 </h3>
                 <div className="text-xs text-slate-400">
-                    Isı Haritası: <span className="font-bold text-red-600">Yoğunluk</span>
+                    {t('activities.matrix.heatmap')}: <span className="font-bold text-red-600">{t('activities.matrix.intensity')}</span>
                 </div>
             </div>
 
@@ -91,9 +90,9 @@ export function SellerActivityMatrix({ filteredActivities }: SellerActivityMatri
                     <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-500 sticky top-0 z-10 font-bold shadow-sm">
                         <tr>
                             <th className="p-2 pl-4 sticky left-0 bg-slate-50 dark:bg-slate-800 z-20 border-r border-slate-200 dark:border-slate-700 min-w-[150px]">
-                                Satış Temsilcisi
+                                {t('executive.list.header.salesOwner')}
                             </th>
-                            <th className="p-2 text-center border-l min-w-[60px] bg-slate-100 dark:bg-slate-800 text-slate-900 font-extrabold cursor-help" title="Toplam Aktivite">
+                            <th className="p-2 text-center border-l min-w-[60px] bg-slate-100 dark:bg-slate-800 text-slate-900 font-extrabold cursor-help" title={t('activities.matrix.totalActivity')}>
                                 TOP
                             </th>
                             {ACTIVITY_TYPES.map(type => (
@@ -133,7 +132,7 @@ export function SellerActivityMatrix({ filteredActivities }: SellerActivityMatri
                 </table>
             </div>
             <div className="p-2 bg-slate-50 dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700 text-[10px] text-center text-slate-400">
-                ← Tabloyu yana kaydırarak tüm aktivite tiplerini görebilirsiniz →
+                {t('activities.matrix.scrollHint')}
             </div>
         </div>
     );

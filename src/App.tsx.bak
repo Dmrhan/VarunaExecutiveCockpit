@@ -4,12 +4,10 @@ import { DataProvider } from './context/DataContext';
 import { Shell } from './components/layout/Shell';
 import { ExecutiveSummaryDashboard } from './features/dashboard/ExecutiveSummaryDashboard';
 import { OpportunitiesDashboard } from './features/dashboard/OpportunitiesDashboard';
-import { OpportunityManagementPage } from './features/opportunities/OpportunityManagementPage';
 import { ActivitiesDashboard } from './features/dashboard/ActivitiesDashboard';
 import { QuotesDashboard } from './features/dashboard/QuotesDashboard';
 import { OrdersDashboard } from './features/dashboard/OrdersDashboard';
 import { ContractsDashboard } from './features/dashboard/ContractsDashboard';
-import { ExecutiveDashboardPageV2 } from './features/dashboard/ExecutiveDashboardPageV2';
 import { RunaAIBot } from './components/RunaAIBot';
 
 import { OpportunityForm } from './features/dashboard/OpportunityForm';
@@ -21,10 +19,8 @@ function App() {
   const renderContent = () => {
     switch (activeView) {
       case 'executive': return <ExecutiveSummaryDashboard />;
-      case 'executivev2': return <ExecutiveDashboardPageV2 />;
-      case 'opportunities': return <OpportunitiesDashboard />;
-      case 'management': return <OpportunityManagementPage onAddOpportunity={() => setActiveView('opportunity-new')} />;
-      case 'opportunity-new': return <OpportunityForm onClose={() => setActiveView('management')} />;
+      case 'opportunities': return <OpportunitiesDashboard onAddOpportunity={() => setActiveView('opportunity-new')} />;
+      case 'opportunity-new': return <OpportunityForm onClose={() => setActiveView('opportunities')} />;
       case 'activities': return <ActivitiesDashboard />;
       case 'quotes': return <QuotesDashboard />;
       case 'orders': return <OrdersDashboard />;

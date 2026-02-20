@@ -1,0 +1,61 @@
+{
+    "opportunity": {
+        "Id": "opp-test-001",
+        "Name": "Koç Holding – EnRoute Expansion",
+        "AccountId": "acc-001",
+        "OwnerId": "usr-042",
+        "Type": 1,
+        "OpportunityStageId": "stage-007",
+        "OpportunityStageName": 3,
+        "Amount_Value": 4500000,
+        "ExpectedRevenue_Value": 3800000,
+        "CloseDate": "2026-04-30",
+        "Source": 2,
+        "PartnerId": null,
+        "Probability": 75.0,
+        "PersonId": "per-019",
+        "CompanyId": "cmp-001",
+        "PipelineId": "pipe-main",
+        "DealType": 0,
+        "LeadOwnerId": "usr-012",
+        "IsThereDelay": 0,
+        "PotentialTurnover_Value": 5200000,
+        "WonLostType": 0,
+        "ProductGroupId": "pg-enroute",
+        "ProductCategoryId": "cat-field",
+        "OpportunityStageNameTr": "Teklif Aşaması",
+        "ProbabilityBand": 3,
+        "DealStatus": 1,
+        "DeliveryDate": "2026-06-01",
+        "BKMTurnover_Value": 0,
+        "TargetTurnover_Value": 4000000,
+        "FirstCreatedDate": "2025-09-15"
+    },
+    "notes": [
+        {
+            "DateTaken": "2026-02-10T09:30:00Z",
+            "Note": "Follow-up call",
+            "UserName": "Ali Yılmaz",
+            "NoteText": "Customer requested revised proposal by end of month."
+        }
+    ],
+    "contacts": [
+        {
+            "Name": "Ahmet Kaya",
+            "Title": "CIO",
+            "Email": "ahmet.kaya@koc.com.tr",
+            "Phone": "+90 212 000 0001",
+            "CellPhone": "+90 532 000 0001",
+            "Website": "koc.com.tr",
+            "DefaultContact": 1
+        }
+    ],
+    "productGroups": [
+        {
+            "ProductGroupId": "pg-enroute"
+        },
+        {
+            "ProductGroupId": "pg-quest"
+        }
+    ]
+}

@@ -2,7 +2,7 @@
 import type { Deal, Contact, OpportunityNote } from '../types/crm';
 import { generateMockData } from '../data/mockData';
 
-const API_URL = 'http://localhost:3000/api/opportunities';
+const API_URL = 'http://localhost:3001/api/opportunities';
 
 // Helper to map API response (snake_case) to Frontend Model (camelCase)
 const mapToDeal = (data: any): Deal => ({

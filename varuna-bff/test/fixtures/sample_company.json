@@ -1,0 +1,44 @@
+{
+    "Id": "cmp-1001",
+    "Name": "Varuna Turkey Tech",
+    "OrderNo": 1,
+    "ValidForAllUserGroups": 0,
+    "Email": "info@varunatr.com",
+    "IntegrationUsername": "api_user_tr",
+    "IntegrationPassword": "super_secret_password_123!@",
+    "IntegrationGrantType": "password",
+    "IntegrationBranchCode": 10,
+    "IntegrationDbName": "VARUNA_PROD",
+    "IntegrationDbUser": "db_admin",
+    "IntegrationDbType": 1,
+    "IntegrationDbPassword": "db_super_secret_456!@",
+    "IntegrationPath": "https://api.sap.varuna.com",
+    "IntegrationType": 2,
+    "SalesOrganizationSapId": "TR1000",
+    "CompanyPipelines": [
+        {
+            "Id": "cmp-pipe-1",
+            "CompanyId": "cmp-1001",
+            "PipelineId": "pl-sales-b2b"
+        },
+        {
+            "Id": "cmp-pipe-2",
+            "CompanyId": "cmp-1001",
+            "PipelineId": "pl-renewal-b2b"
+        }
+    ],
+    "CompanyUserGroups": [
+        {
+            "Id": "cmp-ug-1",
+            "CompanyId": "cmp-1001",
+            "UserGroupId": "ug-sales-managers",
+            "UserGroupName": "Sales Managers"
+        },
+        {
+            "Id": "cmp-ug-2",
+            "CompanyId": "cmp-1001",
+            "UserGroupId": "ug-account-execs",
+            "UserGroupName": "Account Executives"
+        }
+    ]
+}

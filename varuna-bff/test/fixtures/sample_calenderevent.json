@@ -1,0 +1,73 @@
+{
+    "Id": "evt-001235",
+    "OwnerId": "usr-042",
+    "Subject": "Q3 Enterprise Renewal Sync",
+    "Type": 1,
+    "Description": "Discussing the renewal terms for the cloud infrastructure.",
+    "StartDate": "2026-08-15T10:00:00Z",
+    "FinishDate": "2026-08-15T11:00:00Z",
+    "Location": "Microsoft Teams",
+    "AccountId": "acc-1001",
+    "LeadId": null,
+    "ContactId": "cnt-1234",
+    "CompanyId": "cmp-1001",
+    "ParentEventId": null,
+    "IsAllDay": 0,
+    "IsRepeat": 1,
+    "IsReminderSet": 1,
+    "IsNewAccount": 0,
+    "RepeatPattern": 2,
+    "RepeatEvery": 1,
+    "MonthForRepeatOnYearly": null,
+    "EndRepeat": 1,
+    "AfterOccurrenceCount": 10,
+    "TimeBeforeEvent": 15,
+    "RepeatEveryHours": null,
+    "RepeatEveryDays": null,
+    "RepeatOnMonthly": null,
+    "RepeatOnYearly": null,
+    "EndRepeatDate": "2026-10-15T11:00:00Z",
+    "Status": 2,
+    "RecurrenceRule": "FREQ=WEEKLY;COUNT=10;",
+    "RecurrenceException": null,
+    "ParticipantType": 1,
+    "SubjectType": 3,
+    "ExcludeWeekends": 1,
+    "FirstCreatedBy": "usr-042",
+    "FirstCreatedDate": "2026-08-01T09:00:00Z",
+    "EventEnvironment": 2,
+    "CalendarEventResultId": "res-999",
+    "GoogleCalendarEventCreatedMail": "rep@varunatr.com",
+    "SubjectTypeTr": "Müşteri Ziyareti",
+    "TypeTr": "Toplantı",
+    "StatusTr": "Tamamlandı",
+    "EventEnvironmentTr": "Online",
+    "ParticipantTypeTr": "Müşteri",
+    "DaysForRepeatOnWeekly": [
+        {
+            "Id": "evt-day-1",
+            "CalenderEventId": "evt-001235",
+            "Day": 1
+        },
+        {
+            "Id": "evt-day-2",
+            "CalenderEventId": "evt-001235",
+            "Day": 3
+        }
+    ],
+    "ParticipantContacts": [
+        {
+            "Id": "evt-pcontact-1",
+            "CalenderEventId": "evt-001235",
+            "ParticipantContactId": "cnt-1234"
+        }
+    ],
+    "ParticipantPeople": [
+        {
+            "Id": "evt-pperson-1",
+            "CalenderEventId": "evt-001235",
+            "ParticipantPersonId": "usr-042"
+        }
+    ],
+    "ParticipantLeads": []
+}

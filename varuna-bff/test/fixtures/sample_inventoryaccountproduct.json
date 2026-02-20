@@ -1,0 +1,48 @@
+{
+    "Id": "inv-001235",
+    "AccountId": "acc-1001",
+    "StockId": "stk-9001",
+    "ContactId": "cnt-1234",
+    "StartDate": "2024-01-01T00:00:00Z",
+    "FinishDate": "2027-01-01T00:00:00Z",
+    "Domain": "Enterprise SaaS",
+    "PosAccountNo": "POS-556677",
+    "CardNo": "CRD-9988",
+    "Status": 1,
+    "FinancialProductType": 2,
+    "Amount": 1,
+    "InvSerialId": "SN-AXX-9900",
+    "InvInstalledDate": "2024-01-05T10:00:00Z",
+    "InvPurchaseDate": "2023-12-25T14:00:00Z",
+    "InvOutOfWarehouseSerial": 0,
+    "InvOutOfWarehouseSerialCode": null,
+    "IsPFActive": 1,
+    "Price": {
+        "Amount": 5000.0,
+        "Currency": "TRY"
+    },
+    "Vat": {
+        "Amount": 1000.0,
+        "Currency": "TRY"
+    },
+    "TotalListPrice": {
+        "Amount": 6000.0,
+        "Currency": "TRY"
+    },
+    "TotalPackagePrice": {
+        "Amount": 5500.0,
+        "Currency": "TRY"
+    },
+    "TotalPackageVATAmount": {
+        "Amount": 1100.0,
+        "Currency": "TRY"
+    },
+    "InvInstalledAddress": {
+        "CountryCode": "TR",
+        "Subdivision1": "34",
+        "Subdivision2": null,
+        "Subdivision3": null,
+        "Subdivision4": null,
+        "OpenAddress": "Levent Mahallesi, Meltem Sk. No: 10, Istanbul"
+    }
+}

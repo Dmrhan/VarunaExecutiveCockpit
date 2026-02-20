@@ -17,3 +17,12 @@ dist/
 # Logs
 *.log
 npm-debug.log*
+
+# varuna-bff specific
+varuna-bff/node_modules/
+varuna-bff/varuna.db
+varuna-bff/varuna.db-shm
+varuna-bff/varuna.db-wal
+varuna-bff/tools/
+varuna-bff/document.zip
+varuna-bff/enums_extract/

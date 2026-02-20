@@ -1,0 +1,38 @@
+{
+    "Id": "prs-001",
+    "Name": "Begüm",
+    "SurName": "Hayta",
+    "Title": "Senior Sales Exec",
+    "Email": "begum@acme.corp",
+    "CellPhone": "+905551234567",
+    "EmploymentDate": "2020-03-15",
+    "BirthDate": "1985-06-20",
+    "Gender": 1,
+    "Status": 1,
+    "RoleId": "role-sales",
+    "DealerId": "dlr-istanbul",
+    "CompanyId": "comp-core",
+    "ManagerType": 2,
+    "AddressInfo": {
+        "City": "İstanbul",
+        "Town": "Kadıköy",
+        "Country": "TR"
+    },
+    "Education": [
+        {
+            "EducationType": 3,
+            "FieldOfStudy": "Business",
+            "SchoolName": "Boğaziçi Uni",
+            "StartYear": 2003,
+            "EndYear": 2008
+        }
+    ],
+    "Companies": [
+        {
+            "CompanyId": "comp-core"
+        },
+        {
+            "CompanyId": "comp-subsidiary"
+        }
+    ]
+}

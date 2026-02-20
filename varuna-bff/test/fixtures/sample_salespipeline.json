@@ -1,0 +1,27 @@
+{
+    "Id": "pipe-001",
+    "Name": "Standard Enterprise Lifecycle",
+    "CompanyId": "cmp-1001",
+    "Status": 1,
+    "IsDefault": 1,
+    "SalesPipelineStages": [
+        {
+            "Id": "stage-link-1",
+            "SalesPipelineId": "pipe-001",
+            "PipelineStageId": "stg-discovery",
+            "PipelineStageName": 1
+        },
+        {
+            "Id": "stage-link-2",
+            "SalesPipelineId": "pipe-001",
+            "PipelineStageId": "stg-proposal",
+            "PipelineStageName": 3
+        },
+        {
+            "Id": "stage-link-3",
+            "SalesPipelineId": "pipe-001",
+            "PipelineStageId": "stg-negotiation",
+            "PipelineStageName": 4
+        }
+    ]
+}

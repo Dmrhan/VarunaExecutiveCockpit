@@ -1,0 +1,38 @@
+{
+    "Id": "stk-9001",
+    "Code": "PRD-LAPTOP-X1",
+    "Name": "ThinkPad X1 Carbon Gen 10",
+    "ShortName": "X1 Carbon",
+    "BaseUnitType": "Adet",
+    "SerialTrackingEnabled": 1,
+    "SalesVatValue": 20.0,
+    "PurchaseVatValue": 20.0,
+    "State": 1,
+    "ProductGroupId": "grp-laptops",
+    "BrandId": "brnd-lenovo",
+    "MinStockLevel": 5,
+    "OrderLevel": 10,
+    "TargetLevel": 50,
+    "InvWillWarrantyBeFollowed": 1,
+    "CompanyId": "comp-core",
+    "StockUnitTypes": [
+        {
+            "UnitType": "Kutu",
+            "Quantity": 10,
+            "Barcode": "8890012345678",
+            "IsTransactionUnit": 1
+        }
+    ],
+    "AdditionalTaxes": [],
+    "StockFiles": [
+        {
+            "FilePath": "/assets/x1.jpg",
+            "FileName": "x1.jpg"
+        }
+    ],
+    "Companies": [
+        {
+            "CompanyId": "comp-core"
+        }
+    ]
+}

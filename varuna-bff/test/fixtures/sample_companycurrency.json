@@ -1,0 +1,36 @@
+{
+    "SyncBatchId": "batch-daily-fx",
+    "Currencies": [
+        {
+            "Id": "cc-1",
+            "CompanyId": "cmp-1001",
+            "CurrencyCode": 1
+        },
+        {
+            "Id": "cc-2",
+            "CompanyId": "cmp-1001",
+            "CurrencyCode": 2
+        },
+        {
+            "Id": "cc-3",
+            "CompanyId": "cmp-1001",
+            "CurrencyCode": 1
+        }
+    ],
+    "Rates": [
+        {
+            "Id": "rate-usd-try-today",
+            "BaseCurrency": 2,
+            "TargetCurrency": 1,
+            "Rate": 36.45,
+            "RateDate": "2026-02-20T00:00:00Z"
+        },
+        {
+            "Id": "rate-eur-try-today",
+            "BaseCurrency": 3,
+            "TargetCurrency": 1,
+            "Rate": 39.80,
+            "RateDate": "2026-02-20T00:00:00Z"
+        }
+    ]
+}

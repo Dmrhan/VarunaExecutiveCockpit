@@ -1,0 +1,107 @@
+{
+    "Id": "qt-55512",
+    "OpportunityId": "opp-998",
+    "RevisionId": "rev-001",
+    "Number": "QT-2026-0001",
+    "Name": "Server Infrastructure Renew",
+    "ExpirationDate": "2026-09-01T00:00:00Z",
+    "SubTotalDiscount": 1500.0,
+    "WarehouseId": "wh-center",
+    "ProposalOwnerId": "usr-042",
+    "PaymentType": 1,
+    "PaymentTypeTime": 30,
+    "Status": 1,
+    "AddressIdentifier": "addr-111",
+    "DeliveryType": 1,
+    "DeliveryTime": 15,
+    "DeliveryDate": "2026-08-30T00:00:00Z",
+    "CustomerOrderNumber": "PO-991122",
+    "PaymentTime": 30,
+    "DeliveryTypeTime": 15,
+    "PersonId": "cnt-1234",
+    "SpecialCodeId": null,
+    "AccountId": "acc-1001",
+    "Description": "Discounted annual renewal.",
+    "RevNo": 2,
+    "NetSubTotalLocalCurrency": {
+        "Amount": 10000.0,
+        "Currency": "TRY"
+    },
+    "TotalNetAmountLocalCurrency": {
+        "Amount": 8500.0,
+        "Currency": "TRY"
+    },
+    "TotalAmountWithTaxLocalCurrency": {
+        "Amount": 10030.0,
+        "Currency": "TRY"
+    },
+    "TotalProfitAmount": {
+        "Amount": 2500.0,
+        "Currency": "TRY"
+    },
+    "RevStatus": 1,
+    "SubTotalAlternativeCurrency": 1,
+    "AlternativeCurrencyRate": 35.5,
+    "NetSubTotalAlternativeCurrency": {
+        "Amount": 281.69,
+        "Currency": "USD"
+    },
+    "TotalNetAmountAlternativeCurrency": {
+        "Amount": 239.43,
+        "Currency": "USD"
+    },
+    "TotalAmountWithTaxAlternativeCurrency": {
+        "Amount": 282.53,
+        "Currency": "USD"
+    },
+    "TotalProfitAmountAlternativeCurrency": {
+        "Amount": 70.42,
+        "Currency": "USD"
+    },
+    "IsVATExempt": 0,
+    "TermsAndConditions": "Standard SLA applies.",
+    "ProductsAndServices": "Server hosting, load balancers.",
+    "ServiceStartDate": "2026-09-01T00:00:00Z",
+    "ServiceFinishDate": "2027-09-01T00:00:00Z",
+    "ReferenceCode": "REF-ABC",
+    "TransferWithForeignCurrency": 0,
+    "ContactId": "cnt-1234",
+    "FirstCreatedDate": "2026-08-01T09:00:00Z",
+    "FirstCreatedByName": "John Doe",
+    "TeamId": "team-enterprise",
+    "TeamCreatedById": "usr-01",
+    "SubTotalDiscountType": 1,
+    "SubTotalDiscountAmount": 1500.0,
+    "InRefCode": "IN-99",
+    "CompanyId": "cmp-1001",
+    "QuoteApprovalProcessStatus": 2,
+    "TotalDiscountRate": 15.0,
+    "FirstReleaseDate": "2026-08-02T10:00:00Z",
+    "RevisedDate": "2026-08-10T14:00:00Z",
+    "CRMRevNo": 2,
+    "PublicationSource": "Web",
+    "TermsAndConditions2": null,
+    "ProductsAndServices2": null,
+    "StockId": null,
+    "ItemNo": null,
+    "QuoteType": 1,
+    "CrmOrderId": "ord-888",
+    "OrderWillBeCreate": 1,
+    "OrderOwnerWillBeChanged": 0,
+    "TPOutReferenceCode": null,
+    "QuoteOrderDetails": [
+        {
+            "Id": "qt-ord-1",
+            "QuoteId": "qt-55512",
+            "CrmOrderId": "ord-888"
+        }
+    ],
+    "QuoteDynamicFields": [
+        {
+            "Id": "qt-dyn-1",
+            "QuoteId": "qt-55512",
+            "FieldName": "CustomRegion",
+            "FieldValue": "EMEA"
+        }
+    ]
+}

@@ -1,0 +1,69 @@
+{
+    "Id": "cnt-001",
+    "ContractNo": "CONT-2026-0001",
+    "ContractName": "Enterprise Lisance Renew (Yıldız Holding)",
+    "AccountId": "acc-1001",
+    "SalesRepresentativeId": "usr-042",
+    "ContractType": 2,
+    "ContractStatus": 1,
+    "StartDate": "2026-01-01T00:00:00Z",
+    "FinishDate": "2026-12-31T00:00:00Z",
+    "RenewalDate": "2026-11-01T00:00:00Z",
+    "IsAutoExtending": 1,
+    "InvoiceDueDate": 30,
+    "TotalAmount": {
+        "Amount": 12000.0,
+        "Currency": "USD"
+    },
+    "TotalAmountLocalCurrency": {
+        "Amount": 420000.0,
+        "Currency": "TRY"
+    },
+    "StampTaxRate": 0.00948,
+    "StampTaxAmount": 3981.6,
+    "IsLateInterestApply": 0,
+    "LateInterestContractYear": 0,
+    "InvoiceNumber": 12,
+    "InvoiceStatusId": "inv-stat-1",
+    "CompanyId": "cmp-1001",
+    "ContractUrl": "https://docs.varuna.local/cnt-001.pdf",
+    "ProductId": "prod-server-2026",
+    "RemainingBalance": {
+        "Amount": 105000.0,
+        "Currency": "TRY"
+    },
+    "SigningDate": "2025-12-28T14:00:00Z",
+    "ContractPaymentPlans": [
+        {
+            "Id": "pay-001",
+            "ContractId": "cnt-001",
+            "Price": {
+                "Amount": 35000.0,
+                "Currency": "TRY"
+            },
+            "TotalRate": 8.33,
+            "HasBeenCollected": 1,
+            "PaymentDate": "2026-01-15T00:00:00Z",
+            "Name": "Q1 Installment 1"
+        },
+        {
+            "Id": "pay-002",
+            "ContractId": "cnt-001",
+            "Price": {
+                "Amount": 35000.0,
+                "Currency": "TRY"
+            },
+            "TotalRate": 8.33,
+            "HasBeenCollected": 0,
+            "PaymentDate": "2026-02-15T00:00:00Z",
+            "Name": "Q1 Installment 2"
+        }
+    ],
+    "ContractLisances": [
+        {
+            "Id": "lic-001",
+            "ContractId": "cnt-001",
+            "LisanceId": "lic-ent-500"
+        }
+    ]
+}

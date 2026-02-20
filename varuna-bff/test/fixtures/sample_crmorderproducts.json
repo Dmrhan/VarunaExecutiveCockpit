@@ -1,0 +1,51 @@
+{
+    "Id": "ordprod-998877",
+    "CrmOrderId": "ord-778899",
+    "StockId": "stk-9001",
+    "Quantity": 10.0,
+    "DeliveryTime": "3 Days",
+    "TransactionDate": "2026-02-15T10:00:00Z",
+    "LineDiscountRate": 5.0,
+    "LineDiscountType": 1,
+    "Tax": 20.0,
+    "ProfitRate": 25.0,
+    "CurrencyRate": 1.0,
+    "ComissionRate": 2.5,
+    "StockUnitTypeIdentifier": "PRT-01",
+    "StockUnitType": "Adet",
+    "Description": "ThinkPad X1 Carbon 10th Gen",
+    "ItemNo": "10",
+    "PYPSapId": "PYP-100",
+    "StorageLocationSapId": "STR-01",
+    "ProductionLocationSapId": "PRD-LOC-01",
+    "QuoteProductId": "qteprod-5544",
+    "PFApplicaitonType": 1,
+    "UnitPrice": {
+        "Amount": 1000.0,
+        "Currency": "TRY"
+    },
+    "PurchasingPrice": {
+        "Amount": 750.0,
+        "Currency": "TRY"
+    },
+    "LineDiscountAmount": {
+        "Amount": 500.0,
+        "Currency": "TRY"
+    },
+    "NetLineSubTotalLocalCurrency": {
+        "Amount": 9500.0,
+        "Currency": "TRY"
+    },
+    "NetLineTotalWithTaxLocalCurrency": {
+        "Amount": 11400.0,
+        "Currency": "TRY"
+    },
+    "TotalProfitAmountWithLocalCurrency": {
+        "Amount": 2000.0,
+        "Currency": "TRY"
+    },
+    "ProfitAfterSubtotalDiscountLocalCurrency": {
+        "Amount": 2000.0,
+        "Currency": "TRY"
+    }
+}

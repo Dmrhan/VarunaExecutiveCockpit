@@ -1,0 +1,52 @@
+{
+    "Id": "acc-1001",
+    "Name": "Yıldız Holding",
+    "Code": "YLD",
+    "OwnerId": "usr-042",
+    "TerritoryId": "tr-marmara",
+    "State": 1,
+    "IsInvoiceGenerated": 1,
+    "IsTrainingProvided": 1,
+    "IsContractReceived": 1,
+    "LastTouchDate": "2026-02-18",
+    "Sector": 4,
+    "Location": {
+        "Latitude": 41.0082,
+        "Longitude": 28.9784
+    },
+    "CreditLimit": {
+        "Amount": 15000000,
+        "Currency": 1
+    },
+    "RiskLimit": {
+        "Amount": 12000000,
+        "Currency": 1
+    },
+    "Addresses": [
+        {
+            "AddressType": 1,
+            "CentralAddress": 1,
+            "Address": {
+                "Country": "TR",
+                "Subdivision1": "34",
+                "OpenAddress": "Üsküdar / İstanbul"
+            }
+        }
+    ],
+    "Contacts": [
+        {
+            "ContactDetailId": "cnt-001"
+        }
+    ],
+    "AccountNotes": [],
+    "AccountRepresentatives": [],
+    "AccountCompanies": [
+        {
+            "CompanyId": "comp-core"
+        }
+    ],
+    "IntegrationCurrencyDetails": [],
+    "NetsisCompanyReferenceCodes": [],
+    "WhoAreWeDealingWith": [],
+    "InstallProcessRepresentatives": []
+}

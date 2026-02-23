@@ -25,15 +25,16 @@ export function getDbAdapter(): IDbAdapter {
 }
 
 /**
- * Alias kept for backward compatibility.
- * All existing route files that call `getDb()` will still work,
- * but they receive the adapter instead of the raw better-sqlite3 instance.
+ * Returns the active adapter typed as `any` for backward compatibility.
  *
- * NOTE: Sync routes that call db.prepare() directly must be updated
- *       to use adapter.query() / adapter.execute() / adapter.transaction().
- *       For now, SqliteAdapter.getRawDb() provides the old interface during migration.
+ * Sync routes (sync-*.ts) that call db.prepare() / db.transaction() directly
+ * continue to work in SQLite mode without any changes. At runtime the adapter
+ * transparently proxies these calls to better-sqlite3.
+ *
+ * New analytics routes should use getDbAdapter() to get the typed IDbAdapter.
  */
-export function getDb(): IDbAdapter {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getDb(): any {
     return getDbAdapter();
 }
 

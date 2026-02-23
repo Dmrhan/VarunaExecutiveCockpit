@@ -30,6 +30,7 @@ import syncSalesPipelineRouter from './routes/sync-salespipeline';
 import analyticsSalesPipelineRouter from './routes/analytics-salespipeline';
 import syncCompanyCurrencyRouter from './routes/sync-companycurrency';
 import analyticsCompanyCurrencyRouter from './routes/analytics-companycurrency';
+import analyticsPerformanceRouter from './routes/analytics-performance';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -68,6 +69,7 @@ app.use('/api/salespipeline/sync', syncSalesPipelineRouter);
 app.use('/api/analytics/salespipeline', analyticsSalesPipelineRouter);
 app.use('/api/companycurrency/sync', syncCompanyCurrencyRouter);
 app.use('/api/analytics/companycurrency', analyticsCompanyCurrencyRouter);
+app.use('/api/performance', analyticsPerformanceRouter);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {

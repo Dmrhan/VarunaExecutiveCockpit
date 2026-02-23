@@ -6,6 +6,7 @@ import { cn } from '../../lib/utils';
 const NAV_ITEMS = [
     { icon: LayoutDashboard, key: 'executive', active: true },
     { icon: LayoutDashboard, key: 'executivev2', active: false },
+    { icon: Target, key: 'performance', active: false },
     { icon: Target, key: 'opportunities', active: false },
     { icon: ShieldCheck, key: 'management', active: false }, // Using ShieldCheck as placeholder, or Database if available
     { icon: Phone, key: 'activities', active: false },

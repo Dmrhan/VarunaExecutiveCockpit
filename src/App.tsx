@@ -10,6 +10,7 @@ import { QuotesDashboard } from './features/dashboard/QuotesDashboard';
 import { OrdersDashboard } from './features/dashboard/OrdersDashboard';
 import { ContractsDashboard } from './features/dashboard/ContractsDashboard';
 import { ExecutiveDashboardPageV2 } from './features/dashboard/ExecutiveDashboardPageV2';
+import { PerformanceCockpit } from './features/dashboard/PerformanceCockpit';
 import { RunaAIBot } from './components/RunaAIBot';
 
 import { OpportunityForm } from './features/dashboard/OpportunityForm';
@@ -22,6 +23,7 @@ function App() {
     switch (activeView) {
       case 'executive': return <ExecutiveSummaryDashboard />;
       case 'executivev2': return <ExecutiveDashboardPageV2 />;
+      case 'performance': return <PerformanceCockpit />;
       case 'opportunities': return <OpportunitiesDashboard />;
       case 'management': return <OpportunityManagementPage onAddOpportunity={() => setActiveView('opportunity-new')} />;
       case 'opportunity-new': return <OpportunityForm onClose={() => setActiveView('management')} />;

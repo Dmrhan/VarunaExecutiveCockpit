@@ -1,0 +1,50 @@
+# ═══════════════════════════════════════════════════════
+#  docker-compose.yml — PRODUCTION (MS SQL)
+#  Usage: docker-compose -f docker-compose.prod.yml up -d
+# ═══════════════════════════════════════════════════════
+services:
+
+  # ── Backend For Frontend (Node.js + MSSQL) ──────────────
+  bff:
+    build:
+      context: ./varuna-bff
+      target: production # Uses the "production" stage in Dockerfile
+    image: varuna-bff:prod
+    restart: unless-stopped
+    env_file:
+      - ./varuna-bff/.env.production # Create from .env.example → set DB_DRIVER=mssql
+    environment:
+      NODE_ENV: production
+      DB_DRIVER: mssql
+    networks:
+      - varuna-net
+    # No port exposed externally; nginx proxies /api → bff:3001
+    expose:
+      - "3001"
+    healthcheck:
+      test: [ "CMD", "wget", "-qO-", "http://localhost:3001/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ── Frontend (Nginx + React/Vite) ───────────────────────
+  frontend:
+    build:
+      context: .
+      target: production
+      args:
+        VITE_API_URL: /api # Relative — nginx proxies to bff
+    image: varuna-frontend:prod
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      bff:
+        condition: service_healthy
+    networks:
+      - varuna-net
+
+networks:
+  varuna-net:
+    driver: bridge

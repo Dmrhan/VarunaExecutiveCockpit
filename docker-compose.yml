@@ -1,0 +1,49 @@
+# ═══════════════════════════════════════════════════════
+#  docker-compose.yml — DEVELOPMENT (SQLite)
+#  Usage: docker-compose up
+# ═══════════════════════════════════════════════════════
+services:
+
+  # ── Backend For Frontend (Node.js + SQLite) ─────────────
+  bff:
+    build:
+      context: ./varuna-bff
+      target: development # Uses the "development" stage in Dockerfile
+    image: varuna-bff:dev
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      DB_DRIVER: sqlite
+      SQLITE_PATH: /app/data/varuna.db
+    volumes:
+      - ./varuna-bff/src:/app/src # Hot-reload via ts-node-dev
+      - varuna-db:/app/data # Persistent SQLite volume
+    ports:
+      - "3001:3001"
+    networks:
+      - varuna-net
+
+  # ── Frontend (Vite dev server) ───────────────────────────
+  frontend:
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host"
+    environment:
+      VITE_API_URL: http://localhost:3001
+    volumes:
+      - .:/app
+      - /app/node_modules # Isolated node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - bff
+    networks:
+      - varuna-net
+
+volumes:
+  varuna-db:
+
+
+networks:
+  varuna-net:
+    driver: bridge

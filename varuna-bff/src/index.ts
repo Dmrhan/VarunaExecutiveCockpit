@@ -72,18 +72,18 @@ app.use('/api/analytics/companycurrency', analyticsCompanyCurrencyRouter);
 app.use('/api/performance', analyticsPerformanceRouter);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
-app.get('/api/health', (_req, res) => {
-    const db = getDb();
-    const tableCount = (db.prepare(
-        "SELECT COUNT(*) as n FROM sqlite_master WHERE type='table'"
-    ).get() as { n: number }).n;
-
-    res.json({
-        status: 'ok',
-        tables: tableCount,
-        timestamp: new Date().toISOString(),
-    });
-});
+// /health     — docker-compose healthcheck target
+// /api/health — frontend / monitoring
+const healthHandler = (_req: any, res: any) => {
+    try {
+        const db = getDb();
+        res.json({ status: 'ok', driver: db.driver, timestamp: new Date().toISOString() });
+    } catch (e: any) {
+        res.status(503).json({ status: 'error', message: e.message });
+    }
+};
+app.get('/health', healthHandler);
+app.get('/api/health', healthHandler);
 
 // ─── 404 fallback ─────────────────────────────────────────────────────────────
 app.use((_req, res) => {

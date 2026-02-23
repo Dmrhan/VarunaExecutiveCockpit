@@ -28,8 +28,9 @@ RUN npm ci --omit=dev
 COPY --from=builder /app/dist ./dist
 
 # Copy schema files (needed by adapters at runtime)
-COPY src/db/schema.sql     ./dist/db/schema.sql
-COPY src/db/schema.mssql.sql ./dist/db/schema.mssql.sql 2>/dev/null || true
+# Use RUN to ensure target dir exists, then COPY individual files
+RUN mkdir -p ./dist/db
+COPY src/db/schema.sql ./dist/db/schema.sql
 
 EXPOSE 3001
 

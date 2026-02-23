@@ -50,10 +50,11 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({ onClose }) => 
                 stage: formData.stage as any,
                 probability: parseFloat(formData.probability),
                 ownerId: formData.ownerId,
-                source: 'Univera Satış', // Default for manual entry
+                source: 'Univera Satış',
                 topic: `${formData.product} - ${formData.title}`,
                 expectedCloseDate: new Date(formData.expectedCloseDate).toISOString(),
-                currency: 'TRY', // Default currency
+                lastActivityDate: new Date().toISOString(),
+                currency: 'TRY',
                 weightedValue: calculateWeightedValue(),
                 notes: formData.notes,
             });

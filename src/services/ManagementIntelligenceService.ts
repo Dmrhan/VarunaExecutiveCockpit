@@ -2,7 +2,7 @@ import axios from 'axios';
 import type { TFunction } from 'i18next';
 import type { Deal } from '../types/crm';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+const API_BASE_URL = window.__RUNTIME_CONFIG__?.VITE_API_BASE_URL || 'http://localhost:3001/api';
 const API_URL = `${API_BASE_URL}/analytics`;
 
 // --- Types ---

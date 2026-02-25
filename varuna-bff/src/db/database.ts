@@ -1,69 +1,34 @@
-import { IDbAdapter } from './adapter.interface';
-import { SqliteAdapter } from './sqlite.adapter';
+import Database from 'better-sqlite3';
+import fs from 'fs';
+import path from 'path';
 
-let _adapter: IDbAdapter | null = null;
+const DB_PATH = path.join(__dirname, '../../varuna.db');
+const SCHEMA_PATH = path.join(__dirname, 'schema.sql');
 
-/**
- * Returns the active DB adapter based on the DB_DRIVER env variable.
- *   DB_DRIVER=sqlite  (default) — uses better-sqlite3
- *   DB_DRIVER=mssql             — uses mssql + deasync
- */
-export function getDbAdapter(): IDbAdapter {
-    if (!_adapter) {
-        const driver = (process.env.DB_DRIVER || 'sqlite').toLowerCase();
-        console.log(`[DB] Initializing adapter: ${driver}`);
+let db: Database.Database;
 
-        if (driver === 'mssql') {
-            const { MssqlAdapter } = require('./mssql.adapter');
-            _adapter = new MssqlAdapter();
-        } else {
-            const { SqliteAdapter } = require('./sqlite.adapter');
-            _adapter = new SqliteAdapter();
-        }
+export function getDb(): Database.Database {
+    if (!db) {
+        db = new Database(DB_PATH);
+        db.pragma('journal_mode = WAL');
+        db.pragma('foreign_keys = ON');
+        applySchema(db);
     }
-    return _adapter!;
+    return db;
 }
 
-/**
- * Returns the active adapter typed as `any` for backward compatibility.
- *
- * Sync routes (sync-*.ts) that call db.prepare() / db.transaction() directly
- * continue to work in SQLite mode without any changes. At runtime the adapter
- * transparently proxies these calls to better-sqlite3.
- *
- * New analytics routes should use getDbAdapter() to get the typed IDbAdapter.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function getDb(): any {
-    return getDbAdapter();
+function applySchema(database: Database.Database): void {
+    const schema = fs.readFileSync(SCHEMA_PATH, 'utf-8');
+    database.exec(schema);
+    console.log('[DB] Schema applied successfully. DB path:', DB_PATH);
 }
 
-/**
- * Returns the raw better-sqlite3 Database instance.
- * ONLY valid when DB_DRIVER=sqlite.
- * Used by sync/* routes that still call db.prepare().run() directly.
- * On MSSQL these routes should be migrated to use adapter.execute() instead.
- */
-export function getRawSqliteDb(): import('better-sqlite3').Database {
-    const adapter = getDbAdapter();
-    if (adapter.driver !== 'sqlite') {
-        throw new Error(
-            '[DB] getRawSqliteDb() is only available in SQLite mode. ' +
-            'Migrate the calling route to use adapter.execute() / adapter.query().'
-        );
-    }
-    return (adapter as SqliteAdapter).getRawDb();
-}
-
-// Allow running directly for diagnostics:  npx ts-node src/db/database.ts
+// Allow running directly for migration: `npx ts-node src/db/database.ts`
 if (require.main === module) {
-    const adapter = getDbAdapter();
-    console.log(`[DB] Driver: ${adapter.driver}`);
-    if (adapter.driver === 'sqlite') {
-        const rows = adapter.query("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name");
-        console.log('[DB] Tables:', rows.map((r: any) => r.name).join(', '));
-    } else {
-        console.log('[DB] MSSQL connected.');
-    }
+    const database = getDb();
+    const tables = database.prepare(
+        "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+    ).all() as { name: string }[];
+    console.log('[DB] Tables created:', tables.map(t => t.name).join(', '));
     process.exit(0);
 }

@@ -60,7 +60,7 @@ router.get('/pipeline', (req: Request, res: Response) => {
             COALESCE(SUM(ExpectedRevenue_Value * Probability / 100.0), 0)        AS weightedPipeline,
             COALESCE(SUM(PotentialTurnover_Value), 0)                            AS potentialRevenueImpact
         FROM Opportunity
-        WHERE DealStatus NOT IN (${DEAL_STATUS_WON}, ${DEAL_STATUS_LOST})
+        WHERE (DealStatus IS NULL OR DealStatus NOT IN (${DEAL_STATUS_WON}, ${DEAL_STATUS_LOST}))
         ${extraWhere}
     `).get(params) as Record<string, number>;
 
@@ -69,7 +69,7 @@ router.get('/pipeline', (req: Request, res: Response) => {
             COUNT(*)                                AS count,
             COALESCE(SUM(ExpectedRevenue_Value), 0) AS totalValue
         FROM Opportunity
-        WHERE DealStatus NOT IN (${DEAL_STATUS_WON}, ${DEAL_STATUS_LOST})
+        WHERE (DealStatus IS NULL OR DealStatus NOT IN (${DEAL_STATUS_WON}, ${DEAL_STATUS_LOST}))
           AND CloseDate >= date('now', 'start of month')
           AND CloseDate <  date('now', 'start of month', '+1 month')
         ${extraWhere}

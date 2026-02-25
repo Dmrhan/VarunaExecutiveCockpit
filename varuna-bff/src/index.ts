@@ -31,6 +31,9 @@ import analyticsSalesPipelineRouter from './routes/analytics-salespipeline';
 import syncCompanyCurrencyRouter from './routes/sync-companycurrency';
 import analyticsCompanyCurrencyRouter from './routes/analytics-companycurrency';
 import analyticsPerformanceRouter from './routes/analytics-performance';
+import contractsRouter from './routes/contracts';
+import quotesRouter from './routes/quotes';
+import ordersRouter from './routes/orders';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -70,20 +73,23 @@ app.use('/api/analytics/salespipeline', analyticsSalesPipelineRouter);
 app.use('/api/companycurrency/sync', syncCompanyCurrencyRouter);
 app.use('/api/analytics/companycurrency', analyticsCompanyCurrencyRouter);
 app.use('/api/performance', analyticsPerformanceRouter);
+app.use('/api/contracts', contractsRouter);
+app.use('/api/quotes', quotesRouter);
+app.use('/api/orders', ordersRouter);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
-// /health     — docker-compose healthcheck target
-// /api/health — frontend / monitoring
-const healthHandler = (_req: any, res: any) => {
-    try {
-        const db = getDb();
-        res.json({ status: 'ok', driver: db.driver, timestamp: new Date().toISOString() });
-    } catch (e: any) {
-        res.status(503).json({ status: 'error', message: e.message });
-    }
-};
-app.get('/health', healthHandler);
-app.get('/api/health', healthHandler);
+app.get('/api/health', (_req, res) => {
+    const db = getDb();
+    const tableCount = (db.prepare(
+        "SELECT COUNT(*) as n FROM sqlite_master WHERE type='table'"
+    ).get() as { n: number }).n;
+
+    res.json({
+        status: 'ok',
+        tables: tableCount,
+        timestamp: new Date().toISOString(),
+    });
+});
 
 // ─── 404 fallback ─────────────────────────────────────────────────────────────
 app.use((_req, res) => {

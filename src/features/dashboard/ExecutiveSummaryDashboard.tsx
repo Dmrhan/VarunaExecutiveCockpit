@@ -46,18 +46,37 @@ export function ExecutiveSummaryDashboard() {
     }, [deals, orders, contracts]);
 
     // AI Intelligence Data
-    const { data: intelligence, isLoading: isIntelligenceLoading } = useQuery({
+    const { data: intelligence, isLoading: isIntelligenceLoading, error: intelligenceError } = useQuery({
         queryKey: ['management-intelligence'],
-        queryFn: () => ManagementIntelligenceService.getIntelligence(t)
+        queryFn: () => ManagementIntelligenceService.getIntelligence(t),
+        retry: 1
     });
 
     const { narrativeParams } = useMemo(() => generateExecutiveBrief(deals, contracts, t), [deals, contracts, t]); // Re-use for base narrative values
 
-    if (isIntelligenceLoading || !intelligence) {
+    if (isIntelligenceLoading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
                 <Loader2 className="animate-spin text-indigo-500" size={40} />
                 <p className="text-slate-500 font-medium animate-pulse">{t('common.loadingIntelligence', { defaultValue: 'Yapay zeka analizi hazırlanıyor...' })}</p>
+            </div>
+        );
+    }
+
+    if (intelligenceError || !intelligence) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[400px] gap-4 p-8 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
+                <AlertTriangle className="text-amber-500" size={40} />
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('common.errorLoadingData', { defaultValue: 'Veri yüklenirken hata oluştu' })}</h3>
+                <p className="text-slate-500 text-center max-w-md">
+                    {t('common.apiConnectivityIssue', { defaultValue: 'BFF API bağlantısı kurulamadı. Lütfen API URL ayarlarını kontrol edin.' })}
+                </p>
+                <button
+                    onClick={() => window.location.reload()}
+                    className="mt-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                >
+                    {t('common.retry', { defaultValue: 'Tekrar Dene' })}
+                </button>
             </div>
         );
     }

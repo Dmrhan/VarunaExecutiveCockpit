@@ -2,7 +2,7 @@ import axios from 'axios';
 import type { TFunction } from 'i18next';
 import type { Deal } from '../types/crm';
 
-const API_BASE_URL = window.__RUNTIME_CONFIG__?.VITE_API_BASE_URL || 'http://localhost:3001/api';
+const API_BASE_URL = (window as any).__RUNTIME_CONFIG__?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
 const API_URL = `${API_BASE_URL}/analytics`;
 
 // --- Types ---
@@ -74,10 +74,10 @@ export const ManagementIntelligenceService = {
     getIntelligence: async (_t: TFunction): Promise<ManagementIntelligenceData> => {
         try {
             const [pipelineRes, funnelRes, distRes, ownersRes] = await Promise.all([
-                axios.get(`${API_BASE_URL}/pipeline`),
-                axios.get(`${API_BASE_URL}/funnel/monthly`),
-                axios.get(`${API_BASE_URL}/distribution/probability`),
-                axios.get(`${API_BASE_URL}/owners`),
+                axios.get(`${API_URL}/pipeline`),
+                axios.get(`${API_URL}/funnel/monthly`),
+                axios.get(`${API_URL}/distribution/probability`),
+                axios.get(`${API_URL}/owners`),
             ]);
 
             const pipeline = pipelineRes.data;

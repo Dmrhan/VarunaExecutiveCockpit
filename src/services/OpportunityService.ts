@@ -2,7 +2,7 @@
 import type { Deal, Contact, OpportunityNote } from '../types/crm';
 import { generateMockData } from '../data/mockData';
 
-const API_BASE_URL = window.__RUNTIME_CONFIG__?.VITE_API_BASE_URL || 'http://localhost:3001/api';
+const API_BASE_URL = (window as any).__RUNTIME_CONFIG__?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
 const API_URL = `${API_BASE_URL}/opportunities`;
 
 // Helper to map API response (snake_case) to Frontend Model (camelCase)

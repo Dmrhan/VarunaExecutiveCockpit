@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { useData } from '../../context/DataContext';
-import { TrendingUp, AlertTriangle, Target, DollarSign, Activity, Users, ArrowRight, Brain, ShieldAlert, BarChart3, Search, Zap } from 'lucide-react';
+import { TrendingUp, AlertTriangle, Target, DollarSign, Activity, Users, ArrowRight, Brain, ShieldAlert, BarChart3, Search, Zap, Loader2 } from 'lucide-react';
 import { useTranslation, Trans } from 'react-i18next';
 import { ResponsiveContainer, Area, XAxis, YAxis, Tooltip, CartesianGrid, Legend, ComposedChart, Line } from 'recharts';
-import { getManagementIntelligence } from '../../services/ManagementIntelligenceService';
+import { ManagementIntelligenceService } from '../../services/ManagementIntelligenceService';
 import { generateExecutiveBrief } from '../../services/ExecutiveBriefService';
 
 // Local mock data for Trend Chart
@@ -45,8 +46,21 @@ export function ExecutiveSummaryDashboard() {
     }, [deals, orders, contracts]);
 
     // AI Intelligence Data
-    const intelligence = useMemo(() => getManagementIntelligence(deals, t), [deals, t]);
+    const { data: intelligence, isLoading: isIntelligenceLoading } = useQuery({
+        queryKey: ['management-intelligence'],
+        queryFn: () => ManagementIntelligenceService.getIntelligence(t)
+    });
+
     const { narrativeParams } = useMemo(() => generateExecutiveBrief(deals, contracts, t), [deals, contracts, t]); // Re-use for base narrative values
+
+    if (isIntelligenceLoading || !intelligence) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+                <Loader2 className="animate-spin text-indigo-500" size={40} />
+                <p className="text-slate-500 font-medium animate-pulse">{t('common.loadingIntelligence', { defaultValue: 'Yapay zeka analizi hazırlanıyor...' })}</p>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-8 animate-in fade-in duration-700 max-w-7xl mx-auto pb-12">

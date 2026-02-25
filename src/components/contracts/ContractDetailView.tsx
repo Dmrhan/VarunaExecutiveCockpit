@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useData } from '../../context/DataContext';
 import type { Contract, CollectionAnalysisResult } from '../../types/crm';
 import { PaymentPlanTable } from './PaymentPlanTable';
@@ -6,9 +7,10 @@ import { CollectionAnalysisCard } from './CollectionAnalysisCard';
 import { RenewalHistoryWidget, PaymentDisciplineWidget } from './EnrichedDetailWidgets';
 import { analyzeCollectionRisk } from '../../services/CollectionAnalysisService';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card';
-import { Calendar, CreditCard, FileText, ArrowLeft } from 'lucide-react';
+import { Calendar, CreditCard, FileText, ArrowLeft, Loader2 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { useTranslation } from 'react-i18next';
+import { ContractService } from '../../services/ListingServices';
 
 interface ContractDetailViewProps {
     contractId: string;
@@ -16,14 +18,26 @@ interface ContractDetailViewProps {
 }
 
 export const ContractDetailView = ({ contractId, onBack }: ContractDetailViewProps) => {
-    const { contracts } = useData();
     const { t } = useTranslation();
-    const contract = contracts.find((c: Contract) => c.id === contractId);
+
+    const { data: contract, isLoading } = useQuery({
+        queryKey: ['contract', contractId],
+        queryFn: () => ContractService.getById(contractId)
+    });
 
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [analysis, setAnalysis] = useState<CollectionAnalysisResult | undefined>(undefined);
 
-    if (!contract) return <div>{t('common.notFound', { defaultValue: 'Contract not found' })}</div>;
+    if (isLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+                <Loader2 className="animate-spin text-indigo-500" size={40} />
+                <p className="text-slate-500 font-medium">{t('common.loading', { defaultValue: 'Yükleniyor...' })}</p>
+            </div>
+        );
+    }
+
+    if (!contract) return <div className="p-8 text-center text-slate-500">{t('common.notFound', { defaultValue: 'Contract not found' })}</div>;
 
     const handleAnalyze = async () => {
         setIsAnalyzing(true);

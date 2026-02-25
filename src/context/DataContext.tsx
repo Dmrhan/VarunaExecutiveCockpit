@@ -2,6 +2,7 @@ import React, { createContext, useContext, useMemo, useState, useEffect } from '
 import type { Deal, Activity, User, DashboardMetrics, DealStage, Quote, Order, Contract } from '../types/crm';
 import { generateMockData, generateActivitiesForDeals, generateAuxiliaryDataForDeals, USERS } from '../data/mockData';
 import { OpportunityService } from '../services/OpportunityService';
+import { ContractService, QuoteService, OrderService } from '../services/ListingServices';
 
 interface DataContextType {
     deals: Deal[];
@@ -28,22 +29,22 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const refreshData = async () => {
         setIsLoading(true);
         try {
-            // Fetch persistent deals from Service
-            const fetchedDeals = await OpportunityService.getAll();
+            // Fetch persistent data from Services
+            const [fetchedDeals, fetchedContracts, fetchedQuotes, fetchedOrders] = await Promise.all([
+                OpportunityService.getAll(),
+                ContractService.getAll(),
+                QuoteService.getAll(),
+                OrderService.getAll()
+            ]);
+
             setDeals(fetchedDeals);
+            setContracts(fetchedContracts);
+            setQuotes(fetchedQuotes);
+            setOrders(fetchedOrders);
 
             // Generate activities linked to fetched deals
             const newActivities = generateActivitiesForDeals(fetchedDeals);
             setActivities(newActivities);
-
-            // Generate other auxiliary data (Quotes, Orders, Contracts)
-            // Note: For now, we generate them independently, but ideally they should also be linked.
-            // However, the main issue was Activities showing "Unknown".
-            const auxMock = generateMockData(850);
-            const auxData = generateAuxiliaryDataForDeals(fetchedDeals);
-            setQuotes(auxData.quotes);
-            setOrders(auxData.orders);
-            setContracts(auxMock.contracts);
 
         } catch (error) {
             console.error("Failed to fetch data, falling back to mock data", error);

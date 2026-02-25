@@ -49,16 +49,16 @@ export const PRODUCT_COLORS: Record<ProductGroup, string> = {
 };
 
 export const USERS: User[] = [
-    { id: 'u1', name: 'Ali Yılmaz', avatar: 'https://i.pravatar.cc/150?u=1', role: 'sales_rep', department: 'Sales' },
-    { id: 'u2', name: 'Ayşe Demir', avatar: 'https://i.pravatar.cc/150?u=2', role: 'sales_rep', department: 'Sales' },
-    { id: 'u3', name: 'Mehmet Kaya', avatar: 'https://i.pravatar.cc/150?u=3', role: 'sales_rep', department: 'Partners' },
-    { id: 'u4', name: 'Zeynep Çelik', avatar: 'https://i.pravatar.cc/150?u=4', role: 'manager', department: 'Sales' },
-    { id: 'u5', name: 'Mülkiye Akdoğaner', avatar: 'https://i.pravatar.cc/150?u=5', role: 'sales_rep', department: 'Presales' },
-    { id: 'u6', name: 'Begüm Hayta', avatar: 'https://i.pravatar.cc/150?u=6', role: 'sales_rep', department: 'Sales' },
-    { id: 'u7', name: 'Semih Balaban', avatar: 'https://i.pravatar.cc/150?u=7', role: 'sales_rep', department: 'Partners' },
-    { id: 'u8', name: 'Nigar Uygun', avatar: 'https://i.pravatar.cc/150?u=8', role: 'sales_rep', department: 'CustomerSuccess' },
-    { id: 'u9', name: 'Gülçin Erçebi', avatar: 'https://i.pravatar.cc/150?u=9', role: 'sales_rep', department: 'Sales' },
-    { id: 'u10', name: 'Eren Oral', avatar: 'https://i.pravatar.cc/150?u=10', role: 'sales_rep', department: 'Presales' },
+    { id: 'u1', name: 'Ali Yılmaz', avatar: 'https://i.pravatar.cc/150?u=1', role: 'manager', department: 'Univera Satış' },
+    { id: 'u2', name: 'Ayşe Demir', avatar: 'https://i.pravatar.cc/150?u=2', role: 'sales_rep', department: 'EnRoute PY' },
+    { id: 'u3', name: 'Mehmet Kaya', avatar: 'https://i.pravatar.cc/150?u=3', role: 'sales_rep', department: 'İş Ortakları' },
+    { id: 'u4', name: 'Zeynep Çelik', avatar: 'https://i.pravatar.cc/150?u=4', role: 'manager', department: 'Univera Satış' },
+    { id: 'u5', name: 'Mülkiye Akdoğaner', avatar: 'https://i.pravatar.cc/150?u=5', role: 'sales_rep', department: 'Univera Satış' },
+    { id: 'u6', name: 'Begüm Hayta', avatar: 'https://i.pravatar.cc/150?u=6', role: 'sales_rep', department: 'Univera Satış' },
+    { id: 'u7', name: 'Semih Balaban', avatar: 'https://i.pravatar.cc/150?u=7', role: 'sales_rep', department: 'Univera Satış' },
+    { id: 'u8', name: 'Nigar Uygun', avatar: 'https://i.pravatar.cc/150?u=8', role: 'sales_rep', department: 'Univera Satış' },
+    { id: 'u9', name: 'Gülçin Erçebi', avatar: 'https://i.pravatar.cc/150?u=9', role: 'sales_rep', department: 'Stokbar PY' },
+    { id: 'u10', name: 'Eren Oral', avatar: 'https://i.pravatar.cc/150?u=10', role: 'sales_rep', department: 'Quest PY' },
 ];
 
 const generateRandomDate = (start: Date, end: Date) => {
@@ -137,8 +137,17 @@ export const generateMockData = (count: number = 451): { deals: Deal[], activiti
     for (let i = 0; i < count; i++) {
         const createdAt = generateRandomDate(new Date('2023-01-01'), new Date());
         const stage = STAGES[Math.floor(Math.random() * STAGES.length)];
-        const owner = USERS[Math.floor(Math.random() * USERS.length)];
         const source = SOURCES[Math.floor(Math.random() * SOURCES.length)];
+
+        // Assign 70% of deals to 'Univera Satış'
+        const univeraSatisUsers = USERS.filter(u => u.department === 'Univera Satış');
+        const otherUsers = USERS.filter(u => u.department !== 'Univera Satış');
+        let owner = USERS[0]; // fallback
+        if (Math.random() <= 0.7 && univeraSatisUsers.length > 0) {
+            owner = univeraSatisUsers[Math.floor(Math.random() * univeraSatisUsers.length)];
+        } else if (otherUsers.length > 0) {
+            owner = otherUsers[Math.floor(Math.random() * otherUsers.length)];
+        }
 
         // Calculate simulated aging
         const createdDate = new Date(createdAt);
@@ -178,41 +187,61 @@ export const generateMockData = (count: number = 451): { deals: Deal[], activiti
 
         deals.push(deal);
 
-        // Generate Quotes (approx 50% of deals have quotes)
-        if (Math.random() > 0.5) {
-            const quoteStatus = QUOTE_STATUSES[Math.floor(Math.random() * QUOTE_STATUSES.length)];
+        // Generate Quotes (approx 80% of deals have quotes to create a reasonable funnel)
+        if (Math.random() > 0.2) {
+            // Quote status distribution favoring funnel
+            const quoteStatusRand = Math.random();
+            let quoteStatus = 'Sent';
+            if (quoteStatusRand > 0.6) quoteStatus = 'Accepted';
+            else if (quoteStatusRand > 0.85) quoteStatus = 'Rejected';
+            else if (quoteStatusRand > 0.95) quoteStatus = 'Draft';
+
+            // Quote amount <= Deal amount (User rule: Teklif gönderilen ciro, fırsat cirosundan büyük olamaz)
+            const quoteAmount = Math.round(deal.value * (0.7 + Math.random() * 0.3)); // 70-100% of opportunity
+
+            // Quote date is logically after or same as deal creation
+            const quoteCreatedAt = generateRandomDate(new Date(createdAt), new Date());
+
             const quote = {
                 id: `q${i}`,
                 dealId: deal.id,
                 customerName: deal.customerName,
                 product: deal.product,
                 title: `${deal.title} Teklifi`,
-                amount: deal.value,
+                amount: quoteAmount,
                 status: quoteStatus,
-                createdAt: generateRandomDate(new Date(createdAt), new Date()),
+                createdAt: quoteCreatedAt,
                 validUntil: generateRandomDate(new Date(), new Date('2025-12-31')),
-                items: [{ product: deal.product, quantity: 1, price: deal.value }],
+                items: [{ product: deal.product, quantity: 1, price: quoteAmount }],
                 salesRepId: owner.id,
                 salesRepName: owner.name,
-                // Risk Simulation Data
-                discount: Math.floor(Math.random() * 30), // 0-30% discount
-                lastActivityDate: generateRandomDate(new Date(createdAt), new Date()),
-                hasCompetitor: Math.random() > 0.7 // 30% chance of competitor
+                discount: Math.floor(Math.random() * 30),
+                lastActivityDate: generateRandomDate(new Date(quoteCreatedAt), new Date()),
+                hasCompetitor: Math.random() > 0.7
             };
             quotes.push(quote);
 
-            // Generate Orders from Accepted Quotes
-            if (quoteStatus === 'Accepted' || Math.random() > 0.7) {
+            // Generate Orders from Accepted/Approved Quotes
+            // The user wants: "Kabul edilen teklif cirosu, teklif gönderilen cirodan büyük olamaz" (guaranteed by quote subset logic)
+            // The user wants: "Faturalanan ciro, kabul edilen teklif cirosundan büyük olamaz"
+            if (quoteStatus === 'Accepted' || quoteStatus === 'Approved') {
+                // Order amount <= Accepted Quote amount
+                const orderAmount = Math.round(quote.amount * (0.6 + Math.random() * 0.4)); // 60-100% of accepted quote
+                const isClosed = Math.random() > 0.3; // 70% invoiced (Closed), 30% open
+
+                // Order date after quote date
+                const orderCreatedAt = generateRandomDate(new Date(quoteCreatedAt), new Date());
+
                 orders.push({
                     id: `o${i}`,
                     quoteId: quote.id,
                     customerName: deal.customerName,
                     product: deal.product,
                     title: `${deal.title} Siparişi`,
-                    amount: deal.value,
-                    status: ORDER_STATUSES[Math.floor(Math.random() * ORDER_STATUSES.length)],
-                    createdAt: generateRandomDate(new Date(quote.createdAt), new Date()),
-                    deliveryDate: generateRandomDate(new Date(quote.createdAt), new Date('2025-12-31')),
+                    amount: orderAmount,
+                    status: isClosed ? 'Closed' : 'Open',
+                    createdAt: orderCreatedAt,
+                    deliveryDate: generateRandomDate(new Date(orderCreatedAt), new Date('2025-12-31')),
                     salesRepId: deal.ownerId
                 });
             }
@@ -566,4 +595,72 @@ export const mockPerformance = [
     { userId: 'u4', userName: 'Zeynep Çelik', quotaAttainment: 110000, dealsClosed: 10 },
     { userId: 'u6', userName: 'Begüm Hayta', quotaAttainment: 92000, dealsClosed: 8 },
 ];
+
+// Export an auxiliary data generator to link to real/fetched Deals
+export const generateAuxiliaryDataForDeals = (deals: Deal[]): { quotes: any[], orders: any[] } => {
+    const quotes: any[] = [];
+    const orders: any[] = [];
+
+    deals.forEach((deal, i) => {
+        // Generate Quotes (approx 80% of deals have quotes to create a reasonable funnel)
+        if (Math.random() > 0.2) {
+            // Quote status distribution favoring funnel
+            const quoteStatusRand = Math.random();
+            let quoteStatus = 'Sent';
+            if (quoteStatusRand > 0.6) quoteStatus = 'Accepted';
+            else if (quoteStatusRand > 0.85) quoteStatus = 'Rejected';
+            else if (quoteStatusRand > 0.95) quoteStatus = 'Draft';
+
+            // Quote amount <= Deal amount (User rule: Teklif gönderilen ciro, fırsat cirosundan büyük olamaz)
+            const quoteAmount = Math.round(deal.value * (0.7 + Math.random() * 0.3)); // 70-100% of opportunity
+
+            // Quote date is logically after or same as deal creation
+            const quoteCreatedAt = generateRandomDate(new Date(deal.createdAt), new Date());
+
+            const quote = {
+                id: `q_linked_${deal.id}_${i}`,
+                dealId: deal.id,
+                customerName: deal.customerName,
+                product: deal.product,
+                title: `${deal.title} Teklifi`,
+                amount: quoteAmount,
+                status: quoteStatus,
+                createdAt: quoteCreatedAt,
+                validUntil: generateRandomDate(new Date(), new Date('2025-12-31')),
+                items: [{ product: deal.product, quantity: 1, price: quoteAmount }],
+                salesRepId: deal.ownerId,
+                salesRepName: 'SalesRep', // Simplified for mock
+                discount: Math.floor(Math.random() * 30),
+                lastActivityDate: generateRandomDate(new Date(quoteCreatedAt), new Date()),
+                hasCompetitor: Math.random() > 0.7
+            };
+            quotes.push(quote);
+
+            // Generate Orders from Accepted/Approved Quotes
+            if (quoteStatus === 'Accepted' || quoteStatus === 'Approved') {
+                // Order amount <= Accepted Quote amount
+                const orderAmount = Math.round(quote.amount * (0.6 + Math.random() * 0.4)); // 60-100% of accepted quote
+                const isClosed = Math.random() > 0.3; // 70% invoiced (Closed), 30% open
+
+                // Order date after quote date
+                const orderCreatedAt = generateRandomDate(new Date(quoteCreatedAt), new Date());
+
+                orders.push({
+                    id: `o_linked_${deal.id}_${i}`,
+                    quoteId: quote.id,
+                    customerName: deal.customerName,
+                    product: deal.product,
+                    title: `${deal.title} Siparişi`,
+                    amount: orderAmount,
+                    status: isClosed ? 'Closed' : 'Open',
+                    createdAt: orderCreatedAt,
+                    deliveryDate: generateRandomDate(new Date(orderCreatedAt), new Date('2025-12-31')),
+                    salesRepId: deal.ownerId
+                });
+            }
+        }
+    });
+
+    return { quotes, orders };
+};
 

@@ -14,7 +14,7 @@ export interface User {
     name: string;
     avatar: string;
     role: 'sales_rep' | 'manager' | 'executive';
-    department?: 'Sales' | 'Partners' | 'Presales' | 'CustomerSuccess';
+    department?: 'Univera Satış' | 'EnRoute PY' | 'Stokbar PY' | 'Quest PY' | 'İş Ortakları';
 }
 
 export interface Activity {

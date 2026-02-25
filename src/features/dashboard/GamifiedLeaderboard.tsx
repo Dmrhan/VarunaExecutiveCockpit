@@ -25,41 +25,45 @@ const generateTrendData = (seed: string) => {
     return data;
 };
 
-import type { Deal } from '../../types/crm';
+import type { Deal, Order } from '../../types/crm';
 
 interface GamifiedLeaderboardProps {
     deals?: Deal[];
+    orders?: Order[];
 }
 
-export function GamifiedLeaderboard({ deals: propDeals }: GamifiedLeaderboardProps) {
+export function GamifiedLeaderboard({ deals: propDeals, orders: propOrders }: GamifiedLeaderboardProps) {
     const { t } = useTranslation();
-    const { deals: contextDeals, users } = useData();
+    const { deals: contextDeals, orders: contextOrders, users } = useData();
     const deals = propDeals || contextDeals;
+    const orders = propOrders || contextOrders;
     const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
 
     const leaderboardData = useMemo(() => {
-        // Calculate Team Averages for Comparison
-        const teamRevenue = deals.filter(d => ['Kazanıldı', 'Order'].includes(d.stage)).reduce((sum, d) => sum + d.value, 0);
+        // Calculate Team Averages for Comparison based purely on Invoiced Amount
+        const teamInvoicedAmount = orders.filter(o => o.status === 'Closed').reduce((sum, o) => sum + o.amount, 0);
         const activeReps = users.filter(u => u.role === 'sales_rep').length;
-        const avgRevenue = activeReps > 0 ? teamRevenue / activeReps : 0;
+        const avgInvoiced = activeReps > 0 ? teamInvoicedAmount / activeReps : 0;
 
         const stats = users
             .filter(u => u.role === 'sales_rep')
             .map(user => {
                 const userDeals = deals.filter(d => d.ownerId === user.id);
                 const wonDeals = userDeals.filter(d => ['Kazanıldı', 'Order'].includes(d.stage));
-                const totalRevenue = wonDeals.reduce((sum, d) => sum + d.value, 0);
                 const dealCount = wonDeals.length;
                 const totalDeals = userDeals.length;
                 const winRate = totalDeals > 0 ? (dealCount / totalDeals) * 100 : 0;
 
+                const userOrders = orders.filter(o => o.salesRepId === user.id && o.status === 'Closed');
+                const invoicedAmount = userOrders.reduce((sum, o) => sum + o.amount, 0);
+
                 // Advanced Overall Score Calculation (Weighted)
                 // Normalize metrics roughly to 0-100 scale then apply weights
-                const normalizedRevenue = Math.min(100, (totalRevenue / 5000000) * 100); // Target $5M
+                const normalizedInvoiced = Math.min(100, (invoicedAmount / 5000000) * 100); // Target $5M
                 const normalizedWinRate = Math.min(100, winRate * 1.5); // Target ~66% winrate
                 const normalizedActivity = Math.min(100, (dealCount / 10) * 100); // Target 10 deals
 
-                const overallScore = (normalizedRevenue * 0.50) + (normalizedWinRate * 0.30) + (normalizedActivity * 0.20);
+                const overallScore = (normalizedInvoiced * 0.50) + (normalizedWinRate * 0.30) + (normalizedActivity * 0.20);
 
                 const trendData = generateTrendData(user.name);
                 const isTrendingUp = trendData[trendData.length - 1].value > trendData[0].value;
@@ -68,22 +72,33 @@ export function GamifiedLeaderboard({ deals: propDeals }: GamifiedLeaderboardPro
                     id: user.id,
                     name: user.name,
                     avatar: user.avatar,
-                    revenue: totalRevenue,
+                    revenue: invoicedAmount, // We use invoiced as the primary revenue metric for the leaderboard
+                    invoicedAmount,
                     winRate,
                     dealCount,
                     overallScore,
                     trendData,
                     isTrendingUp,
+                    gapToLeader: 0,
                     comparisons: {
-                        vsAvgRevenue: ((totalRevenue - avgRevenue) / avgRevenue) * 100,
+                        vsAvgRevenue: avgInvoiced > 0 ? ((invoicedAmount - avgInvoiced) / avgInvoiced) * 100 : 0,
                     },
                     streak: Math.floor(Math.random() * 8) + 2
                 };
             })
             .sort((a, b) => b.overallScore - a.overallScore)
+        const sortedStats = stats
+            .sort((a, b) => b.overallScore - a.overallScore)
             .slice(0, 10);
 
-        return stats;
+        if (sortedStats.length > 0) {
+            const leaderRevenue = sortedStats[0].invoicedAmount;
+            sortedStats.forEach((stat, index) => {
+                stat.gapToLeader = index === 0 ? 0 : Math.max(0, leaderRevenue - stat.invoicedAmount);
+            });
+        }
+
+        return sortedStats;
     }, [deals, users]);
 
     const getRankIcon = (index: number) => {
@@ -156,8 +171,8 @@ export function GamifiedLeaderboard({ deals: propDeals }: GamifiedLeaderboardPro
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.05 }}
                                 className={cn(
-                                    "border-b border-slate-100 dark:border-white/5 transition-all cursor-pointer",
-                                    isExpanded ? "bg-indigo-50/50 dark:bg-indigo-500/10" : "hover:bg-slate-50 dark:hover:bg-white/5",
+                                    "border-b border-slate-100 dark:border-slate-700 transition-all cursor-pointer",
+                                    isExpanded ? "bg-slate-50 dark:bg-slate-800/80" : "hover:bg-slate-50 dark:hover:bg-slate-800/40",
                                     index === 0 && !isExpanded ? "bg-amber-50/30 dark:bg-amber-500/5" : ""
                                 )}
                                 onClick={() => toggleExpand(performer.id)}
@@ -213,12 +228,20 @@ export function GamifiedLeaderboard({ deals: propDeals }: GamifiedLeaderboardPro
                                         </ResponsiveContainer>
                                     </div>
 
-                                    {/* Overall Score */}
-                                    <div className="flex flex-col items-end flex-shrink-0 min-w-[60px]">
-                                        <span className="text-xl font-black text-indigo-600 dark:text-indigo-400 leading-none">
-                                            {performer.overallScore.toFixed(0)}
-                                        </span>
-                                        <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wide">{t('gamification.score')}</span>
+                                    {/* Invoiced & Score */}
+                                    <div className="flex items-center gap-4 flex-shrink-0">
+                                        <div className="flex flex-col items-end min-w-[80px]">
+                                            <span className="text-lg font-bold text-slate-700 dark:text-slate-200 leading-none">
+                                                {formatCurrency(performer.invoicedAmount)}₺
+                                            </span>
+                                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wide">FATURALANAN</span>
+                                        </div>
+                                        <div className="flex flex-col items-end min-w-[60px]">
+                                            <span className="text-xl font-black text-indigo-600 dark:text-indigo-400 leading-none">
+                                                {performer.overallScore.toFixed(0)}
+                                            </span>
+                                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wide">{t('gamification.score')}</span>
+                                        </div>
                                     </div>
 
                                     {/* Expand Icon */}
@@ -239,27 +262,31 @@ export function GamifiedLeaderboard({ deals: propDeals }: GamifiedLeaderboardPro
                                             <div className="p-4 pt-0 pl-16 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
 
                                                 {/* AI Insights / Why I Won */}
-                                                <div className="bg-indigo-50 dark:bg-indigo-900/20 p-3 rounded-xl border border-indigo-100 dark:border-indigo-500/10">
-                                                    <h4 className="font-bold text-indigo-700 dark:text-indigo-300 mb-2 flex items-center gap-1.5">
-                                                        <Zap size={12} className="fill-current" />
+                                                <div className="bg-slate-100 dark:bg-slate-900/40 p-4 rounded-xl border border-slate-200 dark:border-white/5">
+                                                    <h4 className="font-bold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-1.5">
+                                                        <Zap size={14} className="text-indigo-500 fill-current" />
                                                         {t('gamification.whyScore')}
                                                     </h4>
-                                                    <ul className="space-y-1.5 text-slate-600 dark:text-slate-300">
-                                                        <li className="flex items-start gap-1.5">
-                                                            <div className="mt-0.5 w-1 h-1 rounded-full bg-indigo-500" />
+                                                    <ul className="space-y-2 text-slate-600 dark:text-slate-400">
+                                                        <li className="flex items-start gap-2">
+                                                            <div className="mt-1.5 w-1 h-1 rounded-full bg-indigo-500 flex-shrink-0" />
                                                             <span>
                                                                 <Trans
                                                                     i18nKey="gamification.revenueInsight"
                                                                     values={{
-                                                                        revenue: formatCurrency(performer.revenue),
-                                                                        percentage: performer.comparisons.vsAvgRevenue.toFixed(0)
+                                                                        revenue: formatCurrency(performer.invoicedAmount),
+                                                                        percentage: Math.abs(performer.comparisons.vsAvgRevenue).toFixed(0),
+                                                                        direction: performer.comparisons.vsAvgRevenue >= 0 ? "üzerindesin" : "gerisindesin"
                                                                     }}
-                                                                    components={{ 1: <strong className="text-slate-900 dark:text-white" />, 3: <strong className="text-emerald-600" /> }}
+                                                                    components={{
+                                                                        1: <strong className="text-slate-900 dark:text-slate-200" />,
+                                                                        3: <strong className={performer.comparisons.vsAvgRevenue >= 0 ? "text-emerald-500 dark:text-emerald-400" : "text-rose-500 dark:text-rose-400"} />
+                                                                    }}
                                                                 />
                                                             </span>
                                                         </li>
-                                                        <li className="flex items-start gap-1.5">
-                                                            <div className="mt-0.5 w-1 h-1 rounded-full bg-indigo-500" />
+                                                        <li className="flex items-start gap-2">
+                                                            <div className="mt-1.5 w-1 h-1 rounded-full bg-indigo-500 flex-shrink-0" />
                                                             <span>
                                                                 <Trans
                                                                     i18nKey="gamification.winRateInsight"
@@ -267,12 +294,13 @@ export function GamifiedLeaderboard({ deals: propDeals }: GamifiedLeaderboardPro
                                                                         rate: performer.winRate.toFixed(0),
                                                                         status: performer.winRate > 40 ? t('executiveBrief.kpis.strongSignal') : t('executiveBrief.kpis.needsAttention')
                                                                     }}
-                                                                    components={{ 1: <strong className="text-slate-900 dark:text-white" /> }}
+                                                                    components={{ 1: <strong className="text-slate-900 dark:text-slate-200" /> }}
                                                                 />
                                                             </span>
                                                         </li>
-                                                        <li className="flex items-start gap-1.5">
-                                                            <div className="mt-0.5 w-1 h-1 rounded-full bg-indigo-500" />
+
+                                                        <li className="flex items-start gap-2">
+                                                            <div className="mt-1.5 w-1 h-1 rounded-full bg-indigo-500 flex-shrink-0" />
                                                             <span>
                                                                 {performer.isTrendingUp
                                                                     ? t('gamification.trendingUp')
@@ -283,26 +311,43 @@ export function GamifiedLeaderboard({ deals: propDeals }: GamifiedLeaderboardPro
                                                 </div>
 
                                                 {/* Comparison Stats */}
-                                                <div className="grid grid-cols-2 gap-2">
-                                                    <div className="bg-slate-50 dark:bg-white/5 p-2 rounded-lg border border-slate-100 dark:border-white/5">
-                                                        <span className="text-[9px] text-slate-400 uppercase font-bold block mb-1">{t('gamification.revenueTrend')}</span>
-                                                        <div className="flex items-center gap-1">
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <div className="bg-slate-100 dark:bg-slate-900/40 p-3 rounded-xl border border-slate-200 dark:border-white/5">
+                                                        <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold block mb-2">{t('gamification.revenueTrend')}</span>
+                                                        <div className="flex items-center gap-1.5">
                                                             {performer.comparisons.vsAvgRevenue > 0
-                                                                ? <ArrowUpRight size={14} className="text-emerald-500" />
-                                                                : <ArrowDownRight size={14} className="text-rose-500" />}
-                                                            <span className={cn("font-bold", performer.comparisons.vsAvgRevenue > 0 ? "text-emerald-600" : "text-rose-600")}>
+                                                                ? <ArrowUpRight size={16} className="text-emerald-500" />
+                                                                : <ArrowDownRight size={16} className="text-rose-500" />}
+                                                            <span className={cn("text-lg font-bold", performer.comparisons.vsAvgRevenue > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
                                                                 %{Math.abs(performer.comparisons.vsAvgRevenue).toFixed(0)}
                                                             </span>
-                                                            <span className="text-[9px] text-slate-400">{t('gamification.vsTeam')}</span>
+                                                            <span className="text-[10px] text-slate-500 dark:text-slate-400 ml-1">{t('gamification.vsTeam')}</span>
                                                         </div>
                                                     </div>
-                                                    <div className="bg-slate-50 dark:bg-white/5 p-2 rounded-lg border border-slate-100 dark:border-white/5">
-                                                        <span className="text-[9px] text-slate-400 uppercase font-bold block mb-1">{t('gamification.nextAction')}</span>
-                                                        <div className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
-                                                            <Target size={14} className="text-indigo-500" />
-                                                            <span className="font-medium">{t('gamification.closeDeal')}</span>
-                                                        </div>
-                                                        <span className="text-[8px] text-slate-400 block mt-0.5">{t('gamification.reachMaster')}</span>
+                                                    <div className="bg-slate-100 dark:bg-slate-900/40 p-3 rounded-xl border border-slate-200 dark:border-white/5">
+                                                        {index === 0 ? (
+                                                            <>
+                                                                <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold block mb-2">{t('gamification.nextAction')}</span>
+                                                                <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                                                                    <Crown size={16} className="text-yellow-500" />
+                                                                    <span className="font-semibold text-sm">Zirveyi Koru</span>
+                                                                </div>
+                                                                <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1">Liderliği devretme!</span>
+                                                            </>
+                                                        ) : (
+                                                            <div className="flex flex-col h-full justify-between">
+                                                                <div>
+                                                                    <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold block mb-2">LİDER İLE FARK</span>
+                                                                    <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                                                                        <Target size={16} className="text-indigo-500" />
+                                                                        <span className="font-semibold text-sm">{formatCurrency(performer.gapToLeader)}₺</span>
+                                                                    </div>
+                                                                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1 tracking-tight">
+                                                                        Sıralamayı değiştirecek güç sende.
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
 

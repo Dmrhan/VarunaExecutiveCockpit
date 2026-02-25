@@ -20,12 +20,13 @@
         "regenerate": "Regenerate",
         "selectDate": "Select Date",
         "filters": {
-            "active30": "Active Window (30 Days)",
-            "today": "Today",
-            "thisWeek": "This Week",
-            "thisMonth": "This Month",
-            "thisQuarter": "This Quarter",
-            "custom": "Custom"
+            "allTeams": "All Teams",
+            "allPersons": "All Persons",
+            "thisWeek": "THIS WEEK",
+            "thisMonth": "THIS MONTH",
+            "ytd": "YTD",
+            "all": "ALL",
+            "custom": "CUSTOM"
         }
     },
     "sidebar": {
@@ -37,9 +38,11 @@
         "executivev2": "Cockpit V2",
         "performance": "Performance Cockpit",
         "opportunities": "Opportunities",
+        "management": "Opportunity Management",
         "activities": "Activities",
         "quotes": "Quotes",
-        "orders": "Orders"
+        "orders": "Orders",
+        "contracts": "Contracts"
     },
     "dateFilters": {
         "today": "Today",
@@ -706,6 +709,7 @@
         "filters": {
             "allTeams": "All Teams",
             "allPersons": "All Persons",
+            "allProducts": "All Products",
             "custom": "Custom"
         },
         "metrics": {
@@ -731,7 +735,19 @@
             "conversion": "CONVERSION",
             "daysAvg": "days avg.",
             "records": "Records",
-            "deals": "Deals"
+            "deals": "Deals",
+            "totalOpportunities": "Total opportunities",
+            "oppUnit": "OPP",
+            "quotesSent": "Quotes sent",
+            "quoteUnit": "QUOTE",
+            "conversionRate": "Conversion rate",
+            "revenueBased": "Revenue-Based",
+            "countConversion": "Count conversion",
+            "acceptedQuotes": "Accepted quotes",
+            "winRate": "Win rate",
+            "openOrders": "Open orders",
+            "orderUnit": "ORDER",
+            "invoiced": "Invoiced"
         },
         "blockers": {
             "title": "Order Velocity Blockers",
@@ -759,13 +775,52 @@
         "drilldown": {
             "details": "Details",
             "showingRecords": "Showing {{count}} records affecting this metric",
-            "searchPlaceholder": "Search records...",
+            "searchPlaceholder": "Search by name, customer, owner or status...",
+            "noResults": "No records found matching your search criteria.",
+            "records": "records listed",
+            "estimated": "Estimated",
+            "lowRisk": "LOW RISK",
+            "mediumRisk": "MEDIUM RISK",
+            "highDiscount": "High Discount",
+            "competitor": "Competitor",
             "columns": {
                 "record": "Record",
                 "owner": "Owner",
                 "dateStatus": "Date/Status",
-                "value": "Value"
+                "value": "Value",
+                "customerAndDeals": "Customer / Opportunities",
+                "stage": "Stage",
+                "probability": "Probability",
+                "estimatedClose": "Est. Close",
+                "quoteName": "Quote Name",
+                "customer": "Customer",
+                "product": "Product",
+                "status": "Status",
+                "amount": "Amount",
+                "risk": "Risk",
+                "orderName": "Order Name",
+                "condition": "Status"
             }
+        },
+        "productBalance": {
+            "title": "PRODUCT BALANCE",
+            "subtitle": "Revenue by product from closed orders",
+            "revenue": "Revenue",
+            "orderCount": "Order Count",
+            "unit": "Units",
+            "empty": "No closed orders found matching the current filter."
+        },
+        "closeForecast": {
+            "title": "NEXT 12 MONTHS - CLOSE FORECAST",
+            "subtitle": "Active opportunities by expected close date",
+            "deals": "Deals",
+            "potential": "Potential"
+        },
+        "customerPotential": {
+            "title": "CUSTOMER BASED POTENTIAL",
+            "subtitle": "Total opportunity volume per customer",
+            "potential": "Potential",
+            "dealCount": "Deal Count"
         }
     },
     "performanceCockpit": {

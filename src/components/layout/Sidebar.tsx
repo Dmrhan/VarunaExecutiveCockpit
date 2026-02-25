@@ -1,18 +1,19 @@
-
+import { useState } from 'react';
 import { LayoutDashboard, Target, Phone, FileText, ShoppingCart, ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../../lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const NAV_ITEMS = [
-    { icon: LayoutDashboard, key: 'executive', active: true },
-    { icon: LayoutDashboard, key: 'executivev2', active: false },
-    { icon: Target, key: 'performance', active: false },
-    { icon: Target, key: 'opportunities', active: false },
-    { icon: ShieldCheck, key: 'management', active: false }, // Using ShieldCheck as placeholder, or Database if available
-    { icon: Phone, key: 'activities', active: false },
-    { icon: FileText, key: 'quotes', active: false },
-    { icon: ShoppingCart, key: 'orders', active: false },
-    { icon: ShieldCheck, key: 'contracts', active: false },
+    { icon: LayoutDashboard, key: 'executive' },
+    { icon: LayoutDashboard, key: 'executivev2' },
+    { icon: Target, key: 'performance' },
+    { icon: Target, key: 'opportunities' },
+    { icon: ShieldCheck, key: 'management' },
+    { icon: Phone, key: 'activities' },
+    { icon: FileText, key: 'quotes' },
+    { icon: ShoppingCart, key: 'orders' },
+    { icon: ShieldCheck, key: 'contracts' },
 ];
 
 interface SidebarProps {
@@ -22,40 +23,97 @@ interface SidebarProps {
 
 export function Sidebar({ activeView, onViewChange }: SidebarProps) {
     const { t } = useTranslation();
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [hoverIntentTimer, setHoverIntentTimer] = useState<NodeJS.Timeout | null>(null);
+
+    const handleMouseEnter = () => {
+        const timer = setTimeout(() => setIsExpanded(true), 150);
+        setHoverIntentTimer(timer);
+    };
+
+    const handleMouseLeave = () => {
+        if (hoverIntentTimer) clearTimeout(hoverIntentTimer);
+        setIsExpanded(false);
+    };
 
     return (
-        <div className="h-screen w-20 flex flex-col items-center bg-white dark:bg-slate-700 border-r border-slate-200 dark:border-slate-600 py-6 transition-all duration-300">
-            <div className="mb-8 p-1 bg-white dark:bg-slate-800 rounded-xl shadow-md">
-                <img
-                    src="/logo.png"
-                    alt="Varuna Logo"
-                    className="w-10 h-10 object-contain"
-                />
+        <motion.div
+            className={cn(
+                "h-screen flex flex-col bg-white dark:bg-slate-700 border-r border-slate-200 dark:border-slate-600 py-6 z-50",
+                "shadow-[4px_0_24px_rgba(0,0,0,0.02)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.1)]"
+            )}
+            initial={false}
+            animate={{ width: isExpanded ? 240 : 80 }}
+            transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+        >
+            <div className="px-4 mb-8 flex items-center overflow-hidden">
+                <div className="flex-shrink-0 p-1 bg-white dark:bg-slate-800 rounded-xl shadow-md">
+                    <img
+                        src="/logo.png"
+                        alt="Varuna Logo"
+                        className="w-10 h-10 object-contain"
+                    />
+                </div>
+                <AnimatePresence>
+                    {isExpanded && (
+                        <motion.span
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -10 }}
+                            className="ml-3 font-bold text-lg text-slate-800 dark:text-white whitespace-nowrap"
+                        >
+                            Varuna CRM
+                        </motion.span>
+                    )}
+                </AnimatePresence>
             </div>
 
-            <nav className="flex-1 flex flex-col gap-4">
+            <nav className="flex-1 flex flex-col gap-2 px-3 overflow-y-auto no-scrollbar">
                 {NAV_ITEMS.map((item) => {
                     const label = t(`navigation.${item.key}`);
+                    const isActive = activeView === item.key;
+
                     return (
                         <button
                             key={item.key}
                             onClick={() => onViewChange(item.key)}
                             className={cn(
-                                "p-3 rounded-xl transition-all duration-200 group relative",
-                                activeView === item.key
-                                    ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
+                                "flex items-center w-full p-3 rounded-xl transition-all duration-200 group relative",
+                                isActive
+                                    ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shadow-sm"
                                     : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
                             )}
-                            title={label}
+                            title={!isExpanded ? label : undefined}
                         >
-                            <item.icon size={24} strokeWidth={activeView === item.key ? 2.5 : 2} />
-                            {activeView === item.key && (
-                                <div className="absolute right-[-1px] top-1/2 -translate-y-1/2 w-[3px] h-6 bg-indigo-500 rounded-l-full" />
+                            <div className="flex-shrink-0">
+                                <item.icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+                            </div>
+
+                            <AnimatePresence mode="wait">
+                                {isExpanded && (
+                                    <motion.span
+                                        initial={{ opacity: 0, x: -10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -5 }}
+                                        className="ml-3 text-sm font-semibold whitespace-nowrap overflow-hidden"
+                                    >
+                                        {label}
+                                    </motion.span>
+                                )}
+                            </AnimatePresence>
+
+                            {isActive && (
+                                <motion.div
+                                    layoutId="active-indicator"
+                                    className="absolute left-0 w-[4px] h-6 bg-indigo-500 rounded-r-full"
+                                />
                             )}
                         </button>
                     );
                 })}
             </nav>
-        </div>
+        </motion.div>
     );
 }

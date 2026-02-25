@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
 import type { Deal, Activity, User, DashboardMetrics, DealStage, Quote, Order, Contract } from '../types/crm';
-import { generateMockData, generateActivitiesForDeals, USERS } from '../data/mockData';
+import { generateMockData, generateActivitiesForDeals, generateAuxiliaryDataForDeals, USERS } from '../data/mockData';
 import { OpportunityService } from '../services/OpportunityService';
 
 interface DataContextType {
@@ -40,17 +40,19 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Note: For now, we generate them independently, but ideally they should also be linked.
             // However, the main issue was Activities showing "Unknown".
             const auxMock = generateMockData(850);
-            setQuotes(auxMock.quotes);
-            setOrders(auxMock.orders);
+            const auxData = generateAuxiliaryDataForDeals(fetchedDeals);
+            setQuotes(auxData.quotes);
+            setOrders(auxData.orders);
             setContracts(auxMock.contracts);
 
         } catch (error) {
             console.error("Failed to fetch data, falling back to mock data", error);
             const mock = generateMockData(850);
+            const auxData = generateAuxiliaryDataForDeals(mock.deals);
             setDeals(mock.deals);
             setActivities(mock.activities);
-            setQuotes(mock.quotes);
-            setOrders(mock.orders);
+            setQuotes(auxData.quotes);
+            setOrders(auxData.orders);
             setContracts(mock.contracts);
         } finally {
             setIsLoading(false);

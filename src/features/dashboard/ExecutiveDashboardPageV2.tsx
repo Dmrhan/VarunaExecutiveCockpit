@@ -1,17 +1,22 @@
-import { useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import React, { useMemo, useState } from 'react';
+import { useTranslation, Trans } from 'react-i18next';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { useData } from '../../context/DataContext';
 import { DateRangePicker } from '../../components/ui/DateRangePicker';
+import { MultiSelect } from '../../components/ui/MultiSelect';
 import { cn } from '../../lib/utils';
 import {
     LayoutDashboard, FileText, ShoppingCart,
     CreditCard, Clock, Activity, AlertCircle,
-    ChevronRight, TrendingUp, X, Search, ArrowRight,
-    Building2, Calendar
+    ChevronRight, TrendingUp, TrendingDown, X, Search, ArrowRight,
+    Building2, Calendar, Target, Brain, Sparkles, Maximize2, Minimize2, Package
 } from 'lucide-react';
 
 import { motion, AnimatePresence } from 'framer-motion';
+import { generateExecutiveBrief } from '../../services/ExecutiveBriefService';
+import { GamifiedLeaderboard } from './GamifiedLeaderboard';
+import { ProductSalesDistribution } from './ProductSalesDistribution';
+import { CustomerPotentialChart } from './CustomerPotentialChart';
 
 // --- Types & Mock Data Generators ---
 
@@ -37,6 +42,13 @@ interface DrillDownRow {
     statusColor: string;
     date: string;
     owner: string;
+    // Deal-specific
+    probability?: number;
+    expectedCloseDate?: string;
+    // Quote-specific
+    product?: string;
+    discount?: number;
+    hasCompetitor?: boolean;
 }
 
 // Enhanced Mock Generator
@@ -44,86 +56,267 @@ interface DrillDownRow {
 
 // --- Components ---
 
-const DrillDownModal = ({ isOpen, onClose, title, data }: { isOpen: boolean, onClose: () => void, title: string, data: DrillDownRow[] }) => {
+const STAGE_BADGE: Record<string, string> = {
+    'Teklif': 'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-700',
+    'Sözleşme': 'bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-900/20 dark:text-purple-300 dark:border-purple-700',
+    'Konumlama': 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-700',
+    'Demo': 'bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-900/20 dark:text-sky-300 dark:border-sky-700',
+    'Lead': 'bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600',
+    'Qualified': 'bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-300 dark:border-indigo-700',
+    'Proposal': 'bg-cyan-50 text-cyan-700 border border-cyan-200 dark:bg-cyan-900/20 dark:text-cyan-300 dark:border-cyan-700',
+    'Negotiation': 'bg-orange-50 text-orange-700 border border-orange-200 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-700',
+    'Kazanıldı': 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-700',
+    'Kaybedildi': 'bg-red-50 text-red-600 border border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-700',
+};
+
+const PRODUCT_BADGE: Record<string, { bg: string; text: string }> = {
+    'EnRoute': { bg: '#DC2626', text: '#fff' },
+    'Stokbar': { bg: '#1D4ED8', text: '#fff' },
+    'Quest': { bg: '#15803D', text: '#fff' },
+    'ServiceCore': { bg: '#7E22CE', text: '#fff' },
+    'Varuna': { bg: '#CA8A04', text: '#fff' },
+    'Hosting': { bg: '#475569', text: '#fff' },
+    'Unidox': { bg: '#0284C7', text: '#fff' },
+};
+
+const QUOTE_STATUS_BADGE: Record<string, string> = {
+    'Accepted': 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+    'Approved': 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+    'Sent': 'bg-blue-50 text-blue-700 border border-blue-200',
+    'Draft': 'bg-slate-100 text-slate-600 border border-slate-200',
+    'Review': 'bg-amber-50 text-amber-700 border border-amber-200',
+    'Rejected': 'bg-red-50 text-red-600 border border-red-200',
+    'Denied': 'bg-red-50 text-red-600 border border-red-200',
+};
+
+const DrillDownModal = ({ isOpen, onClose, title, rows, drilldownType }: { isOpen: boolean; onClose: () => void; title: string; rows: DrillDownRow[]; drilldownType?: string }) => {
     const { t } = useTranslation();
+    const [search, setSearch] = useState('');
+    const [isFullscreen, setIsFullscreen] = useState(false);
+
+    // ESC support
+    React.useEffect(() => {
+        if (!isOpen) return;
+        const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+    }, [isOpen, onClose]);
+
+    const filtered = rows.filter(r =>
+        `${r.title} ${r.subtitle} ${r.owner} ${r.status}`.toLowerCase().includes(search.toLowerCase())
+    );
+
     if (!isOpen) return null;
+
+    const isDeals = drilldownType === 'deals';
+    const isQuotes = drilldownType === 'quotes' || drilldownType === 'quotes_accepted';
+    const isOrders = drilldownType === 'orders_open' || drilldownType === 'orders_closed';
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+            <div
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+                onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+            >
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-4xl max-h-[80vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700"
+                    initial={{ opacity: 0, scale: 0.96, y: 12 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.96, y: 12 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                    className={cn(
+                        "bg-white dark:bg-slate-800 rounded-2xl flex flex-col shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 transition-all duration-300",
+                        isFullscreen ? "fixed inset-4" : "w-full max-w-6xl max-h-[85vh]"
+                    )}
                 >
-                    <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
+                    {/* Header */}
+                    <div className="flex-shrink-0 p-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/70 dark:bg-slate-800/70">
                         <div>
-                            <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                                <Activity size={20} className="text-indigo-500" />
-                                {title} {t('dashboardV2.drilldown.details')}
+                            <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                <Activity size={18} className="text-indigo-500" />
+                                {title}
                             </h2>
-                            <p className="text-sm text-slate-500 mt-1">{t('dashboardV2.drilldown.showingRecords', { count: data.length })}</p>
+                            <p className="text-xs text-slate-400 mt-0.5">{filtered.length} {t('dashboardV2.drilldown.records')}</p>
                         </div>
-                        <button onClick={onClose} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors">
-                            <X size={20} className="text-slate-500" />
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setIsFullscreen(f => !f)}
+                                className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                                title={isFullscreen ? 'Küçült' : 'Tam Ekran'}
+                            >
+                                {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                            </button>
+                            <button
+                                onClick={onClose}
+                                className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
                     </div>
 
-                    <div className="p-4 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
+                    {/* Search */}
+                    <div className="flex-shrink-0 px-5 py-3 border-b border-slate-100 dark:border-slate-700">
                         <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
                             <input
                                 type="text"
+                                autoFocus
+                                value={search}
+                                onChange={e => setSearch(e.target.value)}
                                 placeholder={t('dashboardV2.drilldown.searchPlaceholder')}
-                                className="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-700/50 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                                className="w-full pl-9 pr-4 py-2.5 bg-slate-100 dark:bg-slate-700/60 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/30 transition-all placeholder:text-slate-400"
                             />
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-0">
+                    {/* Table */}
+                    <div className="flex-1 overflow-y-auto">
                         <table className="w-full text-left text-sm">
-                            <thead className="bg-slate-50 dark:bg-slate-700/30 sticky top-0 z-10 backdrop-blur-md">
+                            <thead className="bg-slate-50 dark:bg-slate-700/40 sticky top-0 z-10">
                                 <tr>
-                                    <th className="p-4 font-semibold text-slate-500">{t('dashboardV2.drilldown.columns.record')}</th>
-                                    <th className="p-4 font-semibold text-slate-500">{t('dashboardV2.drilldown.columns.owner')}</th>
-                                    <th className="p-4 font-semibold text-slate-500">{t('dashboardV2.drilldown.columns.dateStatus')}</th>
-                                    <th className="p-4 font-semibold text-slate-500 text-right">{t('dashboardV2.drilldown.columns.value')}</th>
-                                    <th className="p-4 font-semibold text-slate-500"></th>
+                                    {isDeals && (
+                                        <>
+                                            <th className="px-5 py-3 font-semibold text-xs uppercase tracking-wide text-slate-500">{t('dashboardV2.drilldown.columns.customerAndDeals')}</th>
+                                            <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wide text-slate-500">{t('dashboardV2.drilldown.columns.stage')}</th>
+                                            <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wide text-slate-500">{t('dashboardV2.drilldown.columns.probability')}</th>
+                                            <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wide text-slate-500">{t('dashboardV2.drilldown.columns.value')}</th>
+                                            <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wide text-slate-500">{t('dashboardV2.drilldown.columns.estimatedClose')}</th>
+                                            <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wide text-slate-500">{t('dashboardV2.drilldown.columns.owner')}</th>
+                                        </>
+                                    )}
+                                    {isQuotes && (
+                                        <>
+                                            <th className="px-5 py-3 font-semibold text-xs uppercase tracking-wide text-slate-500">{t('dashboardV2.drilldown.columns.quoteName')}</th>
+                                            <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wide text-slate-500">{t('dashboardV2.drilldown.columns.customer')}</th>
+                                            <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wide text-slate-500">{t('dashboardV2.drilldown.columns.product')}</th>
+                                            <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wide text-slate-500">{t('dashboardV2.drilldown.columns.status')}</th>
+                                            <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wide text-slate-500 text-right">{t('dashboardV2.drilldown.columns.amount')}</th>
+                                            <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wide text-slate-500">{t('dashboardV2.drilldown.columns.risk')}</th>
+                                        </>
+                                    )}
+                                    {isOrders && (
+                                        <>
+                                            <th className="px-5 py-3 font-semibold text-xs uppercase tracking-wide text-slate-500">{t('dashboardV2.drilldown.columns.orderName')}</th>
+                                            <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wide text-slate-500">{t('dashboardV2.drilldown.columns.customer')}</th>
+                                            <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wide text-slate-500">{t('dashboardV2.drilldown.columns.condition')}</th>
+                                            <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wide text-slate-500 text-right">{t('dashboardV2.drilldown.columns.amount')}</th>
+                                        </>
+                                    )}
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
-                                {data.map((row) => (
+                                {filtered.length === 0 ? (
+                                    <tr><td colSpan={6} className="text-center py-12 text-slate-400 text-sm">{t('dashboardV2.drilldown.noResults')}</td></tr>
+                                ) : filtered.map((row) => (
                                     <tr key={row.id} className="hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10 cursor-pointer group transition-colors">
-                                        <td className="p-4">
-                                            <div className="font-bold text-slate-900 dark:text-white">{row.title}</div>
-                                            <div className="text-xs text-slate-500 flex items-center gap-1">
-                                                <Building2 size={10} />
-                                                {row.subtitle}
-                                            </div>
-                                        </td>
-                                        <td className="p-4">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold">
-                                                    {row.owner.charAt(0)}
-                                                </div>
-                                                <span className="text-slate-600 dark:text-slate-300">{row.owner}</span>
-                                            </div>
-                                        </td>
-                                        <td className="p-4">
-                                            <span className={cn("px-2.5 py-1 rounded-full text-xs font-bold border", row.statusColor)}>
-                                                {row.status}
-                                            </span>
-                                            <div className="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
-                                                <Calendar size={10} /> {row.date}
-                                            </div>
-                                        </td>
-                                        <td className="p-4 text-right font-mono font-bold text-slate-700 dark:text-slate-300">
-                                            {row.value}
-                                        </td>
-                                        <td className="p-4 text-right">
-                                            <ChevronRight size={16} className="text-slate-300 group-hover:text-indigo-500 transition-colors" />
-                                        </td>
+
+                                        {/* ===== DEALS ===== */}
+                                        {isDeals && (
+                                            <>
+                                                <td className="px-5 py-3.5">
+                                                    <div className="font-semibold text-slate-800 dark:text-white text-sm leading-snug">{row.title}</div>
+                                                    <div className="text-xs text-slate-400 flex items-center gap-1 mt-0.5"><Building2 size={10} />{row.subtitle}</div>
+                                                </td>
+                                                <td className="px-4 py-3.5">
+                                                    <span className={cn('px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wide whitespace-nowrap', STAGE_BADGE[row.status] ?? 'bg-slate-100 text-slate-500 border border-slate-200')}>{row.status}</span>
+                                                </td>
+                                                <td className="px-4 py-3.5 min-w-[120px]">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                                                            <div className="h-full rounded-full bg-indigo-500" style={{ width: `${row.probability ?? 0}%` }} />
+                                                        </div>
+                                                        <span className="text-xs font-bold text-slate-600 dark:text-slate-300 w-8 text-right">%{row.probability ?? 0}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-3.5 font-mono font-bold text-slate-700 dark:text-slate-200 text-sm">{row.value}</td>
+                                                <td className="px-4 py-3.5">
+                                                    <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1"><Calendar size={11} />{row.expectedCloseDate ?? row.date}</div>
+                                                    <div className="text-[10px] text-slate-400 mt-0.5">{t('dashboardV2.drilldown.estimated')}</div>
+                                                </td>
+                                                <td className="px-4 py-3.5">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center text-[10px] font-bold text-indigo-600 dark:text-indigo-400 flex-shrink-0">{row.owner.charAt(0)}</div>
+                                                        <span className="text-xs text-slate-600 dark:text-slate-300">{row.owner}</span>
+                                                    </div>
+                                                </td>
+                                            </>
+                                        )}
+
+                                        {/* ===== QUOTES ===== */}
+                                        {isQuotes && (() => {
+                                            const pb = PRODUCT_BADGE[row.product ?? ''];
+                                            const isRisky = (row.discount ?? 0) >= 20 || row.hasCompetitor;
+                                            const riskLabel = row.hasCompetitor
+                                                ? t('dashboardV2.drilldown.competitor')
+                                                : (row.discount ?? 0) >= 20
+                                                    ? `${t('dashboardV2.drilldown.highDiscount')} (${row.discount}%)`
+                                                    : '';
+                                            return (
+                                                <>
+                                                    <td className="px-5 py-3.5">
+                                                        <div className="font-semibold text-slate-800 dark:text-white text-sm leading-snug">{row.title}</div>
+                                                        <div className="text-[10px] text-slate-400 mt-0.5">ID: {row.id}</div>
+                                                    </td>
+                                                    <td className="px-4 py-3.5">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-600">{row.subtitle.charAt(0)}</div>
+                                                            <span className="text-xs text-slate-600 dark:text-slate-300">{row.subtitle}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-4 py-3.5">
+                                                        {pb ? (
+                                                            <span className="px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wide whitespace-nowrap"
+                                                                style={{ backgroundColor: pb.bg, color: pb.text }}>
+                                                                {row.product}
+                                                            </span>
+                                                        ) : <span className="text-xs text-slate-400">{row.product ?? '-'}</span>}
+                                                    </td>
+                                                    <td className="px-4 py-3.5">
+                                                        <span className={cn('px-2.5 py-0.5 rounded-full text-xs font-bold border', QUOTE_STATUS_BADGE[row.status] ?? 'bg-slate-100 text-slate-600 border-slate-200')}>
+                                                            {row.status.toUpperCase()}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-3.5 text-right font-mono font-bold text-slate-700 dark:text-slate-200 text-sm">{row.value}</td>
+                                                    <td className="px-4 py-3.5">
+                                                        <div className={cn('flex items-center gap-1.5 text-xs font-semibold', isRisky ? 'text-amber-600' : 'text-emerald-600')}>
+                                                            {isRisky ? (
+                                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+                                                            ) : (
+                                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
+                                                            )}
+                                                            <span>{isRisky ? t('dashboardV2.drilldown.mediumRisk') : t('dashboardV2.drilldown.lowRisk')}</span>
+                                                        </div>
+                                                        {riskLabel && <div className="text-[10px] text-slate-400 mt-0.5">{riskLabel}</div>}
+                                                    </td>
+                                                </>
+                                            );
+                                        })()}
+
+                                        {/* ===== ORDERS ===== */}
+                                        {isOrders && (
+                                            <>
+                                                <td className="px-5 py-3.5">
+                                                    <div className="font-semibold text-slate-800 dark:text-white text-sm leading-snug">{row.title}</div>
+                                                    <div className="text-[10px] text-slate-400 mt-0.5">REF: {row.id}</div>
+                                                </td>
+                                                <td className="px-4 py-3.5">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-600">{row.subtitle.charAt(0)}</div>
+                                                        <span className="text-xs text-slate-600 dark:text-slate-300">{row.subtitle}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-3.5">
+                                                    <span className={cn(
+                                                        'px-2.5 py-1 rounded-full text-xs font-bold border',
+                                                        row.status === 'Kapalı' || row.status === 'Faturalandı'
+                                                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                                            : 'bg-sky-50 text-sky-700 border-sky-200'
+                                                    )}>{row.status === 'Faturalandı' ? t('status.Closed').toUpperCase() : t('status.Open').toUpperCase()}</span>
+                                                </td>
+                                                <td className="px-4 py-3.5 text-right font-mono font-bold text-slate-700 dark:text-slate-200 text-sm">{row.value}</td>
+                                            </>
+                                        )}
+
                                     </tr>
                                 ))}
                             </tbody>
@@ -173,83 +366,97 @@ const InteractiveKPICard = ({ metric, onClick }: { metric: DashboardMetric, onCl
     </motion.div>
 );
 
-const PipelineStep = ({ title, count, value, index, total }: any) => {
-    const { t } = useTranslation();
-    const isLast = index === total - 1;
-    const isFirst = index === 0;
-
-    // Progress bar colors (getting darker/richer as we move right to imply concentration or simply flow)
-    const activeColor = "bg-indigo-50/40 dark:bg-slate-800/60";
-
+const PipelineStep = ({ title, count, value, index, total, icon, iconColorClass = "text-slate-400", unit, trend, conversion, subMetric, onClick }: any) => {
     return (
-        <div className={cn(
-            "relative flex-1 group min-w-[150px] flex flex-col justify-between p-4",
-            "border-y border-slate-200 dark:border-slate-700",
-            isFirst ? "rounded-l-2xl border-l pl-6" : "pl-8",
-            isLast ? "rounded-r-2xl border-r pr-6" : "pr-4",
-            "hover:bg-indigo-50/80 dark:hover:bg-slate-700 transition-colors duration-300",
-            activeColor
-        )}>
+        <div
+            onClick={onClick}
+            className={cn(
+                "relative flex-1 min-w-[200px] flex flex-col justify-between py-5 px-5 bg-white rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 dark:bg-slate-900",
+                onClick ? "cursor-pointer hover:border-indigo-200 dark:hover:border-indigo-700/50 group" : ""
+            )}
+        >
+            {/* Hover glow */}
+            {onClick && <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity ring-2 ring-indigo-400/20 pointer-events-none" />}
+
             {/* Content */}
-            <div className="flex flex-col h-full justify-between relative z-10">
-                <div className="flex justify-between items-start">
-                    <p className="text-[10px] uppercase font-bold text-slate-500 mb-1 tracking-wider group-hover:text-indigo-600 transition-colors">
+            <div className="flex flex-col h-full justify-start relative z-10 gap-2">
+                <div className="flex items-center justify-between w-full mb-1">
+                    <p className="text-[11px] font-bold tracking-wide text-slate-400 capitalize">
                         {title}
                     </p>
-                    <span className="text-[10px] font-mono text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {t('dashboardV2.pipeline.step')} {index + 1}
-                    </span>
+                    {icon && (
+                        <div className={cn("p-1", iconColorClass)}>
+                            {icon}
+                        </div>
+                    )}
                 </div>
 
-                <div>
-                    <div className="flex items-baseline gap-1.5">
-                        <span className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">{count}</span>
-                        <span className="text-[10px] uppercase font-bold text-slate-400">{t('dashboardV2.pipeline.records')}</span>
+                <div className="flex flex-col gap-1 my-1">
+                    <div className="flex items-baseline gap-2">
+                        <div className="text-[32px] font-medium text-slate-800 dark:text-slate-100 tracking-tight leading-none">
+                            {value}
+                        </div>
                     </div>
-                    <div className="h-1 w-12 bg-indigo-500/20 rounded-full my-2 group-hover:w-full group-hover:bg-indigo-500 transition-all duration-500" />
-                    <div className="text-sm font-bold text-slate-600 dark:text-slate-300 group-hover:text-indigo-700 dark:group-hover:text-indigo-400">
-                        {value}
-                    </div>
+                    {conversion && (
+                        <div className="text-[11px] font-medium text-slate-400 mt-0.5 flex items-center gap-1 group relative cursor-help w-fit">
+                            <span>Dönüşüm:</span>
+                            <span className="text-slate-600 dark:text-slate-300 font-bold">%{conversion.percentage}</span>
+                            <span>•</span>
+                            <span>{conversion.value}</span>
+
+                            {/* Tooltip */}
+                            <div className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 w-max opacity-0 transition-opacity group-hover:opacity-100 bg-slate-800 text-white text-[10px] rounded py-1 px-2 z-50">
+                                {conversion.tooltipText}
+                                <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
+                            </div>
+                        </div>
+                    )}
+                    {subMetric && subMetric}
+                </div>
+
+                <div className="flex justify-between items-center mt-auto w-full pt-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                        {count} {unit || 'KAYIT'}
+                    </span>
+
+                    {trend !== undefined && (
+                        <div className={cn(
+                            "flex items-center text-[10px] font-bold",
+                            trend >= 0 ? "text-emerald-500" : "text-rose-500"
+                        )}>
+                            {trend >= 0 ? <TrendingUp size={12} className="mr-0.5" strokeWidth={2.5} /> : <TrendingDown size={12} className="mr-0.5" strokeWidth={2.5} />}
+                            {trend >= 0 ? '+' : ''}{trend}%
+                        </div>
+                    )}
                 </div>
             </div>
-
-            {/* Chevron Separator (SVG) */}
-            {!isLast && (
-                <div className="absolute top-0 bottom-0 -right-3 w-6 z-20 pointer-events-none hidden md:block" style={{ right: '-12px' }}>
-                    <svg className="h-full w-full" viewBox="0 0 24 100" preserveAspectRatio="none">
-                        {/* Background match to hide content behind */}
-                        <path d="M0,0 L24,50 L0,100" className="fill-slate-50/50 dark:fill-slate-900/50 stroke-none" />
-                        {/* Border line */}
-                        <path d="M0,0 L24,50 L0,100" fill="none" className="stroke-slate-200 dark:stroke-slate-700" strokeWidth="1" vectorEffect="non-scaling-stroke" />
-                    </svg>
-                </div>
-            )}
         </div>
     );
 };
 
 export function ExecutiveDashboardPageV2() {
     const { t } = useTranslation();
-    const { deals, quotes, orders, users } = useData();
+    const { deals, quotes, orders, users, contracts = [] } = useData();
 
     // Filters
     const [dateFilter, setDateFilter] = useState('all');
-    const [selectedRole, setSelectedRole] = useState<'gm' | 'sales_manager'>('gm');
-
-    // New Advanced Filters
-    const [selectedSource, setSelectedSource] = useState<string>('all');
-    const [selectedOwner, setSelectedOwner] = useState<string>('all');
+    // New Advanced Filters (Multiple Choice)
+    const [selectedDepartment, setSelectedDepartment] = useState<string[]>(['all']);
+    const [selectedOwner, setSelectedOwner] = useState<string[]>(['all']);
+    const [selectedProduct, setSelectedProduct] = useState<string[]>(['all']);
 
     // Date Picker State
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [customRange, setCustomRange] = useState<{ start: Date | null, end: Date | null }>({ start: null, end: null });
 
-    // Drilldown State
-    const [selectedMetric, setSelectedMetric] = useState<string | null>(null);
 
     // Derived Lists for Filters
-    const sources = useMemo(() => Array.from(new Set(deals.map(d => d.source))), [deals]);
+    const departments = useMemo(() => Array.from(new Set(users.map(u => u.department))).filter(Boolean) as string[], [users]);
     const owners = useMemo(() => users.filter(u => u.role === 'sales_rep' || u.role === 'manager'), [users]);
+    const products = useMemo(() => Array.from(new Set([
+        ...deals.map(d => (d as any).product).filter(Boolean),
+        ...orders.map(o => (o as any).product).filter(Boolean),
+    ])) as string[], [deals, orders]);
 
     // --- Rich Mock Data (Independent of filters for now, or could filter if dates present) ---
     const { delayedOrders, collections } = useMemo(() => {
@@ -318,20 +525,132 @@ export function ExecutiveDashboardPageV2() {
             filteredOrders = filteredOrders.filter(o => filterByDate(o.createdAt));
         }
 
-        // 2. Filter by Source (Team)
-        if (selectedSource !== 'all') {
-            filteredDeals = filteredDeals.filter(d => d.source === selectedSource);
+        // 2. Filter by Team (Department)
+        if (!selectedDepartment.includes('all') && selectedDepartment.length > 0) {
+            const usersInSelectedDepts = users.filter(u => u.department && selectedDepartment.includes(u.department)).map(u => u.id);
+            filteredDeals = filteredDeals.filter(d => usersInSelectedDepts.includes(d.ownerId));
+            // Since quotes/orders are generated/linked to deals, we filter them implicitly or explicitly
+            // For explicitly:
+            filteredQuotes = filteredQuotes.filter(q => q.salesRepId && usersInSelectedDepts.includes(q.salesRepId));
+            filteredOrders = filteredOrders.filter(o => o.salesRepId && usersInSelectedDepts.includes(o.salesRepId));
         }
 
         // 3. Filter by Owner (Person)
-        if (selectedOwner !== 'all') {
-            filteredDeals = filteredDeals.filter(d => d.ownerId === selectedOwner);
-            filteredQuotes = filteredQuotes.filter(q => q.salesRepId === selectedOwner);
-            filteredOrders = filteredOrders.filter(o => o.salesRepId === selectedOwner);
+        if (!selectedOwner.includes('all') && selectedOwner.length > 0) {
+            filteredDeals = filteredDeals.filter(d => selectedOwner.includes(d.ownerId));
+            filteredQuotes = filteredQuotes.filter(q => q.salesRepId && selectedOwner.includes(q.salesRepId));
+            filteredOrders = filteredOrders.filter(o => o.salesRepId && selectedOwner.includes(o.salesRepId));
+        }
+
+        // 4. Filter by Product
+        if (!selectedProduct.includes('all') && selectedProduct.length > 0) {
+            filteredDeals = filteredDeals.filter(d => selectedProduct.includes((d as any).product));
+            filteredQuotes = filteredQuotes.filter(q => selectedProduct.includes((q as any).product));
+            filteredOrders = filteredOrders.filter(o => selectedProduct.includes((o as any).product));
         }
 
         return { deals: filteredDeals, quotes: filteredQuotes, orders: filteredOrders };
-    }, [deals, quotes, orders, dateFilter, customRange, selectedSource, selectedOwner]);
+    }, [deals, quotes, orders, dateFilter, customRange, selectedDepartment, selectedOwner, selectedProduct, users]);
+
+    // Drilldown State (after filteredData to allow dependency)
+    const [drilldownType, setDrilldownType] = useState<string | null>(null);
+    const [selectedMetric, setSelectedMetric] = useState<string | null>(null);
+
+    // Build drilldown rows from real filtered data
+    const drilldownRows = useMemo((): DrillDownRow[] => {
+        const fmt = (v: number) => {
+            if (v >= 1000000) return `${(v / 1000000).toFixed(1)}M \u20ba`;
+            if (v >= 1000) return `${(v / 1000).toFixed(0)}K \u20ba`;
+            return `${v} \u20ba`;
+        };
+        const ownerName = (id: string) => users.find(u => u.id === id)?.name ?? id;
+
+        if (drilldownType === 'deals') {
+            return filteredData.deals
+                .filter(d => !['Lost', 'Kaybedildi'].includes(d.stage))
+                .map(d => ({
+                    id: d.id,
+                    title: d.title,
+                    subtitle: d.customerName,
+                    owner: ownerName(d.ownerId),
+                    status: d.stage,
+                    statusColor: 'bg-amber-50 text-amber-700 border-amber-200',
+                    date: new Date(d.createdAt).toLocaleDateString('tr-TR'),
+                    value: fmt(d.value),
+                    probability: d.probability,
+                    expectedCloseDate: d.expectedCloseDate ? new Date(d.expectedCloseDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' }) : undefined,
+                }));
+        }
+        if (drilldownType === 'quotes') {
+            return filteredData.quotes.map((q: any) => ({
+                id: q.id,
+                title: q.title ?? `Teklif #${q.id}`,
+                subtitle: q.customerName ?? '-',
+                owner: q.salesRepName ?? ownerName(q.salesRepId ?? q.ownerId),
+                status: q.status,
+                statusColor: 'bg-blue-50 text-blue-700 border-blue-200',
+                date: q.createdAt ? new Date(q.createdAt).toLocaleDateString('tr-TR') : '-',
+                value: fmt(q.amount),
+                product: q.product,
+                discount: q.discount,
+                hasCompetitor: q.hasCompetitor,
+            }));
+        }
+        if (drilldownType === 'quotes_accepted') {
+            return filteredData.quotes
+                .filter((q: any) => ['Accepted', 'Approved'].includes(q.status))
+                .map((q: any) => ({
+                    id: q.id,
+                    title: q.title ?? `Teklif #${q.id}`,
+                    subtitle: q.customerName ?? '-',
+                    owner: q.salesRepName ?? ownerName(q.salesRepId ?? q.ownerId),
+                    status: q.status,
+                    statusColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+                    date: q.createdAt ? new Date(q.createdAt).toLocaleDateString('tr-TR') : '-',
+                    value: fmt(q.amount),
+                    product: q.product,
+                    discount: q.discount,
+                    hasCompetitor: q.hasCompetitor,
+                }));
+        }
+        if (drilldownType === 'orders_open') {
+            return filteredData.orders
+                .filter((o: any) => o.status === 'Open')
+                .map((o: any) => ({
+                    id: o.id,
+                    title: o.title ?? `Sipariş #${o.id}`,
+                    subtitle: o.customerName ?? o.product ?? '-',
+                    owner: ownerName(o.salesRepId ?? o.ownerId),
+                    status: 'Açık',
+                    statusColor: 'bg-purple-50 text-purple-700 border-purple-200',
+                    date: o.createdAt ? new Date(o.createdAt).toLocaleDateString('tr-TR') : '-',
+                    value: fmt(o.amount)
+                }));
+        }
+        if (drilldownType === 'orders_closed') {
+            return filteredData.orders
+                .filter((o: any) => o.status === 'Closed')
+                .map((o: any) => ({
+                    id: o.id,
+                    title: o.title ?? `Sipariş #${o.id}`,
+                    subtitle: o.customerName ?? o.product ?? '-',
+                    owner: ownerName(o.salesRepId ?? o.ownerId),
+                    status: 'Faturalandı',
+                    statusColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                    date: o.createdAt ? new Date(o.createdAt).toLocaleDateString('tr-TR') : '-',
+                    value: fmt(o.amount)
+                }));
+        }
+        return [];
+    }, [drilldownType, filteredData, users]);
+
+    const drilldownTitle: Record<string, string> = {
+        deals: t('dashboardV2.pipeline.totalOpportunities'),
+        quotes: t('dashboardV2.pipeline.quotesSent'),
+        quotes_accepted: t('dashboardV2.pipeline.acceptedQuotes'),
+        orders_open: t('dashboardV2.pipeline.openOrders'),
+        orders_closed: t('dashboardV2.pipeline.invoiced'),
+    };
 
     // Derived Metrics
     const metrics: DashboardMetric[] = useMemo(() => [
@@ -451,6 +770,9 @@ export function ExecutiveDashboardPageV2() {
         return `${(val / 1000).toFixed(0)}k ₺`;
     };
 
+    // Calculate AI Narrative based on filtered deals
+    const { narrativeParams } = useMemo(() => generateExecutiveBrief(filteredData.deals, contracts, t), [filteredData.deals, contracts, t]);
+
     return (
         <div className="min-h-screen bg-slate-50/50 dark:bg-slate-900/50 pb-20">
             <div className="max-w-[1600px] mx-auto space-y-8 p-8">
@@ -468,57 +790,41 @@ export function ExecutiveDashboardPageV2() {
                     </div>
 
                     <div className="flex flex-col md:flex-row gap-3 items-start md:items-center flex-wrap">
-                        {/* Role Selector */}
-                        <div className="flex bg-white dark:bg-slate-800 p-1.5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-                            <button
-                                onClick={() => setSelectedRole('gm')}
-                                className={cn("px-4 py-2 text-sm font-bold rounded-lg transition-all", selectedRole === 'gm' ? "bg-indigo-500 text-white shadow" : "text-slate-500 hover:text-slate-700")}
-                            >
-                                {t('dashboardV2.role.gm')}
-                            </button>
-                            <button
-                                onClick={() => setSelectedRole('sales_manager')}
-                                className={cn("px-4 py-2 text-sm font-bold rounded-lg transition-all", selectedRole === 'sales_manager' ? "bg-indigo-500 text-white shadow" : "text-slate-500 hover:text-slate-700")}
-                            >
-                                {t('dashboardV2.role.salesManager')}
-                            </button>
-                        </div>
 
-                        {/* Source / Team Filter */}
-                        <div className="relative">
-                            <select
-                                className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white font-bold rounded-xl px-4 py-3 pr-10 appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
-                                value={selectedSource}
-                                onChange={(e) => setSelectedSource(e.target.value)}
-                            >
-                                <option value="all">{t('dashboardV2.filters.allTeams')}</option>
-                                {sources.map(s => <option key={s} value={s}>{s}</option>)}
-                            </select>
-                            <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 rotate-90" size={16} />
-                        </div>
+                        {/* Department / Team Filter */}
+                        <MultiSelect
+                            options={departments.map(d => ({ label: d, value: d }))}
+                            selectedValues={selectedDepartment}
+                            onChange={setSelectedDepartment}
+                            allLabel={t('dashboardV2.filters.allTeams')}
+                        />
 
                         {/* Owner / Person Filter */}
-                        <div className="relative">
-                            <select
-                                className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white font-bold rounded-xl px-4 py-3 pr-10 pl-10 appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
-                                value={selectedOwner}
-                                onChange={(e) => setSelectedOwner(e.target.value)}
-                            >
-                                <option value="all">{t('dashboardV2.filters.allPersons')}</option>
-                                {owners.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-                            </select>
-                            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                            <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 rotate-90" size={16} />
-                        </div>
+                        <MultiSelect
+                            options={owners.map(u => ({ label: u.name, value: u.id }))}
+                            selectedValues={selectedOwner}
+                            onChange={setSelectedOwner}
+                            icon={<Building2 size={16} className="text-slate-400" />}
+                            allLabel={t('dashboardV2.filters.allPersons')}
+                        />
+
+                        {/* Product Filter */}
+                        <MultiSelect
+                            options={products.map(p => ({ label: p, value: p }))}
+                            selectedValues={selectedProduct}
+                            onChange={setSelectedProduct}
+                            icon={<Package size={16} className="text-slate-400" />}
+                            allLabel={t('dashboardV2.filters.allProducts')}
+                        />
 
                         {/* Date Filters */}
-                        <div className="flex bg-white dark:bg-slate-800 p-1.5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 items-center gap-1">
+                        <div className="flex bg-white dark:bg-slate-800 p-1 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 items-center gap-1">
                             {['this_week', 'this_month', 'ytd', 'all'].map(key => (
                                 <button
                                     key={key}
                                     onClick={() => setDateFilter(key)}
                                     className={cn(
-                                        "px-3 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all",
+                                        "px-3 py-2 text-xs font-medium uppercase tracking-wider rounded-lg transition-all",
                                         dateFilter === key
                                             ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400"
                                             : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
@@ -527,10 +833,11 @@ export function ExecutiveDashboardPageV2() {
                                     {t(`dateFilters.${key === 'this_week' ? 'thisWeek' : key === 'this_month' ? 'thisMonth' : key === 'ytd' ? 'ytd' : 'all'}`, { defaultValue: key })}
                                 </button>
                             ))}
+                            <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1"></div>
                             <button
                                 onClick={() => { setDateFilter('custom'); setShowDatePicker(true); }}
                                 className={cn(
-                                    "px-3 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all flex items-center gap-1",
+                                    "px-3 py-2 text-xs font-medium uppercase tracking-wider rounded-lg transition-all flex items-center gap-1.5",
                                     dateFilter === 'custom'
                                         ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400"
                                         : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
@@ -560,177 +867,115 @@ export function ExecutiveDashboardPageV2() {
                     />
                 )}
 
-                {/* KPI Grid - Animated & Interactive */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                    {metrics.map((metric) => (
-                        <InteractiveKPICard
-                            key={metric.id}
-                            metric={metric}
-                            onClick={() => setSelectedMetric(metric.id)}
-                        />
-                    ))}
-                </div>
+
 
                 {/* Pipeline Flow - Filtered Data */}
-                {/* Pipeline Flow - Filtered Data */}
-                <div className="w-full overflow-x-auto pb-4 pt-2 px-2">
-                    <div className="flex flex-row w-full min-w-[1000px]">
+                <div className="w-full overflow-x-auto pb-6 pt-2">
+                    <div className="flex flex-row w-full min-w-[1000px] gap-3">
                         <PipelineStep
-                            title={`1. ${t('dashboardV2.pipeline.step1')}`}
+                            title={t('dashboardV2.pipeline.totalOpportunities')}
                             count={filteredData.deals.filter(d => !['Lost', 'Kaybedildi'].includes(d.stage)).length}
                             value={`${(filteredData.deals.filter(d => !['Lost', 'Kaybedildi'].includes(d.stage)).reduce((s, d) => s + d.value, 0) / 1000000).toFixed(1)}M ₺`}
-                            index={0} total={5}
+                            index={0} total={6}
+                            icon={<Target size={16} strokeWidth={2.5} />}
+                            iconColorClass="text-amber-500"
+                            unit={t('dashboardV2.pipeline.oppUnit')}
+                            trend={12}
+                            onClick={() => setDrilldownType('deals')}
                         />
                         <PipelineStep
-                            title={`2. ${t('dashboardV2.pipeline.step2')}`}
+                            title={t('dashboardV2.pipeline.quotesSent')}
                             count={filteredData.quotes.length}
                             value={`${(filteredData.quotes.reduce((s, q) => s + q.amount, 0) / 1000000).toFixed(1)}M ₺`}
-                            index={1} total={5}
+                            index={1} total={6}
+                            icon={<FileText size={16} strokeWidth={2.5} />}
+                            iconColorClass="text-blue-500"
+                            unit={t('dashboardV2.pipeline.quoteUnit')}
+                            trend={8}
+                            onClick={() => setDrilldownType('quotes')}
                         />
                         <PipelineStep
-                            title={`3. ${t('dashboardV2.pipeline.step3')}`}
+                            title={t('dashboardV2.pipeline.conversionRate')}
+                            count=""
+                            value={`%${((filteredData.quotes.reduce((s, q) => s + q.amount, 0) / (filteredData.deals.filter(d => !['Lost', 'Kaybedildi'].includes(d.stage)).reduce((s, d) => s + d.value, 0) || 1)) * 100).toFixed(1)}`}
+                            index={2} total={6}
+                            icon={<Activity size={16} strokeWidth={2.5} />}
+                            iconColorClass="text-emerald-500"
+                            unit={t('dashboardV2.pipeline.revenueBased')}
+                            trend={5}
+                            subMetric={
+                                <div className="mt-1 flex flex-col gap-0.5 w-fit">
+                                    <div className="text-[11px] font-medium text-slate-400 mt-1">
+                                        {t('dashboardV2.pipeline.countConversion')}: <span className="text-slate-500 font-bold">%{(filteredData.quotes.length / (filteredData.deals.filter(d => !['Lost', 'Kaybedildi'].includes(d.stage)).length || 1) * 100).toFixed(1)}</span>
+                                    </div>
+                                </div>
+                            }
+                        />
+                        <PipelineStep
+                            title={t('dashboardV2.pipeline.acceptedQuotes')}
                             count={filteredData.quotes.filter(q => ['Accepted', 'Approved'].includes(q.status)).length}
                             value={`${(filteredData.quotes.filter(q => ['Accepted', 'Approved'].includes(q.status)).reduce((s, q) => s + q.amount, 0) / 1000000).toFixed(1)}M ₺`}
-                            index={2} total={5}
+                            index={3} total={6}
+                            icon={<AlertCircle size={16} strokeWidth={2.5} />}
+                            iconColorClass="text-indigo-500"
+                            unit={t('dashboardV2.pipeline.quoteUnit')}
+                            trend={-3}
+                            subMetric={
+                                <div className="mt-1 flex flex-col gap-0.5 w-fit">
+                                    <div className="text-[11px] font-medium text-slate-400 flex items-center gap-1">
+                                        <span>{t('dashboardV2.pipeline.winRate')} :</span>
+                                        <span className="text-slate-600 dark:text-slate-300 font-bold">%{((filteredData.quotes.filter(q => ['Accepted', 'Approved'].includes(q.status)).reduce((s, q) => s + q.amount, 0) / (filteredData.quotes.reduce((s, q) => s + q.amount, 0) || 1)) * 100).toFixed(1)}</span>
+                                    </div>
+                                </div>
+                            }
+                            onClick={() => setDrilldownType('quotes_accepted')}
                         />
                         <PipelineStep
-                            title={`4. ${t('dashboardV2.pipeline.step4')}`}
+                            title={t('dashboardV2.pipeline.openOrders')}
                             count={filteredData.orders.filter(o => o.status === 'Open').length}
                             value={`${(filteredData.orders.filter(o => o.status === 'Open').reduce((s, o) => s + o.amount, 0) / 1000000).toFixed(1)}M ₺`}
-                            index={3} total={5}
+                            index={4} total={6}
+                            icon={<ShoppingCart size={16} strokeWidth={2.5} />}
+                            iconColorClass="text-purple-500"
+                            unit={t('dashboardV2.pipeline.orderUnit')}
+                            trend={15}
+                            onClick={() => setDrilldownType('orders_open')}
                         />
                         <PipelineStep
-                            title={`5. ${t('dashboardV2.pipeline.step5')}`}
+                            title={t('dashboardV2.pipeline.invoiced')}
                             count={filteredData.orders.filter(o => o.status === 'Closed').length}
                             value={`${(filteredData.orders.filter(o => o.status === 'Closed').reduce((s, o) => s + o.amount, 0) / 1000000).toFixed(1)}M ₺`}
-                            index={4} total={5}
+                            index={5} total={6}
+                            icon={<CreditCard size={16} strokeWidth={2.5} />}
+                            iconColorClass="text-emerald-500"
+                            unit="SİPARİŞ"
+                            trend={2}
+                            onClick={() => setDrilldownType('orders_closed')}
                         />
                     </div>
                 </div>
 
-                {/* Analytics Section */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[500px]">
-
-                    {/* Open Order Breakdown */}
-                    <Card className="lg:col-span-1 border-none shadow-sm bg-white dark:bg-slate-800 h-full flex flex-col">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-slate-800 dark:text-white">
-                                <ShoppingCart size={20} className="text-amber-500" />
-                                {t('dashboardV2.blockers.title')}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="flex-1 flex flex-col pt-4 overflow-hidden">
-                            <div className="flex-1 overflow-y-auto pr-2 space-y-4">
-                                {orderBreakdownData.sort((a, b) => b.value - a.value).map((item, idx) => (
-                                    <div key={item.name} className="group relative">
-                                        <div className="flex justify-between items-end mb-1">
-                                            <span className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
-                                                {item.name}
-                                            </span>
-                                            <div className="text-right">
-                                                <span className="text-sm font-bold text-slate-900 dark:text-white block">{item.value} {t('dashboardV2.blockers.orders')}</span>
-                                                <span className="text-[10px] text-slate-400 font-mono">{(item.value * 1.2).toFixed(1)}M ₺ {t('dashboardV2.blockers.impact')}</span>
-                                            </div>
-                                        </div>
-
-                                        {/* Progress Bar Background */}
-                                        <div className="h-2 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full rounded-full transition-all duration-1000 group-hover:opacity-80"
-                                                style={{
-                                                    width: `${(item.value / 12) * 100}%`, // 12 is max value in mock data
-                                                    backgroundColor: item.color
-                                                }}
-                                            />
-                                        </div>
-
-                                        {idx === 0 && (
-                                            <span className="absolute -right-2 -top-2 flex h-3 w-3">
-                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                                                <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
-                                            </span>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/50">
-                                <button className="w-full text-center text-xs font-bold text-indigo-600 hover:text-indigo-700 py-2 rounded-lg hover:bg-indigo-50 transition-colors">
-                                    {t('dashboardV2.blockers.viewDetailed')}
-                                </button>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* Collection Intelligence */}
-                    <Card className="lg:col-span-2 border-none shadow-sm bg-white dark:bg-slate-800 h-full flex flex-col">
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle className="flex items-center gap-2 text-slate-800 dark:text-white">
-                                <CreditCard size={20} className="text-rose-500" />
-                                {t('dashboardV2.collections.title')}
-                            </CardTitle>
-                            <button className="text-sm font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors">
-                                {t('dashboardV2.collections.viewReport')} <ArrowRight size={14} />
-                            </button>
-                        </CardHeader>
-                        <CardContent className="p-0 overflow-auto flex-1">
-                            <table className="w-full text-left text-sm">
-                                <thead className="bg-slate-50/80 dark:bg-slate-700/30 sticky top-0 z-10 backdrop-blur-sm">
-                                    <tr>
-                                        <th className="p-4 font-semibold text-slate-500">{t('dashboardV2.collections.table.entity')}</th>
-                                        <th className="p-4 font-semibold text-slate-500">{t('dashboardV2.collections.table.invoiceRef')}</th>
-                                        <th className="p-4 font-semibold text-slate-500">{t('dashboardV2.collections.table.aging')}</th>
-                                        <th className="p-4 font-semibold text-slate-500 text-right">{t('dashboardV2.collections.table.amount')}</th>
-                                        <th className="p-4 font-semibold text-slate-500">{t('dashboardV2.collections.table.riskLevel')}</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
-                                    {collections.slice(0, 7).map((item, idx) => (
-                                        <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-700/30 group transition-colors">
-                                            <td className="p-4">
-                                                <div className="font-bold text-slate-800 dark:text-white">{item.customer}</div>
-                                                <div className="text-xs text-slate-400">{t('dashboardV2.collections.table.premiumAccount')}</div>
-                                            </td>
-                                            <td className="p-4 text-slate-600 dark:text-slate-400 font-mono text-xs">{item.id}</td>
-                                            <td className="p-4">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="h-1.5 w-16 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                                                        <div
-                                                            className={cn("h-full rounded-full", item.daysDiff > 20 ? "bg-rose-500" : "bg-amber-500")}
-                                                            style={{ width: `${Math.min(item.daysDiff * 3, 100)}%` }}
-                                                        />
-                                                    </div>
-                                                    <span className="text-xs font-bold text-slate-600 dark:text-slate-400">{item.daysDiff}d</span>
-                                                </div>
-                                            </td>
-                                            <td className="p-4 text-right font-mono font-bold text-slate-700 dark:text-slate-300">
-                                                {formatCurr(item.amount)}
-                                            </td>
-                                            <td className="p-4">
-                                                <span className={cn(
-                                                    "px-2.5 py-1 rounded-full text-[10px] uppercase font-bold border",
-                                                    item.daysDiff > 20
-                                                        ? "bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400"
-                                                        : "bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400"
-                                                )}>
-                                                    {item.daysDiff > 20 ? t('dashboardV2.collections.risk.critical') : t('dashboardV2.collections.risk.high')}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </CardContent>
-                    </Card>
+                {/* Gamified Leaderboard & Product Distribution */}
+                <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <GamifiedLeaderboard deals={filteredData.deals} orders={filteredData.orders} />
+                    <div className="flex flex-col gap-8 h-full">
+                        <div className="flex-1">
+                            <ProductSalesDistribution orders={filteredData.orders} />
+                        </div>
+                        <div className="flex-1">
+                            <CustomerPotentialChart deals={filteredData.deals} />
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {/* Drilldown Modal */}
+            {/* Pipeline Drilldown Modal */}
             <DrillDownModal
-                isOpen={!!selectedMetric}
-                onClose={() => setSelectedMetric(null)}
-                title={metrics.find(m => m.id === selectedMetric)?.title || 'Details'}
-                data={getDrillDownData(selectedMetric)}
+                isOpen={!!drilldownType}
+                onClose={() => setDrilldownType(null)}
+                title={drilldownType ? drilldownTitle[drilldownType] : ''}
+                rows={drilldownRows}
+                drilldownType={drilldownType ?? undefined}
             />
         </div>
     );

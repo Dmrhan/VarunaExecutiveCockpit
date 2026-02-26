@@ -34,6 +34,7 @@ import analyticsPerformanceRouter from './routes/analytics-performance';
 import contractsRouter from './routes/contracts';
 import quotesRouter from './routes/quotes';
 import ordersRouter from './routes/orders';
+import usersRouter from './routes/users';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -76,6 +77,7 @@ app.use('/api/performance', analyticsPerformanceRouter);
 app.use('/api/contracts', contractsRouter);
 app.use('/api/quotes', quotesRouter);
 app.use('/api/orders', ordersRouter);
+app.use('/api/users', usersRouter);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {

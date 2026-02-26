@@ -21,6 +21,20 @@ export const ContractService = {
             console.error('Contract Detail API error', error);
             throw error;
         }
+    },
+    getDashboardAnalytics: async (filters: any) => {
+        try {
+            const res = await fetch(`${API_BASE}/analytics/contract/dashboard`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(filters)
+            });
+            if (!res.ok) throw new Error('Failed to fetch dashboard analytics');
+            return await res.json();
+        } catch (error) {
+            console.error('Dashboard Analytics API error', error);
+            return null;
+        }
     }
 };
 

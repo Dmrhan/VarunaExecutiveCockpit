@@ -109,7 +109,7 @@ export function FunnelChart({ deals: propDeals }: FunnelChartProps) {
         if (columnFilters.owner) {
             const search = columnFilters.owner.toLowerCase();
             result = result.filter(d => {
-                const name = users.find(u => u.id === d.ownerId)?.name.toLowerCase() || '';
+                const name = (d.ownerName || users.find(u => u.id === d.ownerId)?.name || '').toLowerCase();
                 return name.includes(search);
             });
         }
@@ -121,8 +121,8 @@ export function FunnelChart({ deals: propDeals }: FunnelChartProps) {
                 let bVal: any;
 
                 if (sortConfig.key === 'ownerName') {
-                    aVal = users.find(u => u.id === a.ownerId)?.name || '';
-                    bVal = users.find(u => u.id === b.ownerId)?.name || '';
+                    aVal = a.ownerName || users.find(u => u.id === a.ownerId)?.name || '';
+                    bVal = b.ownerName || users.find(u => u.id === b.ownerId)?.name || '';
                 } else if (sortConfig.key === 'expectedCloseDate') {
                     aVal = new Date(a.expectedCloseDate).getTime();
                     bVal = new Date(b.expectedCloseDate).getTime();
@@ -145,7 +145,7 @@ export function FunnelChart({ deals: propDeals }: FunnelChartProps) {
             const data = displayedDeals.map(d => ({
                 [t('opportunities.opportunityName', { defaultValue: 'Fırsat Adı' })]: d.topic,
                 [t('opportunities.customer', { defaultValue: 'Müşteri' })]: d.customerName,
-                [t('opportunities.owner', { defaultValue: 'Sahibi' })]: users.find(u => u.id === d.ownerId)?.name || d.ownerId,
+                [t('opportunities.owner', { defaultValue: 'Sahibi' })]: d.ownerName || users.find(u => u.id === d.ownerId)?.name || d.ownerId,
                 [t('opportunities.closeDate', { defaultValue: 'Kapanış Tarihi' })]: new Date(d.expectedCloseDate).toLocaleDateString('tr-TR'),
                 [t('opportunities.value') + ' ($)']: d.value,
                 [t('opportunities.daysOpen', { defaultValue: 'Açık Gün' })]: d.aging
@@ -167,7 +167,7 @@ export function FunnelChart({ deals: propDeals }: FunnelChartProps) {
             const tableData = displayedDeals.map(d => [
                 d.topic,
                 d.customerName,
-                users.find(u => u.id === d.ownerId)?.name || d.ownerId,
+                d.ownerName || users.find(u => u.id === d.ownerId)?.name || d.ownerId,
                 new Date(d.expectedCloseDate).toLocaleDateString('tr-TR'),
                 `$${d.value.toLocaleString()}`,
                 `${d.aging}`
@@ -415,9 +415,9 @@ export function FunnelChart({ deals: propDeals }: FunnelChartProps) {
                                                         <td className="bg-white dark:bg-white/5 p-4 border-y border-slate-200 dark:border-white/10 shadow-sm">
                                                             <div className="flex items-center gap-2">
                                                                 <div className="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center text-[10px] font-bold text-indigo-500">
-                                                                    {owner?.name.charAt(0)}
+                                                                    {(deal.ownerName || owner?.name || '?').charAt(0)}
                                                                 </div>
-                                                                <span className="text-xs md:text-sm text-slate-600 dark:text-slate-300">{owner?.name || deal.ownerId}</span>
+                                                                <span className="text-xs md:text-sm text-slate-600 dark:text-slate-300">{deal.ownerName || owner?.name || deal.ownerId}</span>
                                                             </div>
                                                         </td>
                                                         <td className="bg-white dark:bg-white/5 p-4 border-y border-slate-200 dark:border-white/10 shadow-sm">

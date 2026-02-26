@@ -67,7 +67,10 @@ router.get('/', (req: Request, res: Response) => {
 
     // ── Paginated fetch ───────────────────────────────────────────────────────
     const rows = db.prepare(`
-        SELECT * FROM Opportunity
+        SELECT o.*, a.Name as AccountName, p.PersonNameSurname as OwnerName
+        FROM Opportunity o
+        LEFT JOIN Account a ON o.AccountId = a.Id
+        LEFT JOIN Person p ON o.OwnerId = p.Id
         ${filterSql}
         ${orderSql}
         LIMIT @limit OFFSET @offset
@@ -77,12 +80,13 @@ router.get('/', (req: Request, res: Response) => {
     const mapped = rows.map(row => ({
         id: row.Id,
         title: row.Name || '',
-        customer_name: row.AccountId || '',   // Using AccountId as customer identifier
+        customer_name: row.AccountName || row.AccountId || 'Bilinmiyor',
         product: row.ProductGroupId || 'EnRoute',
         value: row.Amount_Value || 0,
         stage: row.OpportunityStageNameTr || row.OpportunityStageName?.toString() || 'Lead',
         probability: row.Probability || 0,
         owner_id: row.OwnerId || '',
+        owner_name: row.OwnerName || row.OwnerId || 'Unknown',
         source: row.Source?.toString() || 'Diğer',
         topic: row.Name || '',
         created_at: row.FirstCreatedDate || new Date().toISOString(),
@@ -111,7 +115,13 @@ router.get('/', (req: Request, res: Response) => {
  */
 router.get('/:id', (req: Request, res: Response) => {
     const db = getDb();
-    const row = db.prepare('SELECT * FROM Opportunity WHERE Id = ?').get(req.params.id) as Record<string, any> | undefined;
+    const row = db.prepare(`
+        SELECT o.*, a.Name as AccountName, p.PersonNameSurname as OwnerName
+        FROM Opportunity o 
+        LEFT JOIN Account a ON o.AccountId = a.Id 
+        LEFT JOIN Person p ON o.OwnerId = p.Id
+        WHERE o.Id = ?
+    `).get(req.params.id) as Record<string, any> | undefined;
 
     if (!row) {
         return res.status(404).json({ status: 'error', message: 'Not found' });
@@ -120,12 +130,13 @@ router.get('/:id', (req: Request, res: Response) => {
     return res.json({
         id: row.Id,
         title: row.Name || '',
-        customer_name: row.AccountId || '',
+        customer_name: row.AccountName || row.AccountId || 'Bilinmiyor',
         product: row.ProductGroupId || 'EnRoute',
         value: row.Amount_Value || 0,
         stage: row.OpportunityStageNameTr || 'Lead',
         probability: row.Probability || 0,
         owner_id: row.OwnerId || '',
+        owner_name: row.OwnerName || row.OwnerId || 'Unknown',
         source: row.Source?.toString() || 'Diğer',
         topic: row.Name || '',
         created_at: row.FirstCreatedDate || new Date().toISOString(),

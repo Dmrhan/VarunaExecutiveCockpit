@@ -34,7 +34,7 @@ export const ContractOwnershipPanel = () => {
     }, [contracts]);
 
     return (
-        <Card className="bg-white/40 dark:bg-slate-700/40 backdrop-blur-md border border-slate-200 dark:border-white/10 shadow-sm">
+        <Card className="bg-white/40 dark:bg-slate-700/40 backdrop-blur-md border border-slate-200 dark:border-white/10 shadow-sm h-full">
             <CardHeader className="py-4 border-b border-slate-100 dark:border-white/5 bg-white/30 dark:bg-white/5 flex flex-row items-center gap-3">
                 <div className="p-2 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">
                     <Users size={18} />
@@ -49,7 +49,7 @@ export const ContractOwnershipPanel = () => {
                 </div>
             </CardHeader>
             <CardContent className="p-0">
-                <div className="divide-y divide-slate-100 dark:divide-white/5">
+                <div className="divide-y divide-slate-100 dark:divide-white/5 flex-1 overflow-y-auto">
                     {ownershipData.map((owner, idx) => (
                         <div key={idx} className="p-4 flex items-center justify-between hover:bg-white/50 dark:hover:bg-white/5 transition-colors">
                             <div className="flex items-center gap-3">
@@ -75,6 +75,12 @@ export const ContractOwnershipPanel = () => {
                             </div>
                         </div>
                     ))}
+                    {ownershipData.length === 0 && (
+                        <div className="p-12 flex flex-col items-center justify-center text-center text-slate-400 h-full">
+                            <Users size={32} className="opacity-20 mb-3" />
+                            <p className="text-xs font-medium">{t('common.noData', { defaultValue: 'Aktif sözleşme bulunamadı' })}</p>
+                        </div>
+                    )}
                 </div>
             </CardContent>
         </Card>

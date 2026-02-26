@@ -20,15 +20,25 @@ router.get('/', (req: Request, res: Response) => {
     `).all(top, skip) as Record<string, any>[];
 
     // Map to frontend shape
+    const mapStatus = (status: number) => {
+        if (status === 0) return 'Draft';
+        if ([1, 2, 3, 4, 5].includes(status)) return 'Negotiation';
+        if ([6, 7].includes(status)) return 'Active';
+        if (status === 8) return 'Archived';
+        if (status === 9) return 'Terminated';
+        if (status === 10) return 'Expired';
+        return 'Draft';
+    };
+
     const mapped = rows.map(row => ({
         id: row.Id,
         title: row.ContractName || row.ContractNo || 'Sözleşme',
         customerName: row.AccountName || row.AccountId || '',
         salesOwnerId: row.SalesRepresentativeId,
-        ownerName: row.OwnerName || 'Unknown',
+        ownerName: row.OwnerName || row.SalesRepresentativeId || 'Unknown',
         productGroup: row.ProductId || 'EnRoute',
         type: row.ContractType === 1 ? 'Initialization' : 'Renewal',
-        status: row.ContractStatus === 1 ? 'Active' : 'Archived',
+        status: mapStatus(row.ContractStatus),
         totalValue: row.TotalAmountLocalCurrency_Amount || 0,
         currency: row.TotalAmountLocalCurrency_Currency || 'TRY',
         totalValueTL: row.TotalAmountLocalCurrency_Amount || 0,
@@ -67,15 +77,25 @@ router.get('/:id', (req: Request, res: Response) => {
             SELECT * FROM ContractPaymentPlans WHERE ContractId = ? ORDER BY PaymentDate ASC
         `).all(req.params.id) as Record<string, any>[];
 
+        const mapStatus = (status: number) => {
+            if (status === 0) return 'Draft';
+            if ([1, 2, 3, 4, 5].includes(status)) return 'Negotiation';
+            if ([6, 7].includes(status)) return 'Active';
+            if (status === 8) return 'Archived';
+            if (status === 9) return 'Terminated';
+            if (status === 10) return 'Expired';
+            return 'Draft';
+        };
+
         const mapped = {
             id: contract.Id,
             title: contract.ContractName || contract.ContractNo || 'Sözleşme',
             customerName: contract.AccountName || contract.AccountId || '',
             salesOwnerId: contract.SalesRepresentativeId,
-            ownerName: contract.OwnerName || 'Unknown',
+            ownerName: contract.OwnerName || contract.SalesRepresentativeId || 'Unknown',
             productGroup: contract.ProductId || 'EnRoute',
             type: contract.ContractType === 1 ? 'Initialization' : 'Renewal',
-            status: contract.ContractStatus === 1 ? 'Active' : 'Archived',
+            status: mapStatus(contract.ContractStatus),
             totalValue: contract.TotalAmountLocalCurrency_Amount || 0,
             currency: contract.TotalAmountLocalCurrency_Currency || 'TRY',
             totalValueTL: contract.TotalAmountLocalCurrency_Amount || 0,

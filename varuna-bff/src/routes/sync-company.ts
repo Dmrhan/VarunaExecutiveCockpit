@@ -46,7 +46,35 @@ router.post('/', (req: Request, res: Response) => {
         const payload = companySchema.parse(req.body);
         const db = getDb();
 
-        const upsertCompany = db.prepare(`
+        const upsertCompanySql = db.driver === 'mssql' ? `
+            MERGE INTO Company AS target
+            USING (SELECT @Id AS Id) AS source
+            ON (target.Id = source.Id)
+            WHEN MATCHED THEN
+                UPDATE SET 
+                    Name = @Name, OrderNo = @OrderNo, ValidForAllUserGroups = @ValidForAllUserGroups,
+                    Email = @Email, IntegrationUsername = @IntegrationUsername,
+                    IntegrationPassword = @IntegrationPassword, IntegrationGrantType = @IntegrationGrantType,
+                    IntegrationBranchCode = @IntegrationBranchCode, IntegrationDbName = @IntegrationDbName,
+                    IntegrationDbUser = @IntegrationDbUser, IntegrationDbType = @IntegrationDbType,
+                    IntegrationDbPassword = @IntegrationDbPassword, IntegrationPath = @IntegrationPath,
+                    IntegrationType = @IntegrationType, SalesOrganizationSapId = @SalesOrganizationSapId,
+                    _SyncedAt = GETUTCDATE()
+            WHEN NOT MATCHED THEN
+                INSERT (
+                    Id, Name, OrderNo, ValidForAllUserGroups, Email,
+                    IntegrationUsername, IntegrationPassword, IntegrationGrantType,
+                    IntegrationBranchCode, IntegrationDbName, IntegrationDbUser,
+                    IntegrationDbType, IntegrationDbPassword, IntegrationPath,
+                    IntegrationType, SalesOrganizationSapId, _SyncedAt
+                ) VALUES (
+                    @Id, @Name, @OrderNo, @ValidForAllUserGroups, @Email,
+                    @IntegrationUsername, @IntegrationPassword, @IntegrationGrantType,
+                    @IntegrationBranchCode, @IntegrationDbName, @IntegrationDbUser,
+                    @IntegrationDbType, @IntegrationDbPassword, @IntegrationPath,
+                    @IntegrationType, @SalesOrganizationSapId, GETUTCDATE()
+                );
+        ` : `
             INSERT INTO Company (
                 Id, Name, OrderNo, ValidForAllUserGroups, Email,
                 IntegrationUsername, IntegrationPassword, IntegrationGrantType,
@@ -69,72 +97,59 @@ router.post('/', (req: Request, res: Response) => {
                 IntegrationDbPassword = excluded.IntegrationDbPassword, IntegrationPath = excluded.IntegrationPath,
                 IntegrationType = excluded.IntegrationType, SalesOrganizationSapId = excluded.SalesOrganizationSapId,
                 _SyncedAt = datetime('now')
-        `);
+        `;
 
-        // Prepare statements for child collections
-        const deleteCompanyPipelines = db.prepare(`DELETE FROM CompanyPipelines WHERE CompanyId = ?`);
-        const insertCompanyPipeline = db.prepare(`
-            INSERT INTO CompanyPipelines (Id, CompanyId, PipelineId) 
-            VALUES (@Id, @CompanyId, @PipelineId)
-        `);
-
-        const deleteCompanyUserGroups = db.prepare(`DELETE FROM CompanyUserGroups WHERE CompanyId = ?`);
-        const insertCompanyUserGroup = db.prepare(`
-            INSERT INTO CompanyUserGroups (Id, CompanyId, UserGroupId, UserGroupName) 
-            VALUES (@Id, @CompanyId, @UserGroupId, @UserGroupName)
-        `);
-
-        // Run as a transaction
-        const syncTransaction = db.transaction((data) => {
+        const wasInserted = db.transaction(() => {
             // 1. Upsert main Company record
-            const info = upsertCompany.run({
-                Id: data.Id,
-                Name: data.Name,
-                OrderNo: data.OrderNo,
-                ValidForAllUserGroups: data.ValidForAllUserGroups,
-                Email: data.Email ?? null,
-                IntegrationUsername: data.IntegrationUsername ?? null,
-                IntegrationPassword: data.IntegrationPassword ?? null,
-                IntegrationGrantType: data.IntegrationGrantType ?? null,
-                IntegrationBranchCode: data.IntegrationBranchCode ?? null,
-                IntegrationDbName: data.IntegrationDbName ?? null,
-                IntegrationDbUser: data.IntegrationDbUser ?? null,
-                IntegrationDbType: data.IntegrationDbType ?? null,
-                IntegrationDbPassword: data.IntegrationDbPassword ?? null,
-                IntegrationPath: data.IntegrationPath ?? null,
-                IntegrationType: data.IntegrationType ?? null,
-                SalesOrganizationSapId: data.SalesOrganizationSapId ?? null
+            const result = db.execute(upsertCompanySql, {
+                Id: payload.Id,
+                Name: payload.Name,
+                OrderNo: payload.OrderNo,
+                ValidForAllUserGroups: payload.ValidForAllUserGroups,
+                Email: payload.Email ?? null,
+                IntegrationUsername: payload.IntegrationUsername ?? null,
+                IntegrationPassword: payload.IntegrationPassword ?? null,
+                IntegrationGrantType: payload.IntegrationGrantType ?? null,
+                IntegrationBranchCode: payload.IntegrationBranchCode ?? null,
+                IntegrationDbName: payload.IntegrationDbName ?? null,
+                IntegrationDbUser: payload.IntegrationDbUser ?? null,
+                IntegrationDbType: payload.IntegrationDbType ?? null,
+                IntegrationDbPassword: payload.IntegrationDbPassword ?? null,
+                IntegrationPath: payload.IntegrationPath ?? null,
+                IntegrationType: payload.IntegrationType ?? null,
+                SalesOrganizationSapId: payload.SalesOrganizationSapId ?? null
             });
 
             // 2. Replace Pipelines atomically
-            deleteCompanyPipelines.run(data.Id);
-            if (data.CompanyPipelines && data.CompanyPipelines.length > 0) {
-                for (const pipeline of data.CompanyPipelines) {
-                    insertCompanyPipeline.run({
+            db.execute(`DELETE FROM CompanyPipelines WHERE CompanyId = @id`, { id: payload.Id });
+            if (payload.CompanyPipelines && payload.CompanyPipelines.length > 0) {
+                const insertPipeSql = `INSERT INTO CompanyPipelines (Id, CompanyId, PipelineId) VALUES (@Id, @CompanyId, @PipelineId)`;
+                for (const pipeline of payload.CompanyPipelines) {
+                    db.execute(insertPipeSql, {
                         Id: pipeline.Id,
-                        CompanyId: data.Id,
+                        CompanyId: payload.Id,
                         PipelineId: pipeline.PipelineId
                     });
                 }
             }
 
             // 3. Replace User Groups atomically
-            deleteCompanyUserGroups.run(data.Id);
-            if (data.CompanyUserGroups && data.CompanyUserGroups.length > 0) {
-                for (const ug of data.CompanyUserGroups) {
-                    insertCompanyUserGroup.run({
+            db.execute(`DELETE FROM CompanyUserGroups WHERE CompanyId = @id`, { id: payload.Id });
+            if (payload.CompanyUserGroups && payload.CompanyUserGroups.length > 0) {
+                const insertUgSql = `INSERT INTO CompanyUserGroups (Id, CompanyId, UserGroupId, UserGroupName) VALUES (@Id, @CompanyId, @UserGroupId, @UserGroupName)`;
+                for (const ug of payload.CompanyUserGroups) {
+                    db.execute(insertUgSql, {
                         Id: ug.Id,
-                        CompanyId: data.Id,
+                        CompanyId: payload.Id,
                         UserGroupId: ug.UserGroupId,
                         UserGroupName: ug.UserGroupName
                     });
                 }
             }
 
-            return info.changes === 1;
+            return result.changes === 1;
         });
 
-        const wasInserted = syncTransaction(payload);
 
         res.json({
             status: 'ok',

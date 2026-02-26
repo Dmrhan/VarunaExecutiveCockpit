@@ -11,7 +11,7 @@ router.get('/', (_req: Request, res: Response) => {
         const db = getDb();
 
         // Base Company List with Security Masking (Excluding Passwords & DB Users)
-        const companies = db.prepare(`
+        const companies = db.query(`
             SELECT 
                 Id, Name, OrderNo, ValidForAllUserGroups, Email, 
                 IntegrationGrantType, IntegrationBranchCode, IntegrationDbName, 
@@ -19,29 +19,26 @@ router.get('/', (_req: Request, res: Response) => {
                 SalesOrganizationSapId, _SyncedAt
             FROM Company
             ORDER BY OrderNo ASC
-        `).all() as any[];
+        `) as any[];
 
         // Enhance with Child Collections
-        const getPipelines = db.prepare(`SELECT PipelineId FROM CompanyPipelines WHERE CompanyId = ?`);
-        const getUserGroups = db.prepare(`SELECT UserGroupId, UserGroupName FROM CompanyUserGroups WHERE CompanyId = ?`);
-
         for (const company of companies) {
-            company.Pipelines = getPipelines.all(company.Id);
-            company.UserGroups = getUserGroups.all(company.Id);
+            company.Pipelines = db.query(`SELECT PipelineId FROM CompanyPipelines WHERE CompanyId = ?`, [company.Id]);
+            company.UserGroups = db.query(`SELECT UserGroupId, UserGroupName FROM CompanyUserGroups WHERE CompanyId = ?`, [company.Id]);
         }
 
         // 1. Revenue by Company
-        const revenueByCompany = db.prepare(`
+        const revenueByCompany = db.query(`
             SELECT c.Id as CompanyId, c.Name as CompanyName, SUM(o.TotalNetAmountLocalCurrency_Amount) as TotalRevenue
             FROM Company c
             JOIN CrmOrder o ON c.Id = o.CompanyId
             WHERE o.Status != 5 AND o.IsDeletedFromBackend = 0
             GROUP BY c.Id, c.Name
             ORDER BY TotalRevenue DESC
-        `).all();
+        `);
 
         // 2. Installed Base by Company
-        const installedBaseByCompany = db.prepare(`
+        const installedBaseByCompany = db.query(`
             SELECT c.Name as CompanyName, COUNT(i.Id) as InstalledBaseCount, SUM(i.TotalPackagePrice_Amount) as InstalledRevenue
             FROM Company c
             JOIN AccountCompanies ac ON c.Id = ac.CompanyId
@@ -50,39 +47,39 @@ router.get('/', (_req: Request, res: Response) => {
             WHERE i.Status = 1
             GROUP BY c.Id, c.Name
             ORDER BY InstalledRevenue DESC
-        `).all();
+        `);
 
         // 3. Active Pipelines per Company
-        const activePipelinesPerCompany = db.prepare(`
+        const activePipelinesPerCompany = db.query(`
             SELECT c.Name, COUNT(p.Id) as PipelineCount
             FROM Company c
             LEFT JOIN CompanyPipelines p ON c.Id = p.CompanyId
             GROUP BY c.Id, c.Name
-        `).all();
+        `);
 
         // 4. User Group Distribution
-        const userGroupDistribution = db.prepare(`
+        const userGroupDistribution = db.query(`
             SELECT c.Name, COUNT(u.Id) as UserGroupCount
             FROM Company c
             LEFT JOIN CompanyUserGroups u ON c.Id = u.CompanyId
             GROUP BY c.Id, c.Name
-        `).all();
+        `);
 
         // 5. Integration Type Distribution
-        const integrationTypeDistribution = db.prepare(`
+        const integrationTypeDistribution = db.query(`
             SELECT IntegrationType, COUNT(*) as CompanyCount
             FROM Company
             WHERE IntegrationType IS NOT NULL
             GROUP BY IntegrationType
-        `).all();
+        `);
 
         // 6. SAP Organization Mapping
-        const sapOrganizationMapping = db.prepare(`
+        const sapOrganizationMapping = db.query(`
             SELECT SalesOrganizationSapId, COUNT(*) as CompanyCount
             FROM Company
             WHERE SalesOrganizationSapId IS NOT NULL
             GROUP BY SalesOrganizationSapId
-        `).all();
+        `);
 
         res.json({
             companies,

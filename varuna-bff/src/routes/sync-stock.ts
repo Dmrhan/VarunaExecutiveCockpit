@@ -68,7 +68,39 @@ router.post('/', (req: Request, res: Response) => {
         const payload = stockSchema.parse(req.body);
         const db = getDb();
 
-        const upsertStock = db.prepare(`
+        const upsertStockSql = db.driver === 'mssql' ? `
+            MERGE INTO Stock AS target
+            USING (SELECT @Id AS Id) AS source
+            ON (target.Id = source.Id)
+            WHEN MATCHED THEN
+                UPDATE SET 
+                    Code = @Code, Name = @Name, ShortName = @ShortName, BaseUnitType = @BaseUnitType,
+                    SerialTrackingEnabled = @SerialTrackingEnabled, SerialCodeType = @SerialCodeType,
+                    SalesVatValue = @SalesVatValue, PurchaseVatValue = @PurchaseVatValue,
+                    VatCalculationType = @VatCalculationType, StockType = @StockType,
+                    ParentStocktId = @ParentStocktId, State = @State, ProductGroupId = @ProductGroupId,
+                    BrandId = @BrandId, MinStockLevel = @MinStockLevel, OrderLevel = @OrderLevel,
+                    TargetLevel = @TargetLevel, OrderTime = @OrderTime, ReferenceCode = @ReferenceCode,
+                    CompanyId = @CompanyId, ProductType = @ProductType, AccountingDetailCode = @AccountingDetailCode,
+                    InvWillWarrantyBeFollowed = @InvWillWarrantyBeFollowed, InvWarrantyPeriod = @InvWarrantyPeriod,
+                    InvWarrantyPeriodType = @InvWarrantyPeriodType, InvIsInstallationNecessary = @InvIsInstallationNecessary,
+                    TPOutReferenceCode = @TPOutReferenceCode, SAPOutReferenceCode = @SAPOutReferenceCode,
+                    _SyncedAt = GETUTCDATE()
+            WHEN NOT MATCHED THEN
+                INSERT (
+                    Id, Code, Name, ShortName, BaseUnitType, SerialTrackingEnabled, SerialCodeType,
+                    SalesVatValue, PurchaseVatValue, VatCalculationType, StockType, ParentStocktId, State,
+                    ProductGroupId, BrandId, MinStockLevel, OrderLevel, TargetLevel, OrderTime, ReferenceCode,
+                    CompanyId, ProductType, AccountingDetailCode, InvWillWarrantyBeFollowed, InvWarrantyPeriod,
+                    InvWarrantyPeriodType, InvIsInstallationNecessary, TPOutReferenceCode, SAPOutReferenceCode, _SyncedAt
+                ) VALUES (
+                    @Id, @Code, @Name, @ShortName, @BaseUnitType, @SerialTrackingEnabled, @SerialCodeType,
+                    @SalesVatValue, @PurchaseVatValue, @VatCalculationType, @StockType, @ParentStocktId, @State,
+                    @ProductGroupId, @BrandId, @MinStockLevel, @OrderLevel, @TargetLevel, @OrderTime, @ReferenceCode,
+                    @CompanyId, @ProductType, @AccountingDetailCode, @InvWillWarrantyBeFollowed, @InvWarrantyPeriod,
+                    @InvWarrantyPeriodType, @InvIsInstallationNecessary, @TPOutReferenceCode, @SAPOutReferenceCode, GETUTCDATE()
+                );
+        ` : `
             INSERT INTO Stock (
                 Id, Code, Name, ShortName, BaseUnitType, SerialTrackingEnabled, SerialCodeType,
                 SalesVatValue, PurchaseVatValue, VatCalculationType, StockType, ParentStocktId, State,
@@ -95,67 +127,91 @@ router.post('/', (req: Request, res: Response) => {
                 InvWarrantyPeriodType = excluded.InvWarrantyPeriodType, InvIsInstallationNecessary = excluded.InvIsInstallationNecessary,
                 TPOutReferenceCode = excluded.TPOutReferenceCode, SAPOutReferenceCode = excluded.SAPOutReferenceCode,
                 _SyncedAt = datetime('now')
-        `);
+        `;
 
-        const insertUnitType = db.prepare('INSERT INTO StockUnitTypes (StockId, UnitType, Quantity, Weight, Volume, RelatedUnitType, Barcode, IsTransactionUnit, TPOutReferenceCode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
-        const insertTax = db.prepare('INSERT INTO AdditionalTaxes (StockId, TaxId) VALUES (?, ?)');
-        const insertFile = db.prepare('INSERT INTO StockFiles (StockId, FilePath, FileName, FileType) VALUES (?, ?, ?, ?)');
-        // Mapping 'Companies' array to internal table 'Companies_Stock'
-        const insertComp = db.prepare('INSERT INTO Companies_Stock (StockId, CompanyId) VALUES (?, ?)');
-
-        const syncTransaction = db.transaction((data) => {
-            const info = upsertStock.run({
-                Id: data.Id,
-                Code: data.Code,
-                Name: data.Name,
-                ShortName: data.ShortName,
-                BaseUnitType: data.BaseUnitType,
-                SerialTrackingEnabled: data.SerialTrackingEnabled ?? null,
-                SerialCodeType: data.SerialCodeType ?? null,
-                SalesVatValue: data.SalesVatValue,
-                PurchaseVatValue: data.PurchaseVatValue,
-                VatCalculationType: data.VatCalculationType ?? null,
-                StockType: data.StockType ?? null,
-                ParentStocktId: data.ParentStocktId ?? null,
-                State: data.State ?? null,
-                ProductGroupId: data.ProductGroupId ?? null,
-                BrandId: data.BrandId ?? null,
-                MinStockLevel: data.MinStockLevel ?? null,
-                OrderLevel: data.OrderLevel ?? null,
-                TargetLevel: data.TargetLevel ?? null,
-                OrderTime: data.OrderTime ?? null,
-                ReferenceCode: data.ReferenceCode ?? null,
-                CompanyId: data.CompanyId ?? null,
-                ProductType: data.ProductType ?? null,
-                AccountingDetailCode: data.AccountingDetailCode ?? null,
-                InvWillWarrantyBeFollowed: data.InvWillWarrantyBeFollowed ?? null,
-                InvWarrantyPeriod: data.InvWarrantyPeriod ?? null,
-                InvWarrantyPeriodType: data.InvWarrantyPeriodType ?? null,
-                InvIsInstallationNecessary: data.InvIsInstallationNecessary ?? null,
-                TPOutReferenceCode: data.TPOutReferenceCode ?? null,
-                SAPOutReferenceCode: data.SAPOutReferenceCode ?? null
+        const wasInsertedResult = db.transaction(() => {
+            const result = db.execute(upsertStockSql, {
+                Id: payload.Id,
+                Code: payload.Code,
+                Name: payload.Name,
+                ShortName: payload.ShortName,
+                BaseUnitType: payload.BaseUnitType,
+                SerialTrackingEnabled: payload.SerialTrackingEnabled ?? null,
+                SerialCodeType: payload.SerialCodeType ?? null,
+                SalesVatValue: payload.SalesVatValue,
+                PurchaseVatValue: payload.PurchaseVatValue,
+                VatCalculationType: payload.VatCalculationType ?? null,
+                StockType: payload.StockType ?? null,
+                ParentStocktId: payload.ParentStocktId ?? null,
+                State: payload.State ?? null,
+                ProductGroupId: payload.ProductGroupId ?? null,
+                BrandId: payload.BrandId ?? null,
+                MinStockLevel: payload.MinStockLevel ?? null,
+                OrderLevel: payload.OrderLevel ?? null,
+                TargetLevel: payload.TargetLevel ?? null,
+                OrderTime: payload.OrderTime ?? null,
+                ReferenceCode: payload.ReferenceCode ?? null,
+                CompanyId: payload.CompanyId ?? null,
+                ProductType: payload.ProductType ?? null,
+                AccountingDetailCode: payload.AccountingDetailCode ?? null,
+                InvWillWarrantyBeFollowed: payload.InvWillWarrantyBeFollowed ?? null,
+                InvWarrantyPeriod: payload.InvWarrantyPeriod ?? null,
+                InvWarrantyPeriodType: payload.InvWarrantyPeriodType ?? null,
+                InvIsInstallationNecessary: payload.InvIsInstallationNecessary ?? null,
+                TPOutReferenceCode: payload.TPOutReferenceCode ?? null,
+                SAPOutReferenceCode: payload.SAPOutReferenceCode ?? null
             });
 
-            const isInsert = info.changes === 1;
+            const isInsert = result.changes === 1;
 
-            db.prepare('DELETE FROM StockUnitTypes WHERE StockId = ?').run(data.Id);
-            db.prepare('DELETE FROM AdditionalTaxes WHERE StockId = ?').run(data.Id);
-            db.prepare('DELETE FROM StockFiles WHERE StockId = ?').run(data.Id);
-            db.prepare('DELETE FROM Companies_Stock WHERE StockId = ?').run(data.Id);
+            db.execute('DELETE FROM StockUnitTypes WHERE StockId = @id', { id: payload.Id });
+            db.execute('DELETE FROM AdditionalTaxes WHERE StockId = @id', { id: payload.Id });
+            db.execute('DELETE FROM StockFiles WHERE StockId = @id', { id: payload.Id });
+            db.execute('DELETE FROM Companies_Stock WHERE StockId = @id', { id: payload.Id });
 
-            data.StockUnitTypes?.forEach((d: any) => insertUnitType.run(data.Id, d.UnitType ?? null, d.Quantity ?? null, d.Weight ?? null, d.Volume ?? null, d.RelatedUnitType ?? null, d.Barcode ?? null, d.IsTransactionUnit ?? null, d.TPOutReferenceCode ?? null));
-            data.AdditionalTaxes?.forEach((d: any) => insertTax.run(data.Id, d.TaxId ?? null));
-            data.StockFiles?.forEach((d: any) => insertFile.run(data.Id, d.FilePath ?? null, d.FileName ?? null, d.FileType ?? null));
-            data.Companies?.forEach((d: any) => insertComp.run(data.Id, d.CompanyId ?? null));
+            payload.StockUnitTypes?.forEach((d: any) => {
+                db.execute('INSERT INTO StockUnitTypes (StockId, UnitType, Quantity, Weight, Volume, RelatedUnitType, Barcode, IsTransactionUnit, TPOutReferenceCode) VALUES (@StockId, @UnitType, @Quantity, @Weight, @Volume, @RelatedUnitType, @Barcode, @IsTransactionUnit, @TPOutReferenceCode)', {
+                    StockId: payload.Id,
+                    UnitType: d.UnitType ?? null,
+                    Quantity: d.Quantity ?? null,
+                    Weight: d.Weight ?? null,
+                    Volume: d.Volume ?? null,
+                    RelatedUnitType: d.RelatedUnitType ?? null,
+                    Barcode: d.Barcode ?? null,
+                    IsTransactionUnit: d.IsTransactionUnit ?? null,
+                    TPOutReferenceCode: d.TPOutReferenceCode ?? null
+                });
+            });
+
+            payload.AdditionalTaxes?.forEach((d: any) => {
+                db.execute('INSERT INTO AdditionalTaxes (StockId, TaxId) VALUES (@StockId, @TaxId)', {
+                    StockId: payload.Id,
+                    TaxId: d.TaxId ?? null
+                });
+            });
+
+            payload.StockFiles?.forEach((d: any) => {
+                db.execute('INSERT INTO StockFiles (StockId, FilePath, FileName, FileType) VALUES (@StockId, @FilePath, @FileName, @FileType)', {
+                    StockId: payload.Id,
+                    FilePath: d.FilePath ?? null,
+                    FileName: d.FileName ?? null,
+                    FileType: d.FileType ?? null
+                });
+            });
+
+            payload.Companies?.forEach((d: any) => {
+                db.execute('INSERT INTO Companies_Stock (StockId, CompanyId) VALUES (@StockId, @CompanyId)', {
+                    StockId: payload.Id,
+                    CompanyId: d.CompanyId ?? null
+                });
+            });
 
             return isInsert;
         });
 
-        const wasInserted = syncTransaction(payload);
-
         res.json({
             status: 'ok',
-            upserted: wasInserted,
+            upserted: wasInsertedResult,
             id: payload.Id,
             syncedAt: new Date().toISOString()
         });

@@ -26,7 +26,21 @@ router.post('/', (req: Request, res: Response) => {
         const payload = salesPipelineSchema.parse(req.body);
         const db = getDb();
 
-        const upsertPipeline = db.prepare(`
+        const upsertPipelineSql = db.driver === 'mssql' ? `
+            MERGE INTO SalesPipeline AS target
+            USING (SELECT @Id AS Id) AS source
+            ON (target.Id = source.Id)
+            WHEN MATCHED THEN
+                UPDATE SET 
+                    Name=@Name,
+                    CompanyId=@CompanyId,
+                    Status=@Status,
+                    IsDefault=@IsDefault,
+                    _SyncedAt=GETUTCDATE()
+            WHEN NOT MATCHED THEN
+                INSERT (Id, Name, CompanyId, Status, IsDefault, _SyncedAt)
+                VALUES (@Id, @Name, @CompanyId, @Status, @IsDefault, GETUTCDATE());
+        ` : `
             INSERT INTO SalesPipeline (
                 Id, Name, CompanyId, Status, IsDefault
             ) VALUES (
@@ -38,46 +52,39 @@ router.post('/', (req: Request, res: Response) => {
                 Status=excluded.Status,
                 IsDefault=excluded.IsDefault,
                 _SyncedAt=datetime('now')
-        `);
+        `;
 
-        // Child Prepares
-        const delStages = db.prepare(`DELETE FROM SalesPipelineStages WHERE SalesPipelineId = ?`);
-        const insStages = db.prepare(`
-            INSERT INTO SalesPipelineStages (Id, SalesPipelineId, PipelineStageId, PipelineStageName) 
-            VALUES (@Id, @SalesPipelineId, @PipelineStageId, @PipelineStageName)
-        `);
-
-        const syncTransaction = db.transaction((data) => {
+        const wasInsertedResult = db.transaction(() => {
             // Main Insert
-            const info = upsertPipeline.run({
-                Id: data.Id,
-                Name: data.Name ?? null,
-                CompanyId: data.CompanyId ?? null,
-                Status: data.Status ?? null,
-                IsDefault: data.IsDefault ?? null
+            const result = db.execute(upsertPipelineSql, {
+                Id: payload.Id,
+                Name: payload.Name ?? null,
+                CompanyId: payload.CompanyId ?? null,
+                Status: payload.Status ?? null,
+                IsDefault: payload.IsDefault ?? null
             });
 
             // Replace Child Arrays atomically
-            delStages.run(data.Id);
-            if (data.SalesPipelineStages && data.SalesPipelineStages.length > 0) {
-                for (const row of data.SalesPipelineStages) {
-                    insStages.run({
+            db.execute(`DELETE FROM SalesPipelineStages WHERE SalesPipelineId = @id`, { id: payload.Id });
+            if (payload.SalesPipelineStages && payload.SalesPipelineStages.length > 0) {
+                const insStagesSql = `INSERT INTO SalesPipelineStages (Id, SalesPipelineId, PipelineStageId, PipelineStageName) 
+                                      VALUES (@Id, @SalesPipelineId, @PipelineStageId, @PipelineStageName)`;
+                for (const row of payload.SalesPipelineStages) {
+                    db.execute(insStagesSql, {
                         Id: row.Id,
-                        SalesPipelineId: data.Id,
+                        SalesPipelineId: payload.Id,
                         PipelineStageId: row.PipelineStageId,
                         PipelineStageName: row.PipelineStageName
                     });
                 }
             }
 
-            return info.changes === 1;
+            return result.changes === 1;
         });
-
-        const wasInserted = syncTransaction(payload);
 
         res.json({
             status: 'ok',
-            upserted: wasInserted,
+            upserted: wasInsertedResult,
             id: payload.Id,
             syncedAt: new Date().toISOString()
         });

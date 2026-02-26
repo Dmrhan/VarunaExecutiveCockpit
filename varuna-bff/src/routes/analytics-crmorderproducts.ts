@@ -17,40 +17,40 @@ router.get('/', (_req: Request, res: Response) => {
         `;
 
         // 1. Product Revenue
-        const productRevenue = (db.prepare(`SELECT SUM(p.NetLineSubTotalLocalCurrency_Amount) as sum ${activeOrderCond}`).get() as { sum: number }).sum || 0;
+        const productRevenue = (db.queryOne(`SELECT SUM(p.NetLineSubTotalLocalCurrency_Amount) as sum ${activeOrderCond}`) as { sum: number }).sum || 0;
 
         // 2. Product Revenue With Tax
-        const revenueWithTax = (db.prepare(`SELECT SUM(p.NetLineTotalWithTaxLocalCurrency_Amount) as sum ${activeOrderCond}`).get() as { sum: number }).sum || 0;
+        const revenueWithTax = (db.queryOne(`SELECT SUM(p.NetLineTotalWithTaxLocalCurrency_Amount) as sum ${activeOrderCond}`) as { sum: number }).sum || 0;
 
         // 3. Product Profit
-        const productProfit = (db.prepare(`SELECT SUM(p.TotalProfitAmountWithLocalCurrency_Amount) as sum ${activeOrderCond}`).get() as { sum: number }).sum || 0;
+        const productProfit = (db.queryOne(`SELECT SUM(p.TotalProfitAmountWithLocalCurrency_Amount) as sum ${activeOrderCond}`) as { sum: number }).sum || 0;
 
         // 4. Profit After Discount
-        const profitAfterDiscount = (db.prepare(`SELECT SUM(p.ProfitAfterSubtotalDiscountLocalCurrency_Amount) as sum ${activeOrderCond}`).get() as { sum: number }).sum || 0;
+        const profitAfterDiscount = (db.queryOne(`SELECT SUM(p.ProfitAfterSubtotalDiscountLocalCurrency_Amount) as sum ${activeOrderCond}`) as { sum: number }).sum || 0;
 
         // 5. Discount Leakage
-        const discountLeakage = (db.prepare(`SELECT SUM(p.LineDiscountAmount_Amount) as sum ${activeOrderCond}`).get() as { sum: number }).sum || 0;
+        const discountLeakage = (db.queryOne(`SELECT SUM(p.LineDiscountAmount_Amount) as sum ${activeOrderCond}`) as { sum: number }).sum || 0;
 
         // 6. Average Margin
-        const averageMargin = (db.prepare(`SELECT AVG(p.ProfitRate) as avg ${activeOrderCond} AND p.ProfitRate IS NOT NULL`).get() as { avg: number }).avg || 0;
+        const averageMargin = (db.queryOne(`SELECT AVG(p.ProfitRate) as avg ${activeOrderCond} AND p.ProfitRate IS NOT NULL`) as { avg: number }).avg || 0;
 
         // 7. Revenue by Product
-        const revenueByProduct = db.prepare(`SELECT p.StockId, SUM(p.NetLineSubTotalLocalCurrency_Amount) as Revenue ${activeOrderCond} GROUP BY p.StockId`).all();
+        const revenueByProduct = db.query(`SELECT p.StockId, SUM(p.NetLineSubTotalLocalCurrency_Amount) as Revenue ${activeOrderCond} GROUP BY p.StockId`);
 
         // 8. Revenue by PYP
-        const revenueByPyp = db.prepare(`SELECT p.PYPSapId, SUM(p.NetLineSubTotalLocalCurrency_Amount) as Revenue ${activeOrderCond} AND p.PYPSapId IS NOT NULL GROUP BY p.PYPSapId`).all();
+        const revenueByPyp = db.query(`SELECT p.PYPSapId, SUM(p.NetLineSubTotalLocalCurrency_Amount) as Revenue ${activeOrderCond} AND p.PYPSapId IS NOT NULL GROUP BY p.PYPSapId`);
 
         // 9. Revenue by Storage Location
-        const revenueByStorage = db.prepare(`SELECT p.StorageLocationSapId, SUM(p.NetLineSubTotalLocalCurrency_Amount) as Revenue ${activeOrderCond} AND p.StorageLocationSapId IS NOT NULL GROUP BY p.StorageLocationSapId`).all();
+        const revenueByStorage = db.query(`SELECT p.StorageLocationSapId, SUM(p.NetLineSubTotalLocalCurrency_Amount) as Revenue ${activeOrderCond} AND p.StorageLocationSapId IS NOT NULL GROUP BY p.StorageLocationSapId`);
 
         // 10. Revenue by Production Location
-        const revenueByProduction = db.prepare(`SELECT p.ProductionLocationSapId, SUM(p.NetLineSubTotalLocalCurrency_Amount) as Revenue ${activeOrderCond} AND p.ProductionLocationSapId IS NOT NULL GROUP BY p.ProductionLocationSapId`).all();
+        const revenueByProduction = db.query(`SELECT p.ProductionLocationSapId, SUM(p.NetLineSubTotalLocalCurrency_Amount) as Revenue ${activeOrderCond} AND p.ProductionLocationSapId IS NOT NULL GROUP BY p.ProductionLocationSapId`);
 
         // 11. Commission Exposure
-        const commissionExposure = (db.prepare(`SELECT SUM(p.NetLineSubTotalLocalCurrency_Amount * COALESCE(p.ComissionRate, 0) / 100.0) as sum ${activeOrderCond}`).get() as { sum: number }).sum || 0;
+        const commissionExposure = (db.queryOne(`SELECT SUM(p.NetLineSubTotalLocalCurrency_Amount * COALESCE(p.ComissionRate, 0) / 100.0) as sum ${activeOrderCond}`) as { sum: number }).sum || 0;
 
         // 12. Tax Impact
-        const taxImpact = (db.prepare(`SELECT SUM(p.NetLineTotalWithTaxLocalCurrency_Amount - p.NetLineSubTotalLocalCurrency_Amount) as sum ${activeOrderCond}`).get() as { sum: number }).sum || 0;
+        const taxImpact = (db.queryOne(`SELECT SUM(p.NetLineTotalWithTaxLocalCurrency_Amount - p.NetLineSubTotalLocalCurrency_Amount) as sum ${activeOrderCond}`) as { sum: number }).sum || 0;
 
         res.json({
             productRevenue,
@@ -82,7 +82,7 @@ router.get('/waterfall', (_req: Request, res: Response) => {
             WHERE o.Status != 5 AND o.IsDeletedFromBackend = 0
         `;
 
-        const waterfallData = db.prepare(`
+        const waterfallData = db.queryOne(`
             SELECT 
                 SUM(p.Quantity * COALESCE(p.UnitPrice_Amount, 0)) as grossPotentialValue,
                 SUM(COALESCE(p.LineDiscountAmount_Amount, 0)) as totalLineDiscount,
@@ -91,7 +91,7 @@ router.get('/waterfall', (_req: Request, res: Response) => {
                 SUM(COALESCE(p.ProfitAfterSubtotalDiscountLocalCurrency_Amount, 0)) as profitAfterDiscounts,
                 AVG(COALESCE(p.ProfitRate, 0)) as avgProfitMargin
             ${activeOrderCond}
-        `).get();
+        `);
 
         res.json(waterfallData || {});
     } catch (e: any) {

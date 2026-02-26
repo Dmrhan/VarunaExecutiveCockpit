@@ -12,25 +12,25 @@ router.get('/', (_req: Request, res: Response) => {
         const activeStateCond = 'State = 1'; // 1 = Active
 
         // 1. Active Product Count
-        const activeProductCount = (db.prepare(`SELECT COUNT(*) as n FROM Stock WHERE ${activeStateCond}`).get() as { n: number }).n;
+        const activeProductCount = (db.queryOne(`SELECT COUNT(*) as n FROM Stock WHERE ${activeStateCond}`) as { n: number }).n;
 
         // 2. Product Count by Brand
-        const countByBrand = db.prepare(`SELECT BrandId, COUNT(*) as count FROM Stock WHERE BrandId IS NOT NULL AND ${activeStateCond} GROUP BY BrandId`).all();
+        const countByBrand = db.query(`SELECT BrandId, COUNT(*) as count FROM Stock WHERE BrandId IS NOT NULL AND ${activeStateCond} GROUP BY BrandId`);
 
         // 3. Product Count by ProductGroup
-        const countByGroup = db.prepare(`SELECT ProductGroupId, COUNT(*) as count FROM Stock WHERE ProductGroupId IS NOT NULL AND ${activeStateCond} GROUP BY ProductGroupId`).all();
+        const countByGroup = db.query(`SELECT ProductGroupId, COUNT(*) as count FROM Stock WHERE ProductGroupId IS NOT NULL AND ${activeStateCond} GROUP BY ProductGroupId`);
 
         // 4. Low Stock Risk (Identifying items with MinStockLevel defined)
-        const lowStockRiskItems = db.prepare(`SELECT Id, Name, Code, MinStockLevel FROM Stock WHERE MinStockLevel IS NOT NULL AND ${activeStateCond}`).all();
+        const lowStockRiskItems = db.query(`SELECT Id, Name, Code, MinStockLevel FROM Stock WHERE MinStockLevel IS NOT NULL AND ${activeStateCond}`);
 
         // 5. Reorder Candidates
-        const reorderCandidates = db.prepare(`SELECT Id, Name, Code, OrderLevel FROM Stock WHERE OrderLevel IS NOT NULL AND ${activeStateCond}`).all();
+        const reorderCandidates = db.query(`SELECT Id, Name, Code, OrderLevel FROM Stock WHERE OrderLevel IS NOT NULL AND ${activeStateCond}`);
 
         // 6. Warranty Tracked Products
-        const warrantyTrackedCount = (db.prepare(`SELECT COUNT(*) as n FROM Stock WHERE InvWillWarrantyBeFollowed = 1 AND ${activeStateCond}`).get() as { n: number }).n;
+        const warrantyTrackedCount = (db.queryOne(`SELECT COUNT(*) as n FROM Stock WHERE InvWillWarrantyBeFollowed = 1 AND ${activeStateCond}`) as { n: number }).n;
 
         // 7. VAT Distribution
-        const vatDistribution = db.prepare(`SELECT SalesVatValue, COUNT(*) as count FROM Stock WHERE ${activeStateCond} GROUP BY SalesVatValue`).all();
+        const vatDistribution = db.query(`SELECT SalesVatValue, COUNT(*) as count FROM Stock WHERE ${activeStateCond} GROUP BY SalesVatValue`);
 
         res.json({
             activeProductCount,

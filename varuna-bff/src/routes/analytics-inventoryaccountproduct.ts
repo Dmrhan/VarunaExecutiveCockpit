@@ -14,60 +14,65 @@ router.get('/', (_req: Request, res: Response) => {
         const activeCond = 'Status = 1';
 
         // 1. Installed Base Count
-        const installedBaseCount = (db.prepare(`SELECT COUNT(*) as n FROM InventoryAccountProduct WHERE ${activeCond}`).get() as { n: number }).n || 0;
+        const installedBaseCount = (db.queryOne(`SELECT COUNT(*) as n FROM InventoryAccountProduct WHERE ${activeCond}`) as { n: number }).n || 0;
 
         // 2. Installed Base by Product
-        const installedBaseByProduct = db.prepare(`SELECT StockId, COUNT(*) as Count FROM InventoryAccountProduct WHERE ${activeCond} GROUP BY StockId ORDER BY Count DESC`).all();
+        const installedBaseByProduct = db.query(`SELECT StockId, COUNT(*) as Count FROM InventoryAccountProduct WHERE ${activeCond} GROUP BY StockId ORDER BY Count DESC`);
 
         // 3. Installed Base by Customer
-        const installedBaseByCustomer = db.prepare(`SELECT AccountId, COUNT(*) as Count FROM InventoryAccountProduct WHERE ${activeCond} GROUP BY AccountId ORDER BY Count DESC`).all();
+        const installedBaseByCustomer = db.query(`SELECT AccountId, COUNT(*) as Count FROM InventoryAccountProduct WHERE ${activeCond} GROUP BY AccountId ORDER BY Count DESC`);
 
         // 4. Active PF Coverage Rate
         let pfCoverageRate = 0;
         if (installedBaseCount > 0) {
-            const pfActiveCount = (db.prepare(`SELECT COUNT(*) as n FROM InventoryAccountProduct WHERE ${activeCond} AND IsPFActive = 1`).get() as { n: number }).n || 0;
+            const pfActiveCount = (db.queryOne(`SELECT COUNT(*) as n FROM InventoryAccountProduct WHERE ${activeCond} AND IsPFActive = 1`) as { n: number }).n || 0;
             pfCoverageRate = pfActiveCount / installedBaseCount;
         }
 
         // 5. Installed Revenue Base
-        const installedRevenueBase = (db.prepare(`SELECT SUM(TotalPackagePrice_Amount) as sum FROM InventoryAccountProduct WHERE ${activeCond}`).get() as { sum: number }).sum || 0;
+        const installedRevenueBase = (db.queryOne(`SELECT SUM(TotalPackagePrice_Amount) as sum FROM InventoryAccountProduct WHERE ${activeCond}`) as { sum: number }).sum || 0;
 
         // 6. Average Product Price
-        const averageProductPrice = (db.prepare(`SELECT AVG(Price_Amount) as avg FROM InventoryAccountProduct WHERE ${activeCond} AND Price_Amount IS NOT NULL`).get() as { avg: number }).avg || 0;
+        const averageProductPrice = (db.queryOne(`SELECT AVG(Price_Amount) as avg FROM InventoryAccountProduct WHERE ${activeCond} AND Price_Amount IS NOT NULL`) as { avg: number }).avg || 0;
 
         // 7. Renewal Candidates (FinishDate <= CURRENT_DATE + 90 days)
-        const renewalCandidates = db.prepare(`
+        const dateLimit = db.driver === 'mssql' ? 'DATEADD(day, 90, GETUTCDATE())' : "date('now', '+90 days')";
+        const renewalCandidates = db.query(`
             SELECT Id, AccountId, StockId, FinishDate, TotalPackagePrice_Amount, TotalPackagePrice_Currency 
             FROM InventoryAccountProduct 
-            WHERE ${activeCond} AND FinishDate IS NOT NULL AND date(FinishDate) <= date('now', '+90 days') 
+            WHERE ${activeCond} AND FinishDate IS NOT NULL AND FinishDate <= ${dateLimit} 
             ORDER BY FinishDate ASC
-        `).all();
+        `);
 
         // 8. Out of Warehouse Risk
-        const outOfWarehouseRisk = db.prepare(`
+        const outOfWarehouseRisk = db.query(`
             SELECT Id, AccountId, StockId, InvPurchaseDate 
             FROM InventoryAccountProduct 
             WHERE ${activeCond} AND InvOutOfWarehouseSerial = 1
-        `).all();
+        `);
 
         // 9. Installed by Domain
-        const installedByDomain = db.prepare(`SELECT Domain, COUNT(*) as Count FROM InventoryAccountProduct WHERE ${activeCond} AND Domain IS NOT NULL GROUP BY Domain ORDER BY Count DESC`).all();
+        const installedByDomain = db.query(`SELECT Domain, COUNT(*) as Count FROM InventoryAccountProduct WHERE ${activeCond} AND Domain IS NOT NULL GROUP BY Domain ORDER BY Count DESC`);
 
         // 10. Installation Trend
-        const installationTrend = db.prepare(`
-            SELECT substr(InvInstalledDate, 1, 7) as Month, COUNT(*) as Count 
+        const trendExpr = db.driver === 'mssql' ? 'LEFT(InvInstalledDate, 7)' : 'substr(InvInstalledDate, 1, 7)';
+        const installationTrend = db.query(`
+            SELECT ${trendExpr} as Month, COUNT(*) as Count 
             FROM InventoryAccountProduct 
             WHERE ${activeCond} AND InvInstalledDate IS NOT NULL 
-            GROUP BY substr(InvInstalledDate, 1, 7) 
+            GROUP BY ${trendExpr} 
             ORDER BY Month ASC
-        `).all();
+        `);
 
         // Lifecycle Intelligence (Asset Age avg in years)
-        const avgAssetAgeYears = (db.prepare(`
-            SELECT AVG(julianday('now') - julianday(InvPurchaseDate)) / 365.25 as avgYears 
+        const ageExpr = db.driver === 'mssql'
+            ? 'DATEDIFF(day, InvPurchaseDate, GETUTCDATE())'
+            : "(julianday('now') - julianday(InvPurchaseDate))";
+        const avgAssetAgeYears = (db.queryOne(`
+            SELECT AVG(CAST(${ageExpr} AS FLOAT)) / 365.25 as avgYears 
             FROM InventoryAccountProduct 
             WHERE ${activeCond} AND InvPurchaseDate IS NOT NULL
-        `).get() as { avgYears: number }).avgYears || 0;
+        `) as { avgYears: number }).avgYears || 0;
 
         res.json({
             installedBaseCount,

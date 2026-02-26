@@ -32,17 +32,36 @@ router.get('/daily', (req: Request, res: Response) => {
             return d.toISOString().split('T')[0];
         })();
 
-        const ownerWhere = ownerId ? ` AND SalesRepresentativeId = '${ownerId}'` : '';
-        const companyWhere = companyId ? ` AND CompanyId = '${companyId}'` : '';
-        const orderOwner = ownerId ? ` AND ProposalOwnerId = '${ownerId}'` : '';
-        const orderCompany = companyId ? ` AND co.CompanyId = '${companyId}'` : '';
+        let ownerWhere = '';
+        const params: any[] = [];
+        if (ownerId) {
+            ownerWhere = ' AND SalesRepresentativeId = ?';
+            params.push(ownerId);
+        }
+        let companyWhere = '';
+        if (companyId) {
+            companyWhere = ' AND CompanyId = ?';
+            params.push(companyId);
+        }
+
+        let orderOwner = '';
+        const orderParams: any[] = [];
+        if (ownerId) {
+            orderOwner = ' AND ProposalOwnerId = ?';
+            orderParams.push(ownerId);
+        }
+        let orderCompany = '';
+        if (companyId) {
+            orderCompany = ' AND CompanyId = ?';
+            orderParams.push(companyId);
+        }
 
         // Contract queries
-        const weeklyContractRow = db.prepare(`SELECT COUNT(*) as cnt, COALESCE(SUM(TotalAmountLocalCurrency_Amount),0) as amt FROM Contract WHERE SigningDate >= ? AND SigningDate <= ? ${ownerWhere} ${companyWhere}`).get(weekStart, asOf) as { cnt: number; amt: number };
-        const monthlyContractRow = db.prepare(`SELECT COUNT(*) as cnt, COALESCE(SUM(TotalAmountLocalCurrency_Amount),0) as amt FROM Contract WHERE SigningDate >= ? AND SigningDate <= ? ${ownerWhere} ${companyWhere}`).get(monthStart, asOf) as { cnt: number; amt: number };
-        const prevMonthlyContractRow = db.prepare(`SELECT COALESCE(SUM(TotalAmountLocalCurrency_Amount),0) as amt FROM Contract WHERE SigningDate >= ? AND SigningDate <= ? ${ownerWhere} ${companyWhere}`).get(monthStart, yesterday) as { amt: number };
-        const prevWeeklyContractRow = db.prepare(`SELECT COALESCE(SUM(TotalAmountLocalCurrency_Amount),0) as amt FROM Contract WHERE SigningDate >= ? AND SigningDate <= ? ${ownerWhere} ${companyWhere}`).get(weekStart, yesterday) as { amt: number };
-        const openContractRow = db.prepare(`SELECT COUNT(*) as cnt, COALESCE(SUM(TotalAmountLocalCurrency_Amount),0) as amt FROM Contract WHERE ContractStatus = 2 ${ownerWhere} ${companyWhere}`).get() as { cnt: number; amt: number };
+        const weeklyContractRow = db.queryOne(`SELECT COUNT(*) as cnt, COALESCE(SUM(TotalAmountLocalCurrency_Amount),0) as amt FROM Contract WHERE SigningDate >= ? AND SigningDate <= ? ${ownerWhere} ${companyWhere}`, [weekStart, asOf, ...params]) as { cnt: number; amt: number };
+        const monthlyContractRow = db.queryOne(`SELECT COUNT(*) as cnt, COALESCE(SUM(TotalAmountLocalCurrency_Amount),0) as amt FROM Contract WHERE SigningDate >= ? AND SigningDate <= ? ${ownerWhere} ${companyWhere}`, [monthStart, asOf, ...params]) as { cnt: number; amt: number };
+        const prevMonthlyContractRow = db.queryOne(`SELECT COALESCE(SUM(TotalAmountLocalCurrency_Amount),0) as amt FROM Contract WHERE SigningDate >= ? AND SigningDate <= ? ${ownerWhere} ${companyWhere}`, [monthStart, yesterday, ...params]) as { amt: number };
+        const prevWeeklyContractRow = db.queryOne(`SELECT COALESCE(SUM(TotalAmountLocalCurrency_Amount),0) as amt FROM Contract WHERE SigningDate >= ? AND SigningDate <= ? ${ownerWhere} ${companyWhere}`, [weekStart, yesterday, ...params]) as { amt: number };
+        const openContractRow = db.queryOne(`SELECT COUNT(*) as cnt, COALESCE(SUM(TotalAmountLocalCurrency_Amount),0) as amt FROM Contract WHERE ContractStatus = 2 ${ownerWhere} ${companyWhere}`, params) as { cnt: number; amt: number };
 
         const MonthlyContractTarget = monthlyTarget;
         const MonthlyContractAchievementRate = MonthlyContractTarget > 0 ? (monthlyContractRow.amt / MonthlyContractTarget) * 100 : 0;
@@ -51,14 +70,14 @@ router.get('/daily', (req: Request, res: Response) => {
 
         // Invoice queries
         const activeOrderCond = `Status != 5 AND IsDeletedFromBackend = 0`;
-        const todayInvoiceRow = db.prepare(`SELECT COUNT(*) as cnt, COALESCE(SUM(TotalNetAmountLocalCurrency_Amount),0) as amt FROM CrmOrder WHERE ${activeOrderCond} AND InvoiceDate = ? ${orderOwner} ${orderCompany}`).get(asOf) as { cnt: number; amt: number };
-        const prevTodayInvoiceRow = db.prepare(`SELECT COALESCE(SUM(TotalNetAmountLocalCurrency_Amount),0) as amt FROM CrmOrder WHERE ${activeOrderCond} AND InvoiceDate = ? ${orderOwner} ${orderCompany}`).get(yesterday) as { amt: number };
-        const weeklyInvoiceRow = db.prepare(`SELECT COUNT(*) as cnt, COALESCE(SUM(TotalNetAmountLocalCurrency_Amount),0) as amt FROM CrmOrder WHERE ${activeOrderCond} AND InvoiceDate >= ? AND InvoiceDate <= ? ${orderOwner} ${orderCompany}`).get(weekStart, asOf) as { cnt: number; amt: number };
-        const prevWeeklyInvoiceRow = db.prepare(`SELECT COALESCE(SUM(TotalNetAmountLocalCurrency_Amount),0) as amt FROM CrmOrder WHERE ${activeOrderCond} AND InvoiceDate >= ? AND InvoiceDate <= ? ${orderOwner} ${orderCompany}`).get(weekStart, yesterday) as { amt: number };
-        const monthlyInvoiceRow = db.prepare(`SELECT COUNT(*) as cnt, COALESCE(SUM(TotalNetAmountLocalCurrency_Amount),0) as amt FROM CrmOrder WHERE ${activeOrderCond} AND InvoiceDate >= ? AND InvoiceDate <= ? ${orderOwner} ${orderCompany}`).get(monthStart, asOf) as { cnt: number; amt: number };
-        const prevMonthlyInvoiceRow = db.prepare(`SELECT COALESCE(SUM(TotalNetAmountLocalCurrency_Amount),0) as amt FROM CrmOrder WHERE ${activeOrderCond} AND InvoiceDate >= ? AND InvoiceDate <= ? ${orderOwner} ${orderCompany}`).get(monthStart, yesterday) as { amt: number };
-        const ytdInvoiceRow = db.prepare(`SELECT COALESCE(SUM(TotalNetAmountLocalCurrency_Amount),0) as amt FROM CrmOrder WHERE ${activeOrderCond} AND InvoiceDate >= ? AND InvoiceDate <= ? ${orderOwner} ${orderCompany}`).get(yearStart, asOf) as { amt: number };
-        const prevYtdInvoiceRow = db.prepare(`SELECT COALESCE(SUM(TotalNetAmountLocalCurrency_Amount),0) as amt FROM CrmOrder WHERE ${activeOrderCond} AND InvoiceDate >= ? AND InvoiceDate <= ? ${orderOwner} ${orderCompany}`).get(yearStart, yesterday) as { amt: number };
+        const todayInvoiceRow = db.queryOne(`SELECT COUNT(*) as cnt, COALESCE(SUM(TotalNetAmountLocalCurrency_Amount),0) as amt FROM CrmOrder WHERE ${activeOrderCond} AND InvoiceDate = ? ${orderOwner} ${orderCompany}`, [asOf, ...orderParams]) as { cnt: number; amt: number };
+        const prevTodayInvoiceRow = db.queryOne(`SELECT COALESCE(SUM(TotalNetAmountLocalCurrency_Amount),0) as amt FROM CrmOrder WHERE ${activeOrderCond} AND InvoiceDate = ? ${orderOwner} ${orderCompany}`, [yesterday, ...orderParams]) as { amt: number };
+        const weeklyInvoiceRow = db.queryOne(`SELECT COUNT(*) as cnt, COALESCE(SUM(TotalNetAmountLocalCurrency_Amount),0) as amt FROM CrmOrder WHERE ${activeOrderCond} AND InvoiceDate >= ? AND InvoiceDate <= ? ${orderOwner} ${orderCompany}`, [weekStart, asOf, ...orderParams]) as { cnt: number; amt: number };
+        const prevWeeklyInvoiceRow = db.queryOne(`SELECT COALESCE(SUM(TotalNetAmountLocalCurrency_Amount),0) as amt FROM CrmOrder WHERE ${activeOrderCond} AND InvoiceDate >= ? AND InvoiceDate <= ? ${orderOwner} ${orderCompany}`, [weekStart, yesterday, ...orderParams]) as { amt: number };
+        const monthlyInvoiceRow = db.queryOne(`SELECT COUNT(*) as cnt, COALESCE(SUM(TotalNetAmountLocalCurrency_Amount),0) as amt FROM CrmOrder WHERE ${activeOrderCond} AND InvoiceDate >= ? AND InvoiceDate <= ? ${orderOwner} ${orderCompany}`, [monthStart, asOf, ...orderParams]) as { cnt: number; amt: number };
+        const prevMonthlyInvoiceRow = db.queryOne(`SELECT COALESCE(SUM(TotalNetAmountLocalCurrency_Amount),0) as amt FROM CrmOrder WHERE ${activeOrderCond} AND InvoiceDate >= ? AND InvoiceDate <= ? ${orderOwner} ${orderCompany}`, [monthStart, yesterday, ...orderParams]) as { amt: number };
+        const ytdInvoiceRow = db.queryOne(`SELECT COALESCE(SUM(TotalNetAmountLocalCurrency_Amount),0) as amt FROM CrmOrder WHERE ${activeOrderCond} AND InvoiceDate >= ? AND InvoiceDate <= ? ${orderOwner} ${orderCompany}`, [yearStart, asOf, ...orderParams]) as { amt: number };
+        const prevYtdInvoiceRow = db.queryOne(`SELECT COALESCE(SUM(TotalNetAmountLocalCurrency_Amount),0) as amt FROM CrmOrder WHERE ${activeOrderCond} AND InvoiceDate >= ? AND InvoiceDate <= ? ${orderOwner} ${orderCompany}`, [yearStart, yesterday, ...orderParams]) as { amt: number };
 
         const MonthlyInvoiceTarget = monthlyTarget;
         const YearlyInvoiceTarget = yearlyTarget;
@@ -67,15 +86,24 @@ router.get('/daily', (req: Request, res: Response) => {
         const RevenueGap = Math.max(0, YearlyInvoiceTarget - ytdInvoiceRow.amt);
 
         // Collection queries
-        const contractOwnerJoin = ownerId ? ` INNER JOIN Contract c ON cpp.ContractId = c.Id AND c.SalesRepresentativeId = '${ownerId}'` : '';
-        const contractCompanyJoin = companyId ? (ownerId ? ` AND c.CompanyId = '${companyId}'` : ` INNER JOIN Contract c ON cpp.ContractId = c.Id AND c.CompanyId = '${companyId}'`) : '';
-        const todayDueRow = db.prepare(`SELECT COALESCE(SUM(cpp.Price_Amount),0) as amt FROM ContractPaymentPlans cpp ${contractOwnerJoin} ${contractCompanyJoin} WHERE cpp.PaymentDate = ?`).get(asOf) as { amt: number };
-        const prevTodayDueRow = db.prepare(`SELECT COALESCE(SUM(cpp.Price_Amount),0) as amt FROM ContractPaymentPlans cpp ${contractOwnerJoin} ${contractCompanyJoin} WHERE cpp.PaymentDate = ?`).get(yesterday) as { amt: number };
-        const todayCollectedRow = db.prepare(`SELECT COALESCE(SUM(cpp.Price_Amount),0) as amt FROM ContractPaymentPlans cpp ${contractOwnerJoin} ${contractCompanyJoin} WHERE cpp.HasBeenCollected = 1 AND cpp.PaymentDate = ?`).get(asOf) as { amt: number };
-        const prevTodayCollectedRow = db.prepare(`SELECT COALESCE(SUM(cpp.Price_Amount),0) as amt FROM ContractPaymentPlans cpp ${contractOwnerJoin} ${contractCompanyJoin} WHERE cpp.HasBeenCollected = 1 AND cpp.PaymentDate = ?`).get(yesterday) as { amt: number };
-        const collectionTotals = db.prepare(`SELECT COALESCE(SUM(cpp.Price_Amount),0) as total, COALESCE(SUM(CASE WHEN cpp.HasBeenCollected=1 THEN cpp.Price_Amount ELSE 0 END),0) as collected FROM ContractPaymentPlans cpp ${contractOwnerJoin} ${contractCompanyJoin}`).get() as { total: number; collected: number };
+        let contractJoin = ' INNER JOIN Contract c ON cpp.ContractId = c.Id';
+        const joinParams: any[] = [];
+        if (ownerId) {
+            contractJoin += ' AND c.SalesRepresentativeId = ?';
+            joinParams.push(ownerId);
+        }
+        if (companyId) {
+            contractJoin += ' AND c.CompanyId = ?';
+            joinParams.push(companyId);
+        }
+
+        const todayDueRow = db.queryOne(`SELECT COALESCE(SUM(cpp.Price_Amount),0) as amt FROM ContractPaymentPlans cpp ${contractJoin} WHERE cpp.PaymentDate = ?`, [...joinParams, asOf]) as { amt: number };
+        const prevTodayDueRow = db.queryOne(`SELECT COALESCE(SUM(cpp.Price_Amount),0) as amt FROM ContractPaymentPlans cpp ${contractJoin} WHERE cpp.PaymentDate = ?`, [...joinParams, yesterday]) as { amt: number };
+        const todayCollectedRow = db.queryOne(`SELECT COALESCE(SUM(cpp.Price_Amount),0) as amt FROM ContractPaymentPlans cpp ${contractJoin} WHERE cpp.HasBeenCollected = 1 AND cpp.PaymentDate = ?`, [...joinParams, asOf]) as { amt: number };
+        const prevTodayCollectedRow = db.queryOne(`SELECT COALESCE(SUM(cpp.Price_Amount),0) as amt FROM ContractPaymentPlans cpp ${contractJoin} WHERE cpp.HasBeenCollected = 1 AND cpp.PaymentDate = ?`, [...joinParams, yesterday]) as { amt: number };
+        const collectionTotals = db.queryOne(`SELECT COALESCE(SUM(cpp.Price_Amount),0) as total, COALESCE(SUM(CASE WHEN cpp.HasBeenCollected=1 THEN cpp.Price_Amount ELSE 0 END),0) as collected FROM ContractPaymentPlans cpp ${contractJoin}`, joinParams) as { total: number; collected: number };
         const CollectionRatio = collectionTotals.total > 0 ? (collectionTotals.collected / collectionTotals.total) * 100 : 0;
-        const openReceivableRiskRow = db.prepare(`SELECT COALESCE(SUM(cpp.Price_Amount),0) as amt FROM ContractPaymentPlans cpp ${contractOwnerJoin} ${contractCompanyJoin} WHERE cpp.HasBeenCollected = 0 AND cpp.PaymentDate < ?`).get(asOf) as { amt: number };
+        const openReceivableRiskRow = db.queryOne(`SELECT COALESCE(SUM(cpp.Price_Amount),0) as amt FROM ContractPaymentPlans cpp ${contractJoin} WHERE cpp.HasBeenCollected = 0 AND cpp.PaymentDate < ?`, [...joinParams, asOf]) as { amt: number };
 
         res.json({
             WeeklyContractCount: weeklyContractRow.cnt, WeeklyContractAmount: weeklyContractRow.amt,
@@ -108,17 +136,51 @@ router.get('/monthly', (req: Request, res: Response) => {
         const db = getDb();
         const ownerId = req.query.ownerId as string | undefined;
         const companyId = req.query.companyId as string | undefined;
-        const ownerWhere = ownerId ? ` AND SalesRepresentativeId = '${ownerId}'` : '';
-        const companyWhere = companyId ? ` AND CompanyId = '${companyId}'` : '';
-        const orderOwner = ownerId ? ` AND ProposalOwnerId = '${ownerId}'` : '';
-        const orderCompany = companyId ? ` AND CompanyId = '${companyId}'` : '';
 
-        const contractTrends = db.prepare(`SELECT substr(SigningDate, 1, 7) as PeriodKey, COALESCE(SUM(TotalAmountLocalCurrency_Amount), 0) as ContractAmount FROM Contract WHERE SigningDate IS NOT NULL AND SigningDate >= date('now', '-12 months') ${ownerWhere} ${companyWhere} GROUP BY PeriodKey ORDER BY PeriodKey ASC`).all() as { PeriodKey: string; ContractAmount: number }[];
-        const invoiceTrends = db.prepare(`SELECT substr(InvoiceDate, 1, 7) as PeriodKey, COALESCE(SUM(TotalNetAmountLocalCurrency_Amount), 0) as InvoiceAmount FROM CrmOrder WHERE Status != 5 AND IsDeletedFromBackend = 0 AND InvoiceDate IS NOT NULL AND InvoiceDate >= date('now', '-12 months') ${orderOwner} ${orderCompany} GROUP BY PeriodKey ORDER BY PeriodKey ASC`).all() as { PeriodKey: string; InvoiceAmount: number }[];
+        let ownerWhere = '';
+        const params: any[] = [];
+        if (ownerId) {
+            ownerWhere = ' AND SalesRepresentativeId = ?';
+            params.push(ownerId);
+        }
+        let companyWhere = '';
+        if (companyId) {
+            companyWhere = ' AND CompanyId = ?';
+            params.push(companyId);
+        }
 
-        const contractOwnerJoin = ownerId ? ` INNER JOIN Contract c ON cpp.ContractId = c.Id AND c.SalesRepresentativeId = '${ownerId}'` : '';
-        const contractCompanyJoin2 = companyId ? (ownerId ? ` AND c.CompanyId = '${companyId}'` : ` INNER JOIN Contract c ON cpp.ContractId = c.Id AND c.CompanyId = '${companyId}'`) : '';
-        const collectionTrends = db.prepare(`SELECT substr(cpp.PaymentDate, 1, 7) as PeriodKey, COALESCE(SUM(cpp.Price_Amount), 0) as CollectionAmount FROM ContractPaymentPlans cpp ${contractOwnerJoin} ${contractCompanyJoin2} WHERE cpp.HasBeenCollected = 1 AND cpp.PaymentDate IS NOT NULL AND cpp.PaymentDate >= date('now', '-12 months') GROUP BY PeriodKey ORDER BY PeriodKey ASC`).all() as { PeriodKey: string; CollectionAmount: number }[];
+        let orderOwner = '';
+        const orderParams: any[] = [];
+        if (ownerId) {
+            orderOwner = ' AND ProposalOwnerId = ?';
+            orderParams.push(ownerId);
+        }
+        let orderCompany = '';
+        if (companyId) {
+            orderCompany = ' AND CompanyId = ?';
+            orderParams.push(companyId);
+        }
+
+        const dateSubstr = db.driver === 'mssql' ? 'LEFT(SigningDate, 7)' : 'substr(SigningDate, 1, 7)';
+        const invDateSubstr = db.driver === 'mssql' ? 'LEFT(InvoiceDate, 7)' : 'substr(InvoiceDate, 1, 7)';
+        const payDateSubstr = db.driver === 'mssql' ? 'LEFT(cpp.PaymentDate, 7)' : 'substr(cpp.PaymentDate, 1, 7)';
+        const twelveMonthsAgo = db.driver === 'mssql' ? 'DATEADD(month, -12, GETUTCDATE())' : "date('now', '-12 months')";
+
+        const contractTrends = db.query(`SELECT ${dateSubstr} as PeriodKey, COALESCE(SUM(TotalAmountLocalCurrency_Amount), 0) as ContractAmount FROM Contract WHERE SigningDate IS NOT NULL AND SigningDate >= ${twelveMonthsAgo} ${ownerWhere} ${companyWhere} GROUP BY ${dateSubstr} ORDER BY PeriodKey ASC`, params) as { PeriodKey: string; ContractAmount: number }[];
+        const invoiceTrends = db.query(`SELECT ${invDateSubstr} as PeriodKey, COALESCE(SUM(TotalNetAmountLocalCurrency_Amount), 0) as InvoiceAmount FROM CrmOrder WHERE Status != 5 AND IsDeletedFromBackend = 0 AND InvoiceDate IS NOT NULL AND InvoiceDate >= ${twelveMonthsAgo} ${orderOwner} ${orderCompany} GROUP BY ${invDateSubstr} ORDER BY PeriodKey ASC`, orderParams) as { PeriodKey: string; InvoiceAmount: number }[];
+
+        let contractJoin = ' INNER JOIN Contract c ON cpp.ContractId = c.Id';
+        const joinParams: any[] = [];
+        if (ownerId) {
+            contractJoin += ' AND c.SalesRepresentativeId = ?';
+            joinParams.push(ownerId);
+        }
+        if (companyId) {
+            contractJoin += ' AND c.CompanyId = ?';
+            joinParams.push(companyId);
+        }
+
+        const collectionTrends = db.query(`SELECT ${payDateSubstr} as PeriodKey, COALESCE(SUM(cpp.Price_Amount), 0) as CollectionAmount FROM ContractPaymentPlans cpp ${contractJoin} WHERE cpp.HasBeenCollected = 1 AND cpp.PaymentDate IS NOT NULL AND cpp.PaymentDate >= ${twelveMonthsAgo} GROUP BY ${payDateSubstr} ORDER BY PeriodKey ASC`, joinParams) as { PeriodKey: string; CollectionAmount: number }[];
 
         const periodMap: Record<string, { PeriodKey: string; ContractAmount: number; InvoiceAmount: number; CollectionAmount: number }> = {};
         for (const row of contractTrends) { periodMap[row.PeriodKey] = periodMap[row.PeriodKey] || { PeriodKey: row.PeriodKey, ContractAmount: 0, InvoiceAmount: 0, CollectionAmount: 0 }; periodMap[row.PeriodKey].ContractAmount = row.ContractAmount; }
@@ -136,13 +198,36 @@ router.get('/burnup', (req: Request, res: Response) => {
         const ownerId = req.query.ownerId as string | undefined;
         const companyId = req.query.companyId as string | undefined;
         const monthStart = asOfDate.substring(0, 7) + '-01';
-        const ownerWhere = ownerId ? ` AND SalesRepresentativeId = '${ownerId}'` : '';
-        const companyWhere = companyId ? ` AND CompanyId = '${companyId}'` : '';
-        const orderOwner = ownerId ? ` AND ProposalOwnerId = '${ownerId}'` : '';
-        const orderCompany = companyId ? ` AND CompanyId = '${companyId}'` : '';
 
-        const contractDaily = db.prepare(`SELECT substr(SigningDate, 1, 10) as date, COALESCE(SUM(TotalAmountLocalCurrency_Amount), 0) as amt FROM Contract WHERE SigningDate >= ? AND SigningDate <= ? ${ownerWhere} ${companyWhere} GROUP BY date ORDER BY date ASC`).all(monthStart, asOfDate) as { date: string; amt: number }[];
-        const invoiceDaily = db.prepare(`SELECT substr(InvoiceDate, 1, 10) as date, COALESCE(SUM(TotalNetAmountLocalCurrency_Amount), 0) as amt FROM CrmOrder WHERE Status != 5 AND IsDeletedFromBackend = 0 AND InvoiceDate >= ? AND InvoiceDate <= ? ${orderOwner} ${orderCompany} GROUP BY date ORDER BY date ASC`).all(monthStart, asOfDate) as { date: string; amt: number }[];
+        let ownerWhere = '';
+        const params: any[] = [];
+        if (ownerId) {
+            ownerWhere = ' AND SalesRepresentativeId = ?';
+            params.push(ownerId);
+        }
+        let companyWhere = '';
+        if (companyId) {
+            companyWhere = ' AND CompanyId = ?';
+            params.push(companyId);
+        }
+
+        let orderOwner = '';
+        const orderParams: any[] = [];
+        if (ownerId) {
+            orderOwner = ' AND ProposalOwnerId = ?';
+            orderParams.push(ownerId);
+        }
+        let orderCompany = '';
+        if (companyId) {
+            orderCompany = ' AND CompanyId = ?';
+            orderParams.push(companyId);
+        }
+
+        const dateSubstr = db.driver === 'mssql' ? 'LEFT(SigningDate, 10)' : 'substr(SigningDate, 1, 10)';
+        const invDateSubstr = db.driver === 'mssql' ? 'LEFT(InvoiceDate, 10)' : 'substr(InvoiceDate, 1, 10)';
+
+        const contractDaily = db.query(`SELECT ${dateSubstr} as date, COALESCE(SUM(TotalAmountLocalCurrency_Amount), 0) as amt FROM Contract WHERE SigningDate >= ? AND SigningDate <= ? ${ownerWhere} ${companyWhere} GROUP BY ${dateSubstr} ORDER BY date ASC`, [monthStart, asOfDate, ...params]) as { date: string; amt: number }[];
+        const invoiceDaily = db.query(`SELECT ${invDateSubstr} as date, COALESCE(SUM(TotalNetAmountLocalCurrency_Amount), 0) as amt FROM CrmOrder WHERE Status != 5 AND IsDeletedFromBackend = 0 AND InvoiceDate >= ? AND InvoiceDate <= ? ${orderOwner} ${orderCompany} GROUP BY ${invDateSubstr} ORDER BY date ASC`, [monthStart, asOfDate, ...orderParams]) as { date: string; amt: number }[];
 
         const dayMap: Record<string, { date: string; contractAmt: number; invoiceAmt: number }> = {};
         const startD = new Date(monthStart);

@@ -80,13 +80,16 @@ app.use('/api/orders', ordersRouter);
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
     const db = getDb();
-    const tableCount = (db.prepare(
-        "SELECT COUNT(*) as n FROM sqlite_master WHERE type='table'"
-    ).get() as { n: number }).n;
+    const sql = db.driver === 'mssql'
+        ? "SELECT COUNT(*) as n FROM sys.objects WHERE type='U'"
+        : "SELECT COUNT(*) as n FROM sqlite_master WHERE type='table'";
+
+    const row = db.queryOne<{ n: number }>(sql);
 
     res.json({
         status: 'ok',
-        tables: tableCount,
+        driver: db.driver,
+        tables: row?.n ?? 0,
         timestamp: new Date().toISOString(),
     });
 });

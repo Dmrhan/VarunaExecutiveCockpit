@@ -1,9 +1,9 @@
-const API_BASE = (window as any)['__RUNTIME_CONFIG__']?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+const getApiBaseUrl = () => (window as any)['__RUNTIME_CONFIG__']?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
 
 export const ContractService = {
     getAll: async () => {
         try {
-            const res = await fetch(`${API_BASE}/contracts`);
+            const res = await fetch(`${getApiBaseUrl()}/contracts`);
             if (!res.ok) throw new Error('Failed to fetch contracts');
             const json = await res.json();
             return json.value || [];
@@ -14,7 +14,7 @@ export const ContractService = {
     },
     getById: async (id: string) => {
         try {
-            const res = await fetch(`${API_BASE}/contracts/${id}`);
+            const res = await fetch(`${getApiBaseUrl()}/contracts/${id}`);
             if (!res.ok) throw new Error('Failed to fetch contract');
             return await res.json();
         } catch (error) {
@@ -27,7 +27,7 @@ export const ContractService = {
 export const QuoteService = {
     getAll: async () => {
         try {
-            const res = await fetch(`${API_BASE}/quotes`);
+            const res = await fetch(`${getApiBaseUrl()}/quotes`);
             if (!res.ok) throw new Error('Failed to fetch quotes');
             const json = await res.json();
             return json.value || [];
@@ -41,7 +41,7 @@ export const QuoteService = {
 export const OrderService = {
     getAll: async () => {
         try {
-            const res = await fetch(`${API_BASE}/orders`);
+            const res = await fetch(`${getApiBaseUrl()}/orders`);
             if (!res.ok) throw new Error('Failed to fetch orders');
             const json = await res.json();
             return json.value || [];

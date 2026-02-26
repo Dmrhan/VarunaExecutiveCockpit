@@ -65,7 +65,44 @@ router.post('/', (req: Request, res: Response) => {
         const payload = contractSchema.parse(req.body);
         const db = getDb();
 
-        const upsertContract = db.prepare(`
+        const upsertContractSql = db.driver === 'mssql' ? `
+            MERGE INTO Contract AS target
+            USING (SELECT @Id AS Id) AS source
+            ON (target.Id = source.Id)
+            WHEN MATCHED THEN
+                UPDATE SET 
+                    ContractNo=@ContractNo, ContractName=@ContractName, AccountId=@AccountId, 
+                    SalesRepresentativeId=@SalesRepresentativeId, ContractType=@ContractType, 
+                    ContractStatus=@ContractStatus, StartDate=@StartDate, FinishDate=@FinishDate, 
+                    RenewalDate=@RenewalDate, IsAutoExtending=@IsAutoExtending, 
+                    InvoiceDueDate=@InvoiceDueDate, TotalAmount_Amount=@TotalAmount_Amount, 
+                    TotalAmount_Currency=@TotalAmount_Currency, TotalAmountLocalCurrency_Amount=@TotalAmountLocalCurrency_Amount, 
+                    TotalAmountLocalCurrency_Currency=@TotalAmountLocalCurrency_Currency, 
+                    StampTaxRate=@StampTaxRate, StampTaxAmount=@StampTaxAmount, 
+                    IsLateInterestApply=@IsLateInterestApply, LateInterestContractYear=@LateInterestContractYear, 
+                    InvoiceNumber=@InvoiceNumber, InvoiceStatusId=@InvoiceStatusId, 
+                    CompanyId=@CompanyId, ContractUrl=@ContractUrl, ProductId=@ProductId, 
+                    RemainingBalance_Amount=@RemainingBalance_Amount, RemainingBalance_Currency=@RemainingBalance_Currency, 
+                    SigningDate=@SigningDate, _SyncedAt=GETUTCDATE()
+            WHEN NOT MATCHED THEN
+                INSERT (
+                    Id, ContractNo, ContractName, AccountId, SalesRepresentativeId, 
+                    ContractType, ContractStatus, StartDate, FinishDate, RenewalDate, 
+                    IsAutoExtending, InvoiceDueDate, TotalAmount_Amount, TotalAmount_Currency, 
+                    TotalAmountLocalCurrency_Amount, TotalAmountLocalCurrency_Currency, 
+                    StampTaxRate, StampTaxAmount, IsLateInterestApply, LateInterestContractYear, 
+                    InvoiceNumber, InvoiceStatusId, CompanyId, ContractUrl, ProductId, 
+                    RemainingBalance_Amount, RemainingBalance_Currency, SigningDate, _SyncedAt
+                ) VALUES (
+                    @Id, @ContractNo, @ContractName, @AccountId, @SalesRepresentativeId, 
+                    @ContractType, @ContractStatus, @StartDate, @FinishDate, @RenewalDate, 
+                    @IsAutoExtending, @InvoiceDueDate, @TotalAmount_Amount, @TotalAmount_Currency, 
+                    @TotalAmountLocalCurrency_Amount, @TotalAmountLocalCurrency_Currency, 
+                    @StampTaxRate, @StampTaxAmount, @IsLateInterestApply, @LateInterestContractYear, 
+                    @InvoiceNumber, @InvoiceStatusId, @CompanyId, @ContractUrl, @ProductId, 
+                    @RemainingBalance_Amount, @RemainingBalance_Currency, @SigningDate, GETUTCDATE()
+                );
+        ` : `
             INSERT INTO Contract (
                 Id, ContractNo, ContractName, AccountId, SalesRepresentativeId, 
                 ContractType, ContractStatus, StartDate, FinishDate, RenewalDate, 
@@ -97,62 +134,54 @@ router.post('/', (req: Request, res: Response) => {
                 CompanyId=excluded.CompanyId, ContractUrl=excluded.ContractUrl, ProductId=excluded.ProductId, 
                 RemainingBalance_Amount=excluded.RemainingBalance_Amount, RemainingBalance_Currency=excluded.RemainingBalance_Currency, 
                 SigningDate=excluded.SigningDate, _SyncedAt=datetime('now')
-        `);
+        `;
 
-        // Child Prepares
-        const delPaymentPlans = db.prepare(`DELETE FROM ContractPaymentPlans WHERE ContractId = ?`);
-        const insPaymentPlans = db.prepare(`
-            INSERT INTO ContractPaymentPlans (Id, ContractId, Price_Amount, Price_Currency, TotalRate, HasBeenCollected, PaymentDate, Name) 
-            VALUES (@Id, @ContractId, @Price_Amount, @Price_Currency, @TotalRate, @HasBeenCollected, @PaymentDate, @Name)
-        `);
-
-        const delLisances = db.prepare(`DELETE FROM ContractLisances WHERE ContractId = ?`);
-        const insLisances = db.prepare(`INSERT INTO ContractLisances (Id, ContractId, LisanceId) VALUES (@Id, @ContractId, @LisanceId)`);
-
-        const syncTransaction = db.transaction((data) => {
+        const wasInsertedResult = db.transaction(() => {
             // Main Insert
-            const info = upsertContract.run({
-                Id: data.Id,
-                ContractNo: data.ContractNo ?? null,
-                ContractName: data.ContractName ?? null,
-                AccountId: data.AccountId,
-                SalesRepresentativeId: data.SalesRepresentativeId,
-                ContractType: data.ContractType ?? null,
-                ContractStatus: data.ContractStatus ?? null,
-                StartDate: data.StartDate,
-                FinishDate: data.FinishDate,
-                RenewalDate: data.RenewalDate ?? null,
-                IsAutoExtending: data.IsAutoExtending ?? null,
-                InvoiceDueDate: data.InvoiceDueDate ?? null,
+            const result = db.execute(upsertContractSql, {
+                Id: payload.Id,
+                ContractNo: payload.ContractNo ?? null,
+                ContractName: payload.ContractName ?? null,
+                AccountId: payload.AccountId,
+                SalesRepresentativeId: payload.SalesRepresentativeId,
+                ContractType: payload.ContractType ?? null,
+                ContractStatus: payload.ContractStatus ?? null,
+                StartDate: payload.StartDate,
+                FinishDate: payload.FinishDate,
+                RenewalDate: payload.RenewalDate ?? null,
+                IsAutoExtending: payload.IsAutoExtending ?? null,
+                InvoiceDueDate: payload.InvoiceDueDate ?? null,
 
-                TotalAmount_Amount: data.TotalAmount?.Amount ?? null,
-                TotalAmount_Currency: data.TotalAmount?.Currency ?? null,
-                TotalAmountLocalCurrency_Amount: data.TotalAmountLocalCurrency?.Amount ?? null,
-                TotalAmountLocalCurrency_Currency: data.TotalAmountLocalCurrency?.Currency ?? null,
+                TotalAmount_Amount: payload.TotalAmount?.Amount ?? null,
+                TotalAmount_Currency: payload.TotalAmount?.Currency ?? null,
+                TotalAmountLocalCurrency_Amount: payload.TotalAmountLocalCurrency?.Amount ?? null,
+                TotalAmountLocalCurrency_Currency: payload.TotalAmountLocalCurrency?.Currency ?? null,
 
-                StampTaxRate: data.StampTaxRate ?? null,
-                StampTaxAmount: data.StampTaxAmount ?? null,
-                IsLateInterestApply: data.IsLateInterestApply ?? null,
-                LateInterestContractYear: data.LateInterestContractYear ?? null,
+                StampTaxRate: payload.StampTaxRate ?? null,
+                StampTaxAmount: payload.StampTaxAmount ?? null,
+                IsLateInterestApply: payload.IsLateInterestApply ?? null,
+                LateInterestContractYear: payload.LateInterestContractYear ?? null,
 
-                InvoiceNumber: data.InvoiceNumber ?? null,
-                InvoiceStatusId: data.InvoiceStatusId ?? null,
-                CompanyId: data.CompanyId ?? null,
-                ContractUrl: data.ContractUrl ?? null,
-                ProductId: data.ProductId ?? null,
+                InvoiceNumber: payload.InvoiceNumber ?? null,
+                InvoiceStatusId: payload.InvoiceStatusId ?? null,
+                CompanyId: payload.CompanyId ?? null,
+                ContractUrl: payload.ContractUrl ?? null,
+                ProductId: payload.ProductId ?? null,
 
-                RemainingBalance_Amount: data.RemainingBalance?.Amount ?? null,
-                RemainingBalance_Currency: data.RemainingBalance?.Currency ?? null,
-                SigningDate: data.SigningDate ?? null
+                RemainingBalance_Amount: payload.RemainingBalance?.Amount ?? null,
+                RemainingBalance_Currency: payload.RemainingBalance?.Currency ?? null,
+                SigningDate: payload.SigningDate ?? null
             });
 
             // Replace Child Arrays atomically
-            delPaymentPlans.run(data.Id);
-            if (data.ContractPaymentPlans && data.ContractPaymentPlans.length > 0) {
-                for (const row of data.ContractPaymentPlans) {
-                    insPaymentPlans.run({
+            db.execute(`DELETE FROM ContractPaymentPlans WHERE ContractId = @id`, { id: payload.Id });
+            if (payload.ContractPaymentPlans && payload.ContractPaymentPlans.length > 0) {
+                const insPaymentPlanSql = `INSERT INTO ContractPaymentPlans (Id, ContractId, Price_Amount, Price_Currency, TotalRate, HasBeenCollected, PaymentDate, Name) 
+                                           VALUES (@Id, @ContractId, @Price_Amount, @Price_Currency, @TotalRate, @HasBeenCollected, @PaymentDate, @Name)`;
+                for (const row of payload.ContractPaymentPlans) {
+                    db.execute(insPaymentPlanSql, {
                         Id: row.Id,
-                        ContractId: data.Id,
+                        ContractId: payload.Id,
                         Price_Amount: row.Price?.Amount ?? null,
                         Price_Currency: row.Price?.Currency ?? null,
                         TotalRate: row.TotalRate ?? null,
@@ -163,21 +192,20 @@ router.post('/', (req: Request, res: Response) => {
                 }
             }
 
-            delLisances.run(data.Id);
-            if (data.ContractLisances && data.ContractLisances.length > 0) {
-                for (const row of data.ContractLisances) {
-                    insLisances.run({ Id: row.Id, ContractId: data.Id, LisanceId: row.LisanceId });
+            db.execute(`DELETE FROM ContractLisances WHERE ContractId = @id`, { id: payload.Id });
+            if (payload.ContractLisances && payload.ContractLisances.length > 0) {
+                const insLisancesSql = `INSERT INTO ContractLisances (Id, ContractId, LisanceId) VALUES (@Id, @ContractId, @LisanceId)`;
+                for (const row of payload.ContractLisances) {
+                    db.execute(insLisancesSql, { Id: row.Id, ContractId: payload.Id, LisanceId: row.LisanceId });
                 }
             }
 
-            return info.changes === 1;
+            return result.changes === 1;
         });
-
-        const wasInserted = syncTransaction(payload);
 
         res.json({
             status: 'ok',
-            upserted: wasInserted,
+            upserted: wasInsertedResult,
             id: payload.Id,
             syncedAt: new Date().toISOString()
         });

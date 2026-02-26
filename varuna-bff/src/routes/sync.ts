@@ -30,82 +30,10 @@ router.post('/sync', (req: Request, res: Response) => {
     const db = getDb();
 
     // Check if this is an insert or update for response reporting
-    const existing = db.prepare('SELECT Id FROM Opportunity WHERE Id = ?').get(opportunity.Id);
+    const existing = db.queryOne('SELECT Id FROM Opportunity WHERE Id = ?', [opportunity.Id]);
     const isUpsert = !existing;
 
-    const upsertOpportunity = db.prepare(`
-        INSERT INTO Opportunity (
-            Id, Name, AccountId, OwnerId, LeadOwnerId, PartnerId,
-            PersonId, CompanyId, PipelineId, ProductGroupId, ProductCategoryId,
-            Type, Source, DealType, WonLostType, DealStatus, ProbabilityBand,
-            OpportunityStageName, OpportunityStageId, OpportunityStageNameTr,
-            Amount_Value, ExpectedRevenue_Value, PotentialTurnover_Value,
-            BKMTurnover_Value, TargetTurnover_Value, Probability,
-            IsThereDelay, CloseDate, DeliveryDate, FirstCreatedDate, _SyncedAt
-        ) VALUES (
-            @Id, @Name, @AccountId, @OwnerId, @LeadOwnerId, @PartnerId,
-            @PersonId, @CompanyId, @PipelineId, @ProductGroupId, @ProductCategoryId,
-            @Type, @Source, @DealType, @WonLostType, @DealStatus, @ProbabilityBand,
-            @OpportunityStageName, @OpportunityStageId, @OpportunityStageNameTr,
-            @Amount_Value, @ExpectedRevenue_Value, @PotentialTurnover_Value,
-            @BKMTurnover_Value, @TargetTurnover_Value, @Probability,
-            @IsThereDelay, @CloseDate, @DeliveryDate, @FirstCreatedDate,
-            datetime('now')
-        )
-        ON CONFLICT(Id) DO UPDATE SET
-            Name                    = excluded.Name,
-            AccountId               = excluded.AccountId,
-            OwnerId                 = excluded.OwnerId,
-            LeadOwnerId             = excluded.LeadOwnerId,
-            PartnerId               = excluded.PartnerId,
-            PersonId                = excluded.PersonId,
-            CompanyId               = excluded.CompanyId,
-            PipelineId              = excluded.PipelineId,
-            ProductGroupId          = excluded.ProductGroupId,
-            ProductCategoryId       = excluded.ProductCategoryId,
-            Type                    = excluded.Type,
-            Source                  = excluded.Source,
-            DealType                = excluded.DealType,
-            WonLostType             = excluded.WonLostType,
-            DealStatus              = excluded.DealStatus,
-            ProbabilityBand         = excluded.ProbabilityBand,
-            OpportunityStageName    = excluded.OpportunityStageName,
-            OpportunityStageId      = excluded.OpportunityStageId,
-            OpportunityStageNameTr  = excluded.OpportunityStageNameTr,
-            Amount_Value            = excluded.Amount_Value,
-            ExpectedRevenue_Value   = excluded.ExpectedRevenue_Value,
-            PotentialTurnover_Value = excluded.PotentialTurnover_Value,
-            BKMTurnover_Value       = excluded.BKMTurnover_Value,
-            TargetTurnover_Value    = excluded.TargetTurnover_Value,
-            Probability             = excluded.Probability,
-            IsThereDelay            = excluded.IsThereDelay,
-            CloseDate               = excluded.CloseDate,
-            DeliveryDate            = excluded.DeliveryDate,
-            FirstCreatedDate        = excluded.FirstCreatedDate,
-            _SyncedAt               = datetime('now')
-    `);
-
-    const deleteNotes = db.prepare('DELETE FROM OpportunityNotes    WHERE OpportunityId = ?');
-    const deleteContacts = db.prepare('DELETE FROM OpportunityContacts WHERE OpportunityId = ?');
-    const deletePGs = db.prepare('DELETE FROM ProductGroups       WHERE OpportunityId = ?');
-
-    const insertNote = db.prepare(`
-        INSERT INTO OpportunityNotes (OpportunityId, DateTaken, Note, UserName, NoteText)
-        VALUES (@OpportunityId, @DateTaken, @Note, @UserName, @NoteText)
-    `);
-    const insertContact = db.prepare(`
-        INSERT INTO OpportunityContacts
-            (OpportunityId, Name, Title, Email, Phone, CellPhone, Website, DefaultContact)
-        VALUES
-            (@OpportunityId, @Name, @Title, @Email, @Phone, @CellPhone, @Website, @DefaultContact)
-    `);
-    const insertPG = db.prepare(`
-        INSERT INTO ProductGroups (OpportunityId, ProductGroupId)
-        VALUES (@OpportunityId, @ProductGroupId)
-    `);
-
-    // Execute everything atomically
-    // better-sqlite3 requires every named param to be present — convert undefined → null
+    // ── Bindings ──────────────────────────────────────────────────────────────
     const binding = {
         Id: opportunity.Id,
         Name: opportunity.Name ?? null,
@@ -139,45 +67,169 @@ router.post('/sync', (req: Request, res: Response) => {
         FirstCreatedDate: opportunity.FirstCreatedDate ?? null,
     };
 
-    const syncTransaction = db.transaction(() => {
-        upsertOpportunity.run(binding);
+    // ── SQL Construction ──────────────────────────────────────────────────────
+    let upsertSql: string;
 
-        // Detail tables: delete-then-insert
-        deleteNotes.run(opportunity.Id);
-        deleteContacts.run(opportunity.Id);
-        deletePGs.run(opportunity.Id);
-
-        for (const note of notes) {
-            insertNote.run({
-                OpportunityId: opportunity.Id,
-                DateTaken: note.DateTaken ?? null,
-                Note: note.Note ?? null,
-                UserName: note.UserName ?? null,
-                NoteText: note.NoteText ?? null,
-            });
-        }
-        for (const contact of contacts) {
-            insertContact.run({
-                OpportunityId: opportunity.Id,
-                Name: contact.Name ?? null,
-                Title: contact.Title ?? null,
-                Email: contact.Email ?? null,
-                Phone: contact.Phone ?? null,
-                CellPhone: contact.CellPhone ?? null,
-                Website: contact.Website ?? null,
-                DefaultContact: contact.DefaultContact ?? null,
-            });
-        }
-        for (const pg of productGroups) {
-            insertPG.run({
-                OpportunityId: opportunity.Id,
-                ProductGroupId: pg.ProductGroupId ?? null,
-            });
-        }
-    });
+    if (db.driver === 'mssql') {
+        upsertSql = `
+            MERGE INTO Opportunity AS target
+            USING (SELECT @Id AS Id) AS source
+            ON (target.Id = source.Id)
+            WHEN MATCHED THEN
+                UPDATE SET
+                    Name                    = @Name,
+                    AccountId               = @AccountId,
+                    OwnerId                 = @OwnerId,
+                    LeadOwnerId             = @LeadOwnerId,
+                    PartnerId               = @PartnerId,
+                    PersonId                = @PersonId,
+                    CompanyId               = @CompanyId,
+                    PipelineId              = @PipelineId,
+                    ProductGroupId          = @ProductGroupId,
+                    ProductCategoryId       = @ProductCategoryId,
+                    [Type]                  = @Type,
+                    [Source]                = @Source,
+                    DealType                = @DealType,
+                    WonLostType             = @WonLostType,
+                    DealStatus              = @DealStatus,
+                    ProbabilityBand         = @ProbabilityBand,
+                    OpportunityStageName    = @OpportunityStageName,
+                    OpportunityStageId      = @OpportunityStageId,
+                    OpportunityStageNameTr  = @OpportunityStageNameTr,
+                    Amount_Value            = @Amount_Value,
+                    ExpectedRevenue_Value   = @ExpectedRevenue_Value,
+                    PotentialTurnover_Value = @PotentialTurnover_Value,
+                    BKMTurnover_Value       = @BKMTurnover_Value,
+                    TargetTurnover_Value    = @TargetTurnover_Value,
+                    Probability             = @Probability,
+                    IsThereDelay            = @IsThereDelay,
+                    CloseDate               = @CloseDate,
+                    DeliveryDate            = @DeliveryDate,
+                    FirstCreatedDate        = @FirstCreatedDate,
+                    _SyncedAt               = GETUTCDATE()
+            WHEN NOT MATCHED THEN
+                INSERT (
+                    Id, Name, AccountId, OwnerId, LeadOwnerId, PartnerId,
+                    PersonId, CompanyId, PipelineId, ProductGroupId, ProductCategoryId,
+                    [Type], [Source], DealType, WonLostType, DealStatus, ProbabilityBand,
+                    OpportunityStageName, OpportunityStageId, OpportunityStageNameTr,
+                    Amount_Value, ExpectedRevenue_Value, PotentialTurnover_Value,
+                    BKMTurnover_Value, TargetTurnover_Value, Probability,
+                    IsThereDelay, CloseDate, DeliveryDate, FirstCreatedDate, _SyncedAt
+                ) VALUES (
+                    @Id, @Name, @AccountId, @OwnerId, @LeadOwnerId, @PartnerId,
+                    @PersonId, @CompanyId, @PipelineId, @ProductGroupId, @ProductCategoryId,
+                    @Type, @Source, @DealType, @WonLostType, @DealStatus, @ProbabilityBand,
+                    @OpportunityStageName, @OpportunityStageId, @OpportunityStageNameTr,
+                    @Amount_Value, @ExpectedRevenue_Value, @PotentialTurnover_Value,
+                    @BKMTurnover_Value, @TargetTurnover_Value, @Probability,
+                    @IsThereDelay, @CloseDate, @DeliveryDate, @FirstCreatedDate,
+                    GETUTCDATE()
+                );
+        `;
+    } else {
+        upsertSql = `
+            INSERT INTO Opportunity (
+                Id, Name, AccountId, OwnerId, LeadOwnerId, PartnerId,
+                PersonId, CompanyId, PipelineId, ProductGroupId, ProductCategoryId,
+                Type, Source, DealType, WonLostType, DealStatus, ProbabilityBand,
+                OpportunityStageName, OpportunityStageId, OpportunityStageNameTr,
+                Amount_Value, ExpectedRevenue_Value, PotentialTurnover_Value,
+                BKMTurnover_Value, TargetTurnover_Value, Probability,
+                IsThereDelay, CloseDate, DeliveryDate, FirstCreatedDate, _SyncedAt
+            ) VALUES (
+                :Id, :Name, :AccountId, :OwnerId, :LeadOwnerId, :PartnerId,
+                :PersonId, :CompanyId, :PipelineId, :ProductGroupId, :ProductCategoryId,
+                :Type, :Source, :DealType, :WonLostType, :DealStatus, :ProbabilityBand,
+                :OpportunityStageName, :OpportunityStageId, :OpportunityStageNameTr,
+                :Amount_Value, :ExpectedRevenue_Value, :PotentialTurnover_Value,
+                :BKMTurnover_Value, :TargetTurnover_Value, :Probability,
+                :IsThereDelay, :CloseDate, :DeliveryDate, :FirstCreatedDate,
+                datetime('now')
+            )
+            ON CONFLICT(Id) DO UPDATE SET
+                Name                    = excluded.Name,
+                AccountId               = excluded.AccountId,
+                OwnerId                 = excluded.OwnerId,
+                LeadOwnerId             = excluded.LeadOwnerId,
+                PartnerId               = excluded.PartnerId,
+                PersonId                = excluded.PersonId,
+                CompanyId               = excluded.CompanyId,
+                PipelineId              = excluded.PipelineId,
+                ProductGroupId          = excluded.ProductGroupId,
+                ProductCategoryId       = excluded.ProductCategoryId,
+                Type                    = excluded.Type,
+                Source                  = excluded.Source,
+                DealType                = excluded.DealType,
+                WonLostType             = excluded.WonLostType,
+                DealStatus              = excluded.DealStatus,
+                ProbabilityBand         = excluded.ProbabilityBand,
+                OpportunityStageName    = excluded.OpportunityStageName,
+                OpportunityStageId      = excluded.OpportunityStageId,
+                OpportunityStageNameTr  = excluded.OpportunityStageNameTr,
+                Amount_Value            = excluded.Amount_Value,
+                ExpectedRevenue_Value   = excluded.ExpectedRevenue_Value,
+                PotentialTurnover_Value = excluded.PotentialTurnover_Value,
+                BKMTurnover_Value       = excluded.BKMTurnover_Value,
+                TargetTurnover_Value    = excluded.TargetTurnover_Value,
+                Probability             = excluded.Probability,
+                IsThereDelay            = excluded.IsThereDelay,
+                CloseDate               = excluded.CloseDate,
+                DeliveryDate            = excluded.DeliveryDate,
+                FirstCreatedDate        = excluded.FirstCreatedDate,
+                _SyncedAt               = datetime('now')
+        `;
+    }
 
     try {
-        syncTransaction();
+        db.transaction(() => {
+            db.execute(upsertSql, binding);
+
+            // Detail tables: delete-then-insert
+            db.execute('DELETE FROM OpportunityNotes    WHERE OpportunityId = ?', [opportunity.Id]);
+            db.execute('DELETE FROM OpportunityContacts WHERE OpportunityId = ?', [opportunity.Id]);
+            db.execute('DELETE FROM ProductGroups       WHERE OpportunityId = ?', [opportunity.Id]);
+
+            for (const note of notes) {
+                db.execute(`
+                    INSERT INTO OpportunityNotes (OpportunityId, DateTaken, Note, UserName, NoteText)
+                    VALUES (:OpportunityId, :DateTaken, :Note, :UserName, :NoteText)
+                `, {
+                    OpportunityId: opportunity.Id,
+                    DateTaken: note.DateTaken ?? null,
+                    Note: note.Note ?? null,
+                    UserName: note.UserName ?? null,
+                    NoteText: note.NoteText ?? null,
+                });
+            }
+            for (const contact of contacts) {
+                db.execute(`
+                    INSERT INTO OpportunityContacts
+                        (OpportunityId, Name, Title, Email, Phone, CellPhone, Website, DefaultContact)
+                    VALUES
+                        (:OpportunityId, :Name, :Title, :Email, :Phone, :CellPhone, :Website, :DefaultContact)
+                `, {
+                    OpportunityId: opportunity.Id,
+                    Name: contact.Name ?? null,
+                    Title: contact.Title ?? null,
+                    Email: contact.Email ?? null,
+                    Phone: contact.Phone ?? null,
+                    CellPhone: contact.CellPhone ?? null,
+                    Website: contact.Website ?? null,
+                    DefaultContact: contact.DefaultContact ?? null,
+                });
+            }
+            for (const pg of productGroups) {
+                db.execute(`
+                    INSERT INTO ProductGroups (OpportunityId, ProductGroupId)
+                    VALUES (:OpportunityId, :ProductGroupId)
+                `, {
+                    OpportunityId: opportunity.Id,
+                    ProductGroupId: pg.ProductGroupId ?? null,
+                });
+            }
+        });
+
         return res.status(200).json({
             status: 'ok',
             upserted: isUpsert,

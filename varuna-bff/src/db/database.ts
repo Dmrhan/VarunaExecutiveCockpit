@@ -1,34 +1,35 @@
-import Database from 'better-sqlite3';
-import fs from 'fs';
-import path from 'path';
+import { IDbAdapter } from './adapter.interface';
+import { SqliteAdapter } from './sqlite.adapter';
+import { MssqlAdapter } from './mssql.adapter';
 
-const DB_PATH = path.join(__dirname, '../../varuna.db');
-const SCHEMA_PATH = path.join(__dirname, 'schema.sql');
+let adapter: IDbAdapter;
 
-let db: Database.Database;
+/**
+ * getDb — Factory that returns the singleton instance of the database adapter.
+ * Controlled by process.env.DB_DRIVER ('sqlite' | 'mssql').
+ */
+export function getDb(): IDbAdapter {
+    if (!adapter) {
+        const driver = (process.env.DB_DRIVER || 'sqlite').toLowerCase();
 
-export function getDb(): Database.Database {
-    if (!db) {
-        db = new Database(DB_PATH);
-        db.pragma('journal_mode = WAL');
-        db.pragma('foreign_keys = ON');
-        applySchema(db);
+        if (driver === 'mssql') {
+            adapter = new MssqlAdapter();
+        } else {
+            adapter = new SqliteAdapter();
+        }
     }
-    return db;
-}
-
-function applySchema(database: Database.Database): void {
-    const schema = fs.readFileSync(SCHEMA_PATH, 'utf-8');
-    database.exec(schema);
-    console.log('[DB] Schema applied successfully. DB path:', DB_PATH);
+    return adapter;
 }
 
 // Allow running directly for migration: `npx ts-node src/db/database.ts`
 if (require.main === module) {
-    const database = getDb();
-    const tables = database.prepare(
-        "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
-    ).all() as { name: string }[];
-    console.log('[DB] Tables created:', tables.map(t => t.name).join(', '));
+    const db = getDb();
+    // Use the abstraction's query method for a smoke test
+    const tables = db.query<{ name: string }>(
+        db.driver === 'mssql'
+            ? "SELECT name FROM sys.objects WHERE type = 'U' ORDER BY name"
+            : "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+    );
+    console.log(`[DB:${db.driver.toUpperCase()}] Tables found:`, tables.map(t => t.name).join(', '));
     process.exit(0);
 }

@@ -88,7 +88,50 @@ router.post('/', (req: Request, res: Response) => {
         const payload = calenderEventSchema.parse(req.body);
         const db = getDb();
 
-        const upsertEvent = db.prepare(`
+        const upsertEventSql = db.driver === 'mssql' ? `
+            MERGE INTO CalenderEvent AS target
+            USING (SELECT @Id AS Id) AS source
+            ON (target.Id = source.Id)
+            WHEN MATCHED THEN
+                UPDATE SET 
+                    OwnerId = @OwnerId, Subject = @Subject, Type = @Type, Description = @Description,
+                    StartDate = @StartDate, FinishDate = @FinishDate, Location = @Location,
+                    AccountId = @AccountId, LeadId = @LeadId, ContactId = @ContactId,
+                    CompanyId = @CompanyId, ParentEventId = @ParentEventId, IsAllDay = @IsAllDay,
+                    IsRepeat = @IsRepeat, IsReminderSet = @IsReminderSet, IsNewAccount = @IsNewAccount,
+                    RepeatPattern = @RepeatPattern, RepeatEvery = @RepeatEvery, MonthForRepeatOnYearly = @MonthForRepeatOnYearly,
+                    EndRepeat = @EndRepeat, AfterOccurrenceCount = @AfterOccurrenceCount, TimeBeforeEvent = @TimeBeforeEvent,
+                    RepeatEveryHours = @RepeatEveryHours, RepeatEveryDays = @RepeatEveryDays, RepeatOnMonthly = @RepeatOnMonthly,
+                    RepeatOnYearly = @RepeatOnYearly, EndRepeatDate = @EndRepeatDate, Status = @Status,
+                    RecurrenceRule = @RecurrenceRule, RecurrenceException = @RecurrenceException, ParticipantType = @ParticipantType,
+                    SubjectType = @SubjectType, ExcludeWeekends = @ExcludeWeekends, FirstCreatedBy = @FirstCreatedBy,
+                    FirstCreatedDate = @FirstCreatedDate, EventEnvironment = @EventEnvironment, CalendarEventResultId = @CalendarEventResultId,
+                    GoogleCalendarEventCreatedMail = @GoogleCalendarEventCreatedMail, SubjectTypeTr = @SubjectTypeTr, TypeTr = @TypeTr,
+                    StatusTr = @StatusTr, EventEnvironmentTr = @EventEnvironmentTr, ParticipantTypeTr = @ParticipantTypeTr,
+                    _SyncedAt = GETUTCDATE()
+            WHEN NOT MATCHED THEN
+                INSERT (
+                    Id, OwnerId, Subject, Type, Description, 
+                    StartDate, FinishDate, Location, AccountId, LeadId, 
+                    ContactId, CompanyId, ParentEventId, IsAllDay, IsRepeat, 
+                    IsReminderSet, IsNewAccount, RepeatPattern, RepeatEvery, MonthForRepeatOnYearly, 
+                    EndRepeat, AfterOccurrenceCount, TimeBeforeEvent, RepeatEveryHours, RepeatEveryDays, 
+                    RepeatOnMonthly, RepeatOnYearly, EndRepeatDate, Status, RecurrenceRule, 
+                    RecurrenceException, ParticipantType, SubjectType, ExcludeWeekends, FirstCreatedBy, 
+                    FirstCreatedDate, EventEnvironment, CalendarEventResultId, GoogleCalendarEventCreatedMail, SubjectTypeTr, 
+                    TypeTr, StatusTr, EventEnvironmentTr, ParticipantTypeTr, _SyncedAt
+                ) VALUES (
+                    @Id, @OwnerId, @Subject, @Type, @Description, 
+                    @StartDate, @FinishDate, @Location, @AccountId, @LeadId, 
+                    @ContactId, @CompanyId, @ParentEventId, @IsAllDay, @IsRepeat, 
+                    @IsReminderSet, @IsNewAccount, @RepeatPattern, @RepeatEvery, @MonthForRepeatOnYearly, 
+                    @EndRepeat, @AfterOccurrenceCount, @TimeBeforeEvent, @RepeatEveryHours, @RepeatEveryDays, 
+                    @RepeatOnMonthly, @RepeatOnYearly, @EndRepeatDate, @Status, @RecurrenceRule, 
+                    @RecurrenceException, @ParticipantType, @SubjectType, @ExcludeWeekends, @FirstCreatedBy, 
+                    @FirstCreatedDate, @EventEnvironment, @CalendarEventResultId, @GoogleCalendarEventCreatedMail, @SubjectTypeTr, 
+                    @TypeTr, @StatusTr, @EventEnvironmentTr, @ParticipantTypeTr, GETUTCDATE()
+                );
+        ` : `
             INSERT INTO CalenderEvent (
                 Id, OwnerId, Subject, Type, Description, 
                 StartDate, FinishDate, Location, AccountId, LeadId, 
@@ -126,107 +169,96 @@ router.post('/', (req: Request, res: Response) => {
                 GoogleCalendarEventCreatedMail = excluded.GoogleCalendarEventCreatedMail, SubjectTypeTr = excluded.SubjectTypeTr, TypeTr = excluded.TypeTr,
                 StatusTr = excluded.StatusTr, EventEnvironmentTr = excluded.EventEnvironmentTr, ParticipantTypeTr = excluded.ParticipantTypeTr,
                 _SyncedAt = datetime('now')
-        `);
+        `;
 
-        // Prepare statements for child collections
-        const deleteDays = db.prepare(`DELETE FROM CalenderEventDaysForRepeatOnWeekly WHERE CalenderEventId = ?`);
-        const insertDay = db.prepare(`INSERT INTO CalenderEventDaysForRepeatOnWeekly (Id, CalenderEventId, Day) VALUES (@Id, @CalenderEventId, @Day)`);
-
-        const deletePeople = db.prepare(`DELETE FROM CalenderEventParticipantPeople WHERE CalenderEventId = ?`);
-        const insertPerson = db.prepare(`INSERT INTO CalenderEventParticipantPeople (Id, CalenderEventId, ParticipantPersonId) VALUES (@Id, @CalenderEventId, @ParticipantPersonId)`);
-
-        const deleteLeads = db.prepare(`DELETE FROM CalenderEventParticipantLeads WHERE CalenderEventId = ?`);
-        const insertLead = db.prepare(`INSERT INTO CalenderEventParticipantLeads (Id, CalenderEventId, ParticipantLeadId) VALUES (@Id, @CalenderEventId, @ParticipantLeadId)`);
-
-        const deleteContacts = db.prepare(`DELETE FROM CalenderEventParticipantContacts WHERE CalenderEventId = ?`);
-        const insertContact = db.prepare(`INSERT INTO CalenderEventParticipantContacts (Id, CalenderEventId, ParticipantContactId) VALUES (@Id, @CalenderEventId, @ParticipantContactId)`);
-
-        // Run as a transaction
-        const syncTransaction = db.transaction((data) => {
+        const wasInserted = db.transaction(() => {
             // 1. Upsert main CalenderEvent record
-            const info = upsertEvent.run({
-                Id: data.Id,
-                OwnerId: data.OwnerId,
-                Subject: data.Subject,
-                Type: data.Type,
-                Description: data.Description ?? null,
-                StartDate: data.StartDate ?? null,
-                FinishDate: data.FinishDate ?? null,
-                Location: data.Location ?? null,
-                AccountId: data.AccountId ?? null,
-                LeadId: data.LeadId ?? null,
-                ContactId: data.ContactId ?? null,
-                CompanyId: data.CompanyId ?? null,
-                ParentEventId: data.ParentEventId ?? null,
-                IsAllDay: data.IsAllDay,
-                IsRepeat: data.IsRepeat,
-                IsReminderSet: data.IsReminderSet,
-                IsNewAccount: data.IsNewAccount ?? null,
-                RepeatPattern: data.RepeatPattern ?? null,
-                RepeatEvery: data.RepeatEvery ?? null,
-                MonthForRepeatOnYearly: data.MonthForRepeatOnYearly ?? null,
-                EndRepeat: data.EndRepeat ?? null,
-                AfterOccurrenceCount: data.AfterOccurrenceCount ?? null,
-                TimeBeforeEvent: data.TimeBeforeEvent ?? null,
-                RepeatEveryHours: data.RepeatEveryHours ?? null,
-                RepeatEveryDays: data.RepeatEveryDays ?? null,
-                RepeatOnMonthly: data.RepeatOnMonthly ?? null,
-                RepeatOnYearly: data.RepeatOnYearly ?? null,
-                EndRepeatDate: data.EndRepeatDate ?? null,
-                Status: data.Status,
-                RecurrenceRule: data.RecurrenceRule ?? null,
-                RecurrenceException: data.RecurrenceException ?? null,
-                ParticipantType: data.ParticipantType ?? null,
-                SubjectType: data.SubjectType ?? null,
-                ExcludeWeekends: data.ExcludeWeekends ?? null,
-                FirstCreatedBy: data.FirstCreatedBy ?? null,
-                FirstCreatedDate: data.FirstCreatedDate ?? null,
-                EventEnvironment: data.EventEnvironment ?? null,
-                CalendarEventResultId: data.CalendarEventResultId ?? null,
-                GoogleCalendarEventCreatedMail: data.GoogleCalendarEventCreatedMail ?? null,
-                SubjectTypeTr: data.SubjectTypeTr ?? null,
-                TypeTr: data.TypeTr ?? null,
-                StatusTr: data.StatusTr ?? null,
-                EventEnvironmentTr: data.EventEnvironmentTr ?? null,
-                ParticipantTypeTr: data.ParticipantTypeTr ?? null
+            const result = db.execute(upsertEventSql, {
+                Id: payload.Id,
+                OwnerId: payload.OwnerId,
+                Subject: payload.Subject,
+                Type: payload.Type,
+                Description: payload.Description ?? null,
+                StartDate: payload.StartDate ?? null,
+                FinishDate: payload.FinishDate ?? null,
+                Location: payload.Location ?? null,
+                AccountId: payload.AccountId ?? null,
+                LeadId: payload.LeadId ?? null,
+                ContactId: payload.ContactId ?? null,
+                CompanyId: payload.CompanyId ?? null,
+                ParentEventId: payload.ParentEventId ?? null,
+                IsAllDay: payload.IsAllDay,
+                IsRepeat: payload.IsRepeat,
+                IsReminderSet: payload.IsReminderSet,
+                IsNewAccount: payload.IsNewAccount ?? null,
+                RepeatPattern: payload.RepeatPattern ?? null,
+                RepeatEvery: payload.RepeatEvery ?? null,
+                MonthForRepeatOnYearly: payload.MonthForRepeatOnYearly ?? null,
+                EndRepeat: payload.EndRepeat ?? null,
+                AfterOccurrenceCount: payload.AfterOccurrenceCount ?? null,
+                TimeBeforeEvent: payload.TimeBeforeEvent ?? null,
+                RepeatEveryHours: payload.RepeatEveryHours ?? null,
+                RepeatEveryDays: payload.RepeatEveryDays ?? null,
+                RepeatOnMonthly: payload.RepeatOnMonthly ?? null,
+                RepeatOnYearly: payload.RepeatOnYearly ?? null,
+                EndRepeatDate: payload.EndRepeatDate ?? null,
+                Status: payload.Status,
+                RecurrenceRule: payload.RecurrenceRule ?? null,
+                RecurrenceException: payload.RecurrenceException ?? null,
+                ParticipantType: payload.ParticipantType ?? null,
+                SubjectType: payload.SubjectType ?? null,
+                ExcludeWeekends: payload.ExcludeWeekends ?? null,
+                FirstCreatedBy: payload.FirstCreatedBy ?? null,
+                FirstCreatedDate: payload.FirstCreatedDate ?? null,
+                EventEnvironment: payload.EventEnvironment ?? null,
+                CalendarEventResultId: payload.CalendarEventResultId ?? null,
+                GoogleCalendarEventCreatedMail: payload.GoogleCalendarEventCreatedMail ?? null,
+                SubjectTypeTr: payload.SubjectTypeTr ?? null,
+                TypeTr: payload.TypeTr ?? null,
+                StatusTr: payload.StatusTr ?? null,
+                EventEnvironmentTr: payload.EventEnvironmentTr ?? null,
+                ParticipantTypeTr: payload.ParticipantTypeTr ?? null
             });
 
             // 2. Replace Repeat Days atomically
-            deleteDays.run(data.Id);
-            if (data.DaysForRepeatOnWeekly && data.DaysForRepeatOnWeekly.length > 0) {
-                for (const row of data.DaysForRepeatOnWeekly) {
-                    insertDay.run({ Id: row.Id, CalenderEventId: data.Id, Day: row.Day });
+            db.execute(`DELETE FROM CalenderEventDaysForRepeatOnWeekly WHERE CalenderEventId = @id`, { id: payload.Id });
+            if (payload.DaysForRepeatOnWeekly && payload.DaysForRepeatOnWeekly.length > 0) {
+                const insertDaySql = `INSERT INTO CalenderEventDaysForRepeatOnWeekly (Id, CalenderEventId, Day) VALUES (@Id, @CalenderEventId, @Day)`;
+                for (const row of payload.DaysForRepeatOnWeekly) {
+                    db.execute(insertDaySql, { Id: row.Id, CalenderEventId: payload.Id, Day: row.Day });
                 }
             }
 
             // 3. Replace Participant People atomically
-            deletePeople.run(data.Id);
-            if (data.ParticipantPeople && data.ParticipantPeople.length > 0) {
-                for (const row of data.ParticipantPeople) {
-                    insertPerson.run({ Id: row.Id, CalenderEventId: data.Id, ParticipantPersonId: row.ParticipantPersonId });
+            db.execute(`DELETE FROM CalenderEventParticipantPeople WHERE CalenderEventId = @id`, { id: payload.Id });
+            if (payload.ParticipantPeople && payload.ParticipantPeople.length > 0) {
+                const insertPersonSql = `INSERT INTO CalenderEventParticipantPeople (Id, CalenderEventId, ParticipantPersonId) VALUES (@Id, @CalenderEventId, @ParticipantPersonId)`;
+                for (const row of payload.ParticipantPeople) {
+                    db.execute(insertPersonSql, { Id: row.Id, CalenderEventId: payload.Id, ParticipantPersonId: row.ParticipantPersonId });
                 }
             }
 
             // 4. Replace Participant Leads atomically
-            deleteLeads.run(data.Id);
-            if (data.ParticipantLeads && data.ParticipantLeads.length > 0) {
-                for (const row of data.ParticipantLeads) {
-                    insertLead.run({ Id: row.Id, CalenderEventId: data.Id, ParticipantLeadId: row.ParticipantLeadId });
+            db.execute(`DELETE FROM CalenderEventParticipantLeads WHERE CalenderEventId = @id`, { id: payload.Id });
+            if (payload.ParticipantLeads && payload.ParticipantLeads.length > 0) {
+                const insertLeadSql = `INSERT INTO CalenderEventParticipantLeads (Id, CalenderEventId, ParticipantLeadId) VALUES (@Id, @CalenderEventId, @ParticipantLeadId)`;
+                for (const row of payload.ParticipantLeads) {
+                    db.execute(insertLeadSql, { Id: row.Id, CalenderEventId: payload.Id, ParticipantLeadId: row.ParticipantLeadId });
                 }
             }
 
             // 5. Replace Participant Contacts atomically
-            deleteContacts.run(data.Id);
-            if (data.ParticipantContacts && data.ParticipantContacts.length > 0) {
-                for (const row of data.ParticipantContacts) {
-                    insertContact.run({ Id: row.Id, CalenderEventId: data.Id, ParticipantContactId: row.ParticipantContactId });
+            db.execute(`DELETE FROM CalenderEventParticipantContacts WHERE CalenderEventId = @id`, { id: payload.Id });
+            if (payload.ParticipantContacts && payload.ParticipantContacts.length > 0) {
+                const insertContactSql = `INSERT INTO CalenderEventParticipantContacts (Id, CalenderEventId, ParticipantContactId) VALUES (@Id, @CalenderEventId, @ParticipantContactId)`;
+                for (const row of payload.ParticipantContacts) {
+                    db.execute(insertContactSql, { Id: row.Id, CalenderEventId: payload.Id, ParticipantContactId: row.ParticipantContactId });
                 }
             }
 
-            return info.changes === 1;
+            return result.changes === 1;
         });
 
-        const wasInserted = syncTransaction(payload);
 
         res.json({
             status: 'ok',

@@ -25,12 +25,10 @@ router.get('/', (req: Request, res: Response) => {
     const orderby = req.query.$orderby as string | undefined;
 
     // ── Filter ────────────────────────────────────────────────────────────────
-    // Only support: contains(title, 'term') or contains(customer_name, 'term')
     let filterSql = '';
     const filterParams: any = {};
 
     if (filter) {
-        // Match: contains(title, 'term') or contains(customer_name, 'term')
         const match = filter.match(/contains\([^,]+,\s*'([^']+)'\)/);
         if (match) {
             filterSql = `WHERE (Name LIKE @search OR AccountId LIKE @search)`;
@@ -39,7 +37,6 @@ router.get('/', (req: Request, res: Response) => {
     }
 
     // ── Ordering ──────────────────────────────────────────────────────────────
-    // Map frontend snake_case field names to SQLite column names
     const FIELD_MAP: Record<string, string> = {
         'created_at': 'FirstCreatedDate',
         'expected_close_date': 'CloseDate',
@@ -59,25 +56,33 @@ router.get('/', (req: Request, res: Response) => {
     // ── Total count ───────────────────────────────────────────────────────────
     let totalCount: number | undefined;
     if (count) {
-        const countRow = db.prepare(
-            `SELECT COUNT(*) AS n FROM Opportunity ${filterSql}`
-        ).get(filterParams) as { n: number };
-        totalCount = countRow.n;
+        const countRow = db.queryOne<{ n: number }>(
+            `SELECT COUNT(*) AS n FROM Opportunity ${filterSql}`,
+            filterParams
+        );
+        totalCount = countRow?.n;
     }
 
     // ── Paginated fetch ───────────────────────────────────────────────────────
-    const rows = db.prepare(`
+    let querySql = `
         SELECT * FROM Opportunity
         ${filterSql}
         ${orderSql}
-        LIMIT @limit OFFSET @offset
-    `).all({ ...filterParams, limit: top, offset: skip }) as Record<string, any>[];
+    `;
 
-    // ── Map SQLite rows → frontend Deal shape (snake_case expected by mapToDeal) ──
+    if (db.driver === 'mssql') {
+        querySql += ` OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY`;
+    } else {
+        querySql += ` LIMIT @limit OFFSET @offset`;
+    }
+
+    const rows = db.query(querySql, { ...filterParams, limit: top, offset: skip });
+
+    // ── Map rows → frontend Deal shape ──
     const mapped = rows.map(row => ({
         id: row.Id,
         title: row.Name || '',
-        customer_name: row.AccountId || '',   // Using AccountId as customer identifier
+        customer_name: row.AccountId || '',
         product: row.ProductGroupId || 'EnRoute',
         value: row.Amount_Value || 0,
         stage: row.OpportunityStageNameTr || row.OpportunityStageName?.toString() || 'Lead',
@@ -97,7 +102,6 @@ router.get('/', (req: Request, res: Response) => {
         health_score: row.IsThereDelay ? 30 : 80,
     }));
 
-    // ── Response ──────────────────────────────────────────────────────────────
     const response: Record<string, any> = { value: mapped };
     if (count && totalCount !== undefined) {
         response['@odata.count'] = totalCount;
@@ -106,12 +110,9 @@ router.get('/', (req: Request, res: Response) => {
     return res.json(response);
 });
 
-/**
- * GET /api/opportunities/:id
- */
 router.get('/:id', (req: Request, res: Response) => {
     const db = getDb();
-    const row = db.prepare('SELECT * FROM Opportunity WHERE Id = ?').get(req.params.id) as Record<string, any> | undefined;
+    const row = db.queryOne('SELECT * FROM Opportunity WHERE Id = ?', [req.params.id]);
 
     if (!row) {
         return res.status(404).json({ status: 'error', message: 'Not found' });

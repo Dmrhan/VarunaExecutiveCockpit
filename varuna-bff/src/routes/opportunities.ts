@@ -64,7 +64,7 @@ router.get('/', (req: Request, res: Response) => {
     }
 
     // ── Paginated fetch ───────────────────────────────────────────────────────
-    const rows = db.prepare(`
+    let querySql = `
         SELECT o.*, a.Name as AccountName, p.PersonNameSurname as OwnerName
         FROM Opportunity o
         LEFT JOIN Account a ON o.AccountId = a.Id
@@ -116,13 +116,13 @@ router.get('/', (req: Request, res: Response) => {
 
 router.get('/:id', (req: Request, res: Response) => {
     const db = getDb();
-    const row = db.prepare(`
+    const row = db.queryOne(`
         SELECT o.*, a.Name as AccountName, p.PersonNameSurname as OwnerName
         FROM Opportunity o 
         LEFT JOIN Account a ON o.AccountId = a.Id 
         LEFT JOIN Person p ON o.OwnerId = p.Id
         WHERE o.Id = ?
-    `).get(req.params.id) as Record<string, any> | undefined;
+    `, [req.params.id]) as Record<string, any> | undefined;
 
     if (!row) {
         return res.status(404).json({ status: 'error', message: 'Not found' });

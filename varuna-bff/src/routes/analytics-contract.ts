@@ -204,15 +204,15 @@ router.post('/dashboard', (req: Request, res: Response) => {
             FROM Contract c
             ${whereClause}
         `;
-        const kpis = db.prepare(kpisQuery).get(asOfDate, asOfDate, asOfDate, asOfDate, ...params);
+        const kpis = db.queryOne(kpisQuery, [asOfDate, asOfDate, asOfDate, asOfDate, ...params]);
 
         // 2. Delta KPI Cards (D-1)
         const yesterday = new Date(new Date(asOfDate).getTime() - 86400000).toISOString().split('T')[0];
         const deltaParams = [yesterday, yesterday, yesterday, yesterday, yesterday, ...params.slice(1)];
-        const deltaKpis = db.prepare(kpisQuery).get(...deltaParams);
+        const deltaKpis = db.queryOne(kpisQuery, deltaParams);
 
         // 3. Status Breakdown
-        const statusBreakdown = db.prepare(`
+        const statusBreakdown = db.query(`
             SELECT
                 ${statusCase} as statusLabel,
                 c.ContractStatus as statusCode,
@@ -222,10 +222,10 @@ router.post('/dashboard', (req: Request, res: Response) => {
             ${whereClause}
             GROUP BY c.ContractStatus
             ORDER BY amount DESC
-        `).all(...params);
+        `, params);
 
         // 4. Müşteri Breakdown (Top 10)
-        const accountBreakdown = db.prepare(`
+        const accountBreakdown = db.query(`
             SELECT
                 COALESCE(a.Name, c.AccountId) as accountName,
                 c.AccountId as accountId,
@@ -240,10 +240,10 @@ router.post('/dashboard', (req: Request, res: Response) => {
             GROUP BY c.AccountId, a.Name
             ORDER BY amount DESC
             LIMIT 10
-        `).all(asOfDate, asOfDate, asOfDate, asOfDate, ...params);
+        `, [asOfDate, asOfDate, asOfDate, asOfDate, ...params]);
 
         // 5. Satıcı Breakdown
-        const repBreakdown = db.prepare(`
+        const repBreakdown = db.query(`
             SELECT
                 COALESCE(p.PersonNameSurname, p.Name || ' ' || p.SurName, c.SalesRepresentativeId) as repName,
                 c.SalesRepresentativeId as repId,
@@ -258,7 +258,7 @@ router.post('/dashboard', (req: Request, res: Response) => {
             ${whereClause}
             GROUP BY c.SalesRepresentativeId, p.PersonNameSurname, p.Name, p.SurName
             ORDER BY amount DESC
-        `).all(asOfDate, asOfDate, asOfDate, asOfDate, ...params);
+        `, [asOfDate, asOfDate, asOfDate, asOfDate, ...params]);
 
         // 6. Trend Data (Monthly for last 12 months from asOfDate)
         const trendData = [];
@@ -270,13 +270,13 @@ router.post('/dashboard', (req: Request, res: Response) => {
             const startOfMonth = new Date(year, date.getMonth(), 1).toISOString().split('T')[0];
             const endOfMonth = new Date(year, date.getMonth() + 1, 0).toISOString().split('T')[0];
 
-            const monthlyKpis = db.prepare(`
+            const monthlyKpis = db.queryOne<{ count: number, amount: number }>(`
                 SELECT
                     COUNT(*) as count,
                     COALESCE(SUM(TotalAmountLocalCurrency_Amount), 0) as amount
                 FROM Contract c
                 ${whereClause} AND c.StartDate <= ?
-            `).get(endOfMonth, ...params);
+            `, [endOfMonth, ...params]);
 
             trendData.push({
                 name: `${monthLabel} ${year}`,

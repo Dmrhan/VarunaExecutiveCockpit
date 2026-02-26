@@ -24,7 +24,7 @@ export const ContractService = {
     },
     getDashboardAnalytics: async (filters: any) => {
         try {
-            const res = await fetch(`${API_BASE}/analytics/contract/dashboard`, {
+            const res = await fetch(`${getApiBaseUrl()}/analytics/contract/dashboard`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(filters)

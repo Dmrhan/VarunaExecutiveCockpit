@@ -29,39 +29,39 @@ router.post('/', (req: Request, res: Response) => {
         const payload = companyCurrencySyncSchema.parse(req.body);
         const db = getDb();
 
-        const upsertCurrency = db.prepare(`
-            INSERT INTO CompanyCurrency (
-                Id, CompanyId, CurrencyCode
-            ) VALUES (
-                @Id, @CompanyId, @CurrencyCode
-            )
-            ON CONFLICT(Id) DO UPDATE SET
-                CompanyId=excluded.CompanyId,
-                CurrencyCode=excluded.CurrencyCode,
-                _SyncedAt=datetime('now')
-        `);
+        const upsertCurrencySql = db.driver === 'mssql' ? `
+            MERGE INTO CompanyCurrency AS target
+            USING (SELECT @Id AS Id) AS source
+            ON (target.Id = source.Id)
+            WHEN MATCHED THEN
+                UPDATE SET CompanyId=@CompanyId, CurrencyCode=@CurrencyCode, _SyncedAt=GETUTCDATE()
+            WHEN NOT MATCHED THEN
+                INSERT (Id, CompanyId, CurrencyCode, _SyncedAt) VALUES (@Id, @CompanyId, @CurrencyCode, GETUTCDATE());
+        ` : `
+            INSERT INTO CompanyCurrency (Id, CompanyId, CurrencyCode) VALUES (@Id, @CompanyId, @CurrencyCode)
+            ON CONFLICT(Id) DO UPDATE SET CompanyId=excluded.CompanyId, CurrencyCode=excluded.CurrencyCode, _SyncedAt=datetime('now')
+        `;
 
-        const upsertRate = db.prepare(`
-            INSERT INTO CurrencyRates (
-                Id, BaseCurrency, TargetCurrency, Rate, RateDate
-            ) VALUES (
-                @Id, @BaseCurrency, @TargetCurrency, @Rate, @RateDate
-            )
-            ON CONFLICT(Id) DO UPDATE SET
-                BaseCurrency=excluded.BaseCurrency,
-                TargetCurrency=excluded.TargetCurrency,
-                Rate=excluded.Rate,
-                RateDate=excluded.RateDate,
-                _SyncedAt=datetime('now')
-        `);
+        const upsertRateSql = db.driver === 'mssql' ? `
+            MERGE INTO CurrencyRates AS target
+            USING (SELECT @Id AS Id) AS source
+            ON (target.Id = source.Id)
+            WHEN MATCHED THEN
+                UPDATE SET BaseCurrency=@BaseCurrency, TargetCurrency=@TargetCurrency, Rate=@Rate, RateDate=@RateDate, _SyncedAt=GETUTCDATE()
+            WHEN NOT MATCHED THEN
+                INSERT (Id, BaseCurrency, TargetCurrency, Rate, RateDate, _SyncedAt) VALUES (@Id, @BaseCurrency, @TargetCurrency, @Rate, @RateDate, GETUTCDATE());
+        ` : `
+            INSERT INTO CurrencyRates (Id, BaseCurrency, TargetCurrency, Rate, RateDate) VALUES (@Id, @BaseCurrency, @TargetCurrency, @Rate, @RateDate)
+            ON CONFLICT(Id) DO UPDATE SET BaseCurrency=excluded.BaseCurrency, TargetCurrency=excluded.TargetCurrency, Rate=excluded.Rate, RateDate=excluded.RateDate, _SyncedAt=datetime('now')
+        `;
 
-        const syncTransaction = db.transaction((data) => {
+        const syncResult = db.transaction(() => {
             let currencyCount = 0;
             let rateCount = 0;
 
-            if (data.Currencies && data.Currencies.length > 0) {
-                for (const curr of data.Currencies) {
-                    upsertCurrency.run({
+            if (payload.Currencies && payload.Currencies.length > 0) {
+                for (const curr of payload.Currencies) {
+                    db.execute(upsertCurrencySql, {
                         Id: curr.Id,
                         CompanyId: curr.CompanyId,
                         CurrencyCode: curr.CurrencyCode
@@ -70,9 +70,9 @@ router.post('/', (req: Request, res: Response) => {
                 }
             }
 
-            if (data.Rates && data.Rates.length > 0) {
-                for (const rate of data.Rates) {
-                    upsertRate.run({
+            if (payload.Rates && payload.Rates.length > 0) {
+                for (const rate of payload.Rates) {
+                    db.execute(upsertRateSql, {
                         Id: rate.Id,
                         BaseCurrency: rate.BaseCurrency,
                         TargetCurrency: rate.TargetCurrency,
@@ -86,7 +86,6 @@ router.post('/', (req: Request, res: Response) => {
             return { currencyCount, rateCount };
         });
 
-        const syncResult = syncTransaction(payload);
 
         res.json({
             status: 'ok',

@@ -10,19 +10,19 @@ export interface IDbResult {
 export interface IDbAdapter {
     /**
      * Execute a SELECT and return all rows.
-     * Use positional `?` placeholders shared by both drivers.
+     * Supports positional `?` or named parameters (object).
      */
-    query<T = any>(sql: string, params?: any[]): T[];
+    query<T = any>(sql: string, params?: any[] | Record<string, any>): T[];
 
     /**
      * Execute a SELECT and return the first row (or undefined).
      */
-    queryOne<T = any>(sql: string, params?: any[]): T | undefined;
+    queryOne<T = any>(sql: string, params?: any[] | Record<string, any>): T | undefined;
 
     /**
      * Execute an INSERT / UPDATE / DELETE statement.
      */
-    execute(sql: string, params?: any[]): IDbResult;
+    execute(sql: string, params?: any[] | Record<string, any>): IDbResult;
 
     /**
      * Run multiple operations atomically.

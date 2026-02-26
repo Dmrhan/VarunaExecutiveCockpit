@@ -49,6 +49,7 @@ function buildConfig(): any {
 export class MssqlAdapter implements IDbAdapter {
     readonly driver = 'mssql' as const;
     private pool: any;
+    private _currentTransaction: any = null;
 
     constructor() {
         const config = buildConfig();
@@ -73,30 +74,42 @@ export class MssqlAdapter implements IDbAdapter {
         console.log('[DB:MSSQL] Schema applied.');
     }
 
-    private _buildRequest(sql: string, params: any[]): { sql: string; request: any } {
-        let idx = 0;
-        const request = this.pool.request();
-        const paramSql = sql.replace(/\?/g, () => {
-            const name = `p${idx}`;
-            request.input(name, params[idx]);
-            idx++;
-            return `@${name}`;
-        });
+    private _buildRequest(sql: string, params: any[] | Record<string, any>): { sql: string; request: any } {
+        const request = this._currentTransaction ? this._currentTransaction.request() : this.pool.request();
+        let paramSql = sql;
+
+        if (Array.isArray(params)) {
+            let idx = 0;
+            paramSql = sql.replace(/\?/g, () => {
+                const name = `p${idx}`;
+                request.input(name, params[idx]);
+                idx++;
+                return `@${name}`;
+            });
+        } else {
+            // Named parameters: @name or :name or $name (common in SQLite)
+            // SQL Server uses @name natively.
+            for (const [key, value] of Object.entries(params)) {
+                request.input(key, value);
+            }
+            // Optional: convert :param and $param to @param if routes use them
+            paramSql = sql.replace(/[:$](\w+)/g, '@$1');
+        }
         return { sql: paramSql, request };
     }
 
-    query<T = any>(sql: string, params: any[] = []): T[] {
+    query<T = any>(sql: string, params: any[] | Record<string, any> = []): T[] {
         const { sql: paramSql, request } = this._buildRequest(sql, params);
         const result: any = runSync(request.query(paramSql));
         return result.recordset as T[];
     }
 
-    queryOne<T = any>(sql: string, params: any[] = []): T | undefined {
+    queryOne<T = any>(sql: string, params: any[] | Record<string, any> = []): T | undefined {
         const rows = this.query<T>(sql, params);
         return rows[0];
     }
 
-    execute(sql: string, params: any[] = []): IDbResult {
+    execute(sql: string, params: any[] | Record<string, any> = []): IDbResult {
         const { sql: paramSql, request } = this._buildRequest(sql, params);
         const result: any = runSync(request.query(paramSql));
         return {
@@ -105,8 +118,14 @@ export class MssqlAdapter implements IDbAdapter {
     }
 
     transaction<T>(fn: () => T): T {
+        if (this._currentTransaction) {
+            // Nested transactions not supported in this simple wrapper
+            return fn();
+        }
+
         const tx = new mssql.Transaction(this.pool);
         runSync(tx.begin());
+        this._currentTransaction = tx;
         try {
             const result = fn();
             runSync(tx.commit());
@@ -114,6 +133,8 @@ export class MssqlAdapter implements IDbAdapter {
         } catch (err) {
             runSync(tx.rollback());
             throw err;
+        } finally {
+            this._currentTransaction = null;
         }
     }
 

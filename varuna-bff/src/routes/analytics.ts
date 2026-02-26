@@ -42,19 +42,12 @@ function buildWhere(clauses: string[]): string {
 }
 
 // ─── GET /api/analytics/pipeline ─────────────────────────────────────────────
-/**
- * Returns high-level pipeline KPIs:
- * - openPipelineValue: SUM(ExpectedRevenue_Value) for open deals
- * - weightedPipeline:  SUM(ExpectedRevenue_Value × Probability / 100)
- * - potentialRevenueImpact: SUM(PotentialTurnover_Value) for open deals
- * - closingThisMonth: count + value of deals closing in the current calendar month
- */
 router.get('/pipeline', (req: Request, res: Response) => {
     const db = getDb();
     const { whereClauses, params } = getOptionalFilter(req);
     const extraWhere = buildWhere(whereClauses);
 
-    const pipeline = db.prepare(`
+    const pipeline = db.queryOne(`
         SELECT
             COALESCE(SUM(ExpectedRevenue_Value), 0)                              AS openPipelineValue,
             COALESCE(SUM(ExpectedRevenue_Value * Probability / 100.0), 0)        AS weightedPipeline,
@@ -62,18 +55,25 @@ router.get('/pipeline', (req: Request, res: Response) => {
         FROM Opportunity
         WHERE (DealStatus IS NULL OR DealStatus NOT IN (${DEAL_STATUS_WON}, ${DEAL_STATUS_LOST}))
         ${extraWhere}
-    `).get(params) as Record<string, number>;
+    `, params) as Record<string, number>;
 
-    const closing = db.prepare(`
+    const startOfMonth = db.driver === 'mssql'
+        ? 'DATEFROMPARTS(YEAR(GETUTCDATE()), MONTH(GETUTCDATE()), 1)'
+        : "date('now', 'start of month')";
+    const startOfNextMonth = db.driver === 'mssql'
+        ? 'DATEADD(month, 1, DATEFROMPARTS(YEAR(GETUTCDATE()), MONTH(GETUTCDATE()), 1))'
+        : "date('now', 'start of month', '+1 month')";
+
+    const closing = db.queryOne(`
         SELECT
             COUNT(*)                                AS count,
             COALESCE(SUM(ExpectedRevenue_Value), 0) AS totalValue
         FROM Opportunity
         WHERE (DealStatus IS NULL OR DealStatus NOT IN (${DEAL_STATUS_WON}, ${DEAL_STATUS_LOST}))
-          AND CloseDate >= date('now', 'start of month')
-          AND CloseDate <  date('now', 'start of month', '+1 month')
+          AND CloseDate >= ${startOfMonth}
+          AND CloseDate <  ${startOfNextMonth}
         ${extraWhere}
-    `).get(params) as { count: number; totalValue: number };
+    `, params) as { count: number; totalValue: number };
 
     return res.json({
         openPipelineValue: pipeline.openPipelineValue,
@@ -87,101 +87,96 @@ router.get('/pipeline', (req: Request, res: Response) => {
 });
 
 // ─── GET /api/analytics/funnel/monthly ───────────────────────────────────────
-/**
- * Won and Lost revenue aggregated by month (YYYY-MM).
- * Supports optional ?from and ?to date range filters.
- */
 router.get('/funnel/monthly', (req: Request, res: Response) => {
     const db = getDb();
     const { whereClauses, params } = getOptionalFilter(req);
     const extraWhere = buildWhere(whereClauses);
 
-    const wonRows = db.prepare(`
+    const monthFormat = db.driver === 'mssql' ? "FORMAT(CloseDate, 'yyyy-MM')" : "strftime('%Y-%m', CloseDate)";
+
+    const wonRows = db.query(`
         SELECT
-            strftime('%Y-%m', CloseDate)            AS month,
+            ${monthFormat}                          AS month,
             COALESCE(SUM(ExpectedRevenue_Value), 0) AS revenue
         FROM Opportunity
         WHERE WonLostType = ${WON_LOST_TYPE_WON}
         ${extraWhere}
-        GROUP BY month
+        GROUP BY ${monthFormat}
         ORDER BY month
-    `).all(params);
+    `, params);
 
-    const lostRows = db.prepare(`
+    const lostRows = db.query(`
         SELECT
-            strftime('%Y-%m', CloseDate)            AS month,
+            ${monthFormat}                          AS month,
             COALESCE(SUM(ExpectedRevenue_Value), 0) AS revenue
         FROM Opportunity
         WHERE WonLostType = ${WON_LOST_TYPE_LOST}
         ${extraWhere}
-        GROUP BY month
+        GROUP BY ${monthFormat}
         ORDER BY month
-    `).all(params);
+    `, params);
 
     return res.json({ won: wonRows, lost: lostRows });
 });
 
 // ─── GET /api/analytics/funnel/weekly ────────────────────────────────────────
-/**
- * Revenue grouped by ISO week (YYYY-WNN format using strftime %W which is 00-53).
- */
 router.get('/funnel/weekly', (req: Request, res: Response) => {
     const db = getDb();
     const { whereClauses, params } = getOptionalFilter(req);
     const extraWhere = buildWhere(whereClauses);
 
-    const rows = db.prepare(`
+    const weekFormat = db.driver === 'mssql'
+        ? "CONCAT(YEAR(CloseDate), '-W', FORMAT(DATEPART(ISO_WEEK, CloseDate), '00'))"
+        : "strftime('%Y-W%W', CloseDate)";
+
+    const rows = db.query(`
         SELECT
-            strftime('%Y-W%W', CloseDate)           AS week,
+            ${weekFormat}                           AS week,
             COALESCE(SUM(ExpectedRevenue_Value), 0) AS revenue,
             COUNT(*)                                AS count
         FROM Opportunity
         WHERE CloseDate IS NOT NULL
         ${extraWhere}
-        GROUP BY week
+        GROUP BY ${weekFormat}
         ORDER BY week
-    `).all(params);
+    `, params);
 
     return res.json({ weekly: rows });
 });
 
 // ─── GET /api/analytics/funnel/quarterly ─────────────────────────────────────
-/**
- * Revenue grouped by year + quarter.
- * Quarter derived from CloseDate month: Q = (month - 1) / 3 + 1
- */
 router.get('/funnel/quarterly', (req: Request, res: Response) => {
     const db = getDb();
     const { whereClauses, params } = getOptionalFilter(req);
     const extraWhere = buildWhere(whereClauses);
 
-    const rows = db.prepare(`
+    const yearExpr = db.driver === 'mssql' ? "YEAR(CloseDate)" : "strftime('%Y', CloseDate)";
+    const quarterExpr = db.driver === 'mssql' ? "DATEPART(QUARTER, CloseDate)" : "(CAST(strftime('%m', CloseDate) AS INTEGER) - 1) / 3 + 1";
+
+    const rows = db.query(`
         SELECT
-            strftime('%Y', CloseDate)                                             AS year,
-            (CAST(strftime('%m', CloseDate) AS INTEGER) - 1) / 3 + 1            AS quarter,
+            ${yearExpr}                                                           AS year,
+            ${quarterExpr}                                                        AS quarter,
             COALESCE(SUM(ExpectedRevenue_Value), 0)                              AS revenue,
             COALESCE(SUM(ExpectedRevenue_Value * Probability / 100.0), 0)        AS weightedRevenue,
             COUNT(*)                                                              AS count
         FROM Opportunity
         WHERE CloseDate IS NOT NULL
         ${extraWhere}
-        GROUP BY year, quarter
+        GROUP BY ${yearExpr}, ${quarterExpr}
         ORDER BY year, quarter
-    `).all(params);
+    `, params);
 
     return res.json({ quarterly: rows });
 });
 
 // ─── GET /api/analytics/distribution/probability ─────────────────────────────
-/**
- * Deal count and value grouped by ProbabilityBand (integer enum).
- */
 router.get('/distribution/probability', (req: Request, res: Response) => {
     const db = getDb();
     const { whereClauses, params } = getOptionalFilter(req);
     const extraWhere = buildWhere(whereClauses);
 
-    const rows = db.prepare(`
+    const rows = db.query(`
         SELECT
             ProbabilityBand,
             COUNT(*)                                AS count,
@@ -191,21 +186,18 @@ router.get('/distribution/probability', (req: Request, res: Response) => {
         ${extraWhere}
         GROUP BY ProbabilityBand
         ORDER BY ProbabilityBand
-    `).all(params);
+    `, params);
 
     return res.json({ distribution: rows });
 });
 
 // ─── GET /api/analytics/owners ───────────────────────────────────────────────
-/**
- * Pipeline breakdown per OwnerId — useful for leaderboard and rep-level views.
- */
 router.get('/owners', (req: Request, res: Response) => {
     const db = getDb();
     const { whereClauses, params } = getOptionalFilter(req);
     const extraWhere = buildWhere(whereClauses);
 
-    const rows = db.prepare(`
+    const rows = db.query(`
         SELECT
             OwnerId,
             COUNT(*)                                                          AS totalDeals,
@@ -220,7 +212,7 @@ router.get('/owners', (req: Request, res: Response) => {
         ${extraWhere}
         GROUP BY OwnerId
         ORDER BY pipelineValue DESC
-    `).all(params);
+    `, params);
 
     return res.json({ owners: rows });
 });

@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = `${(window as any)['__RUNTIME_CONFIG__']?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api'}/performance`;
+const getApiBaseUrl = () => (window as any)['__RUNTIME_CONFIG__']?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+const getPerformanceUrl = () => `${getApiBaseUrl()}/performance`;
 
 export interface PerformanceDailyMetrics {
     WeeklyContractCount: number;
@@ -71,12 +72,12 @@ export interface PerformanceTrendResponse {
 
 export const PerformanceService = {
     getDailyMetrics: async (params?: { companyId?: string, ownerId?: string, monthlyTarget?: number, yearlyTarget?: number, asOfDate?: string }): Promise<PerformanceDailyMetrics> => {
-        const response = await axios.get(`${API_BASE_URL}/daily`, { params });
+        const response = await axios.get(`${getPerformanceUrl()}/daily`, { params });
         return response.data;
     },
 
     getBurnupData: async (params?: { companyId?: string, ownerId?: string, asOfDate?: string }): Promise<BurnupResponse> => {
-        const response = await axios.get(`${API_BASE_URL}/burnup`, { params });
+        const response = await axios.get(`${getPerformanceUrl()}/burnup`, { params });
         return response.data;
     },
 
@@ -84,7 +85,7 @@ export const PerformanceService = {
         period: 'weekly' | 'monthly' | 'quarterly',
         params?: { companyId?: string, ownerId?: string }
     ): Promise<PerformanceTrendResponse> => {
-        const response = await axios.get(`${API_BASE_URL}/${period}`, { params });
+        const response = await axios.get(`${getPerformanceUrl()}/${period}`, { params });
         return response.data;
     }
 };

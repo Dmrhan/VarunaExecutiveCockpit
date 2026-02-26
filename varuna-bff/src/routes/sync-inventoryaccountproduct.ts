@@ -68,7 +68,53 @@ router.post('/', (req: Request, res: Response) => {
         const payload = inventoryAccountProductSchema.parse(req.body);
         const db = getDb();
 
-        const upsertInventory = db.prepare(`
+        const upsertInventorySql = db.driver === 'mssql' ? `
+            MERGE INTO InventoryAccountProduct AS target
+            USING (SELECT @Id AS Id) AS source
+            ON (target.Id = source.Id)
+            WHEN MATCHED THEN
+                UPDATE SET 
+                    AccountId = @AccountId, StockId = @StockId, ContactId = @ContactId,
+                    StartDate = @StartDate, FinishDate = @FinishDate, Domain = @Domain,
+                    PosAccountNo = @PosAccountNo, CardNo = @CardNo, Status = @Status,
+                    FinancialProductType = @FinancialProductType, Amount = @Amount,
+                    InvSerialId = @InvSerialId, InvInstalledDate = @InvInstalledDate,
+                    InvPurchaseDate = @InvPurchaseDate, InvOutOfWarehouseSerial = @InvOutOfWarehouseSerial,
+                    InvOutOfWarehouseSerialCode = @InvOutOfWarehouseSerialCode, IsPFActive = @IsPFActive,
+                    Price_Amount = @Price_Amount, Price_Currency = @Price_Currency,
+                    Vat_Amount = @Vat_Amount, Vat_Currency = @Vat_Currency,
+                    TotalListPrice_Amount = @TotalListPrice_Amount, TotalListPrice_Currency = @TotalListPrice_Currency,
+                    TotalPackagePrice_Amount = @TotalPackagePrice_Amount, TotalPackagePrice_Currency = @TotalPackagePrice_Currency,
+                    TotalPackageVATAmount_Amount = @TotalPackageVATAmount_Amount, TotalPackageVATAmount_Currency = @TotalPackageVATAmount_Currency,
+                    InvInstalledAddress_CountryCode = @InvInstalledAddress_CountryCode, InvInstalledAddress_Subdivision1 = @InvInstalledAddress_Subdivision1,
+                    InvInstalledAddress_Subdivision2 = @InvInstalledAddress_Subdivision2, InvInstalledAddress_Subdivision3 = @InvInstalledAddress_Subdivision3,
+                    InvInstalledAddress_Subdivision4 = @InvInstalledAddress_Subdivision4, InvInstalledAddress_OpenAddress = @InvInstalledAddress_OpenAddress,
+                    _SyncedAt = GETUTCDATE()
+            WHEN NOT MATCHED THEN
+                INSERT (
+                    Id, AccountId, StockId, ContactId, StartDate, FinishDate, Domain, PosAccountNo, CardNo,
+                    Status, FinancialProductType, Amount, InvSerialId, InvInstalledDate, InvPurchaseDate,
+                    InvOutOfWarehouseSerial, InvOutOfWarehouseSerialCode, IsPFActive,
+                    Price_Amount, Price_Currency,
+                    Vat_Amount, Vat_Currency,
+                    TotalListPrice_Amount, TotalListPrice_Currency,
+                    TotalPackagePrice_Amount, TotalPackagePrice_Currency,
+                    TotalPackageVATAmount_Amount, TotalPackageVATAmount_Currency,
+                    InvInstalledAddress_CountryCode, InvInstalledAddress_Subdivision1, InvInstalledAddress_Subdivision2,
+                    InvInstalledAddress_Subdivision3, InvInstalledAddress_Subdivision4, InvInstalledAddress_OpenAddress, _SyncedAt
+                ) VALUES (
+                    @Id, @AccountId, @StockId, @ContactId, @StartDate, @FinishDate, @Domain, @PosAccountNo, @CardNo,
+                    @Status, @FinancialProductType, @Amount, @InvSerialId, @InvInstalledDate, @InvPurchaseDate,
+                    @InvOutOfWarehouseSerial, @InvOutOfWarehouseSerialCode, @IsPFActive,
+                    @Price_Amount, @Price_Currency,
+                    @Vat_Amount, @Vat_Currency,
+                    @TotalListPrice_Amount, @TotalListPrice_Currency,
+                    @TotalPackagePrice_Amount, @TotalPackagePrice_Currency,
+                    @TotalPackageVATAmount_Amount, @TotalPackageVATAmount_Currency,
+                    @InvInstalledAddress_CountryCode, @InvInstalledAddress_Subdivision1, @InvInstalledAddress_Subdivision2,
+                    @InvInstalledAddress_Subdivision3, @InvInstalledAddress_Subdivision4, @InvInstalledAddress_OpenAddress, GETUTCDATE()
+                );
+        ` : `
             INSERT INTO InventoryAccountProduct (
                 Id, AccountId, StockId, ContactId, StartDate, FinishDate, Domain, PosAccountNo, CardNo,
                 Status, FinancialProductType, Amount, InvSerialId, InvInstalledDate, InvPurchaseDate,
@@ -109,55 +155,53 @@ router.post('/', (req: Request, res: Response) => {
                 InvInstalledAddress_Subdivision2 = excluded.InvInstalledAddress_Subdivision2, InvInstalledAddress_Subdivision3 = excluded.InvInstalledAddress_Subdivision3,
                 InvInstalledAddress_Subdivision4 = excluded.InvInstalledAddress_Subdivision4, InvInstalledAddress_OpenAddress = excluded.InvInstalledAddress_OpenAddress,
                 _SyncedAt = datetime('now')
-        `);
+        `;
 
-        // Run as a transaction
-        const syncTransaction = db.transaction((data) => {
-            const info = upsertInventory.run({
-                Id: data.Id,
-                AccountId: data.AccountId,
-                StockId: data.StockId,
-                ContactId: data.ContactId ?? null,
-                StartDate: data.StartDate ?? null,
-                FinishDate: data.FinishDate ?? null,
-                Domain: data.Domain ?? null,
-                PosAccountNo: data.PosAccountNo ?? null,
-                CardNo: data.CardNo ?? null,
-                Status: data.Status ?? null,
-                FinancialProductType: data.FinancialProductType ?? null,
-                Amount: data.Amount ?? null,
-                InvSerialId: data.InvSerialId ?? null,
-                InvInstalledDate: data.InvInstalledDate ?? null,
-                InvPurchaseDate: data.InvPurchaseDate,
-                InvOutOfWarehouseSerial: data.InvOutOfWarehouseSerial ?? null,
-                InvOutOfWarehouseSerialCode: data.InvOutOfWarehouseSerialCode ?? null,
-                IsPFActive: data.IsPFActive ?? null,
+        const wasInserted = db.transaction(() => {
+            const result = db.execute(upsertInventorySql, {
+                Id: payload.Id,
+                AccountId: payload.AccountId,
+                StockId: payload.StockId,
+                ContactId: payload.ContactId ?? null,
+                StartDate: payload.StartDate ?? null,
+                FinishDate: payload.FinishDate ?? null,
+                Domain: payload.Domain ?? null,
+                PosAccountNo: payload.PosAccountNo ?? null,
+                CardNo: payload.CardNo ?? null,
+                Status: payload.Status ?? null,
+                FinancialProductType: payload.FinancialProductType ?? null,
+                Amount: payload.Amount ?? null,
+                InvSerialId: payload.InvSerialId ?? null,
+                InvInstalledDate: payload.InvInstalledDate ?? null,
+                InvPurchaseDate: payload.InvPurchaseDate,
+                InvOutOfWarehouseSerial: payload.InvOutOfWarehouseSerial ?? null,
+                InvOutOfWarehouseSerialCode: payload.InvOutOfWarehouseSerialCode ?? null,
+                IsPFActive: payload.IsPFActive ?? null,
 
                 // Flattened IMoney
-                Price_Amount: data.Price?.Amount ?? null,
-                Price_Currency: data.Price?.Currency ?? null,
-                Vat_Amount: data.Vat?.Amount ?? null,
-                Vat_Currency: data.Vat?.Currency ?? null,
-                TotalListPrice_Amount: data.TotalListPrice?.Amount ?? null,
-                TotalListPrice_Currency: data.TotalListPrice?.Currency ?? null,
-                TotalPackagePrice_Amount: data.TotalPackagePrice?.Amount ?? null,
-                TotalPackagePrice_Currency: data.TotalPackagePrice?.Currency ?? null,
-                TotalPackageVATAmount_Amount: data.TotalPackageVATAmount?.Amount ?? null,
-                TotalPackageVATAmount_Currency: data.TotalPackageVATAmount?.Currency ?? null,
+                Price_Amount: payload.Price?.Amount ?? null,
+                Price_Currency: payload.Price?.Currency ?? null,
+                Vat_Amount: payload.Vat?.Amount ?? null,
+                Vat_Currency: payload.Vat?.Currency ?? null,
+                TotalListPrice_Amount: payload.TotalListPrice?.Amount ?? null,
+                TotalListPrice_Currency: payload.TotalListPrice?.Currency ?? null,
+                TotalPackagePrice_Amount: payload.TotalPackagePrice?.Amount ?? null,
+                TotalPackagePrice_Currency: payload.TotalPackagePrice?.Currency ?? null,
+                TotalPackageVATAmount_Amount: payload.TotalPackageVATAmount?.Amount ?? null,
+                TotalPackageVATAmount_Currency: payload.TotalPackageVATAmount?.Currency ?? null,
 
                 // Flattened IAddress
-                InvInstalledAddress_CountryCode: data.InvInstalledAddress?.CountryCode ?? null,
-                InvInstalledAddress_Subdivision1: data.InvInstalledAddress?.Subdivision1 ?? null,
-                InvInstalledAddress_Subdivision2: data.InvInstalledAddress?.Subdivision2 ?? null,
-                InvInstalledAddress_Subdivision3: data.InvInstalledAddress?.Subdivision3 ?? null,
-                InvInstalledAddress_Subdivision4: data.InvInstalledAddress?.Subdivision4 ?? null,
-                InvInstalledAddress_OpenAddress: data.InvInstalledAddress?.OpenAddress ?? null,
+                InvInstalledAddress_CountryCode: payload.InvInstalledAddress?.CountryCode ?? null,
+                InvInstalledAddress_Subdivision1: payload.InvInstalledAddress?.Subdivision1 ?? null,
+                InvInstalledAddress_Subdivision2: payload.InvInstalledAddress?.Subdivision2 ?? null,
+                InvInstalledAddress_Subdivision3: payload.InvInstalledAddress?.Subdivision3 ?? null,
+                InvInstalledAddress_Subdivision4: payload.InvInstalledAddress?.Subdivision4 ?? null,
+                InvInstalledAddress_OpenAddress: payload.InvInstalledAddress?.OpenAddress ?? null,
             });
 
-            return info.changes === 1;
+            return result.changes === 1;
         });
 
-        const wasInserted = syncTransaction(payload);
 
         res.json({
             status: 'ok',

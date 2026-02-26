@@ -9,13 +9,20 @@ router.get('/', (req: Request, res: Response) => {
     const top = parseInt(req.query.$top as string) || 100;
     const skip = parseInt(req.query.$skip as string) || 0;
 
-    const rows = db.prepare(`
+    let querySql = `
         SELECT o.*, a.Name as AccountName 
         FROM CrmOrder o
         LEFT JOIN Account a ON o.CompanyId = a.Id
         ORDER BY o.InvoiceDate DESC
-        LIMIT ? OFFSET ?
-    `).all(top, skip) as Record<string, any>[];
+    `;
+
+    if (db.driver === 'mssql') {
+        querySql += ` OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY`;
+    } else {
+        querySql += ` LIMIT @limit OFFSET @offset`;
+    }
+
+    const rows = db.query(querySql, { limit: top, offset: skip }) as Record<string, any>[];
 
     const mapped = rows.map(row => ({
         id: row.Id,

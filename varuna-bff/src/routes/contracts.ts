@@ -9,15 +9,24 @@ router.get('/', (req: Request, res: Response) => {
     const top = parseInt(req.query.$top as string) || 100;
     const skip = parseInt(req.query.$skip as string) || 0;
 
-    const rows = db.prepare(`
+    let querySql = `
         SELECT c.*, a.Name as AccountName, p.PersonNameSurname as OwnerName,
-               CAST(julianday(c.FinishDate) - julianday('now') AS INTEGER) as DaysToRenewal
+               ${db.driver === 'mssql'
+            ? 'DATEDIFF(day, GETUTCDATE(), c.FinishDate)'
+            : 'CAST(julianday(c.FinishDate) - julianday(\'now\') AS INTEGER)'} as DaysToRenewal
         FROM Contract c
         LEFT JOIN Account a ON c.AccountId = a.Id
         LEFT JOIN Person p ON c.SalesRepresentativeId = p.Id
         ORDER BY c.SigningDate DESC
-        LIMIT ? OFFSET ?
-    `).all(top, skip) as Record<string, any>[];
+    `;
+
+    if (db.driver === 'mssql') {
+        querySql += ` OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY`;
+    } else {
+        querySql += ` LIMIT @limit OFFSET @offset`;
+    }
+
+    const rows = db.query(querySql, { limit: top, offset: skip }) as Record<string, any>[];
 
     // Map to frontend shape
     const mapStatus = (status: number) => {
@@ -62,20 +71,24 @@ router.get('/', (req: Request, res: Response) => {
 router.get('/:id', (req: Request, res: Response) => {
     try {
         const db = getDb();
-        const contract = db.prepare(`
+        const contractSql = `
             SELECT c.*, a.Name as AccountName, p.PersonNameSurname as OwnerName,
-                   CAST(julianday(c.FinishDate) - julianday('now') AS INTEGER) as DaysToRenewal
+                   ${db.driver === 'mssql'
+                ? 'DATEDIFF(day, GETUTCDATE(), c.FinishDate)'
+                : 'CAST(julianday(c.FinishDate) - julianday(\'now\') AS INTEGER)'} as DaysToRenewal
             FROM Contract c
             LEFT JOIN Account a ON c.AccountId = a.Id
             LEFT JOIN Person p ON c.SalesRepresentativeId = p.Id
-            WHERE c.Id = ?
-        `).get(req.params.id) as Record<string, any>;
+            WHERE c.Id = @id
+        `;
+
+        const contract = db.queryOne(contractSql, { id: req.params.id }) as Record<string, any>;
 
         if (!contract) return res.status(404).json({ error: 'Contract not found' });
 
-        const paymentPlans = db.prepare(`
-            SELECT * FROM ContractPaymentPlans WHERE ContractId = ? ORDER BY PaymentDate ASC
-        `).all(req.params.id) as Record<string, any>[];
+        const paymentPlans = db.query(`
+            SELECT * FROM ContractPaymentPlans WHERE ContractId = @id ORDER BY PaymentDate ASC
+        `, { id: req.params.id }) as Record<string, any>[];
 
         const mapStatus = (status: number) => {
             if (status === 0) return 'Draft';

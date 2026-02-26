@@ -182,236 +182,312 @@ router.post('/', (req: Request, res: Response) => {
         const payload = accountSchema.parse(req.body);
         const db = getDb();
 
-        const upsertAccount = db.prepare(`
-            INSERT INTO Account (
-                Id, Name, Code, Title, Type, ParentAccountId, OwnerId, TerritoryId, State, DefaultDiscount,
-                DefaultCurrency, IdentificationNumber, SurName, CellPhone, Phone, TaxOffice, TaxNumber, Email,
-                DealerId, AccountGroupId, AccountAdditionalGroupId, CurrencyRateType, IsVATExempt,
-                AccountAutoNumberNextGen, WebSite, Sector, ActivitySummary, LastTouchDate, SignBoardName,
-                Emplooyes, LeadSource, AccountNumber, Instagram, Fax, RelatedDepartment, ParamBusinessCardNo,
-                ReferenceCode, MonthlyTurnoverLevel, RivalFirmId, AccountNameSurname, MonthlyTurnoverLevelTR,
-                SectorTR, FirstCreatedDate, FirstCreatedByName, Email2, Email3, BusinessPartnerId, UsedERP,
-                IsInvoiceGenerated, IsTrainingProvided, IsContractReceived, NumberOfEmployees, NumberOfDealer,
-                NumberOfWorkingBank, ENumberOfGroupComplaints, CapitalSize, AccountGroupInfo, CompanyAge,
-                InRefCode, City, LeadSourceNextGenId, IsSpecialField, IsoThousandRank, CommunicationInfo,
-                CreditUsageCountForLastMonth, CreditUsageCountForLastThreeMonth, CreditUsageCountForYear,
-                FieldSalesRepresentativeId, TPOutReferenceCode, CountrySapId, CountryRegionSapId, CurrencySapId,
-                CustomerAccountGroupSapId, LanguageSapId, PaymentTermSapId, SalesOfficeSapId, TaxClassificationSapId,
-                SAPOutReferenceCode, IBAN, BankCountryId, BankCurrencySapId, AccountHolderName, OtherUsedERP,
-                EDocumentType,
-                Location_Latitude, Location_Longitude,
-                CreditLimit_Amount, CreditLimit_Currency,
-                RiskLimit_Amount, RiskLimit_Currency,
-                CreditUsageAmountForLastMonth_Amount, CreditUsageAmountForLastMonth_Currency,
-                CreditUsageAmountForLastThreeMonths_Amount, CreditUsageAmountForLastThreeMonths_Currency,
-                CreditUsageAmountForYear_Amount, CreditUsageAmountForYear_Currency
-            ) VALUES (
-                         @Id, @Name, @Code, @Title, @Type, @ParentAccountId, @OwnerId, @TerritoryId, @State, @DefaultDiscount,
-                         @DefaultCurrency, @IdentificationNumber, @SurName, @CellPhone, @Phone, @TaxOffice, @TaxNumber, @Email,
-                         @DealerId, @AccountGroupId, @AccountAdditionalGroupId, @CurrencyRateType, @IsVATExempt,
-                         @AccountAutoNumberNextGen, @WebSite, @Sector, @ActivitySummary, @LastTouchDate, @SignBoardName,
-                         @Emplooyes, @LeadSource, @AccountNumber, @Instagram, @Fax, @RelatedDepartment, @ParamBusinessCardNo,
-                         @ReferenceCode, @MonthlyTurnoverLevel, @RivalFirmId, @AccountNameSurname, @MonthlyTurnoverLevelTR,
-                         @SectorTR, @FirstCreatedDate, @FirstCreatedByName, @Email2, @Email3, @BusinessPartnerId, @UsedERP,
-                         @IsInvoiceGenerated, @IsTrainingProvided, @IsContractReceived, @NumberOfEmployees, @NumberOfDealer,
-                         @NumberOfWorkingBank, @ENumberOfGroupComplaints, @CapitalSize, @AccountGroupInfo, @CompanyAge,
-                         @InRefCode, @City, @LeadSourceNextGenId, @IsSpecialField, @IsoThousandRank, @CommunicationInfo,
-                         @CreditUsageCountForLastMonth, @CreditUsageCountForLastThreeMonth, @CreditUsageCountForYear,
-                         @FieldSalesRepresentativeId, @TPOutReferenceCode, @CountrySapId, @CountryRegionSapId, @CurrencySapId,
-                         @CustomerAccountGroupSapId, @LanguageSapId, @PaymentTermSapId, @SalesOfficeSapId, @TaxClassificationSapId,
-                         @SAPOutReferenceCode, @IBAN, @BankCountryId, @BankCurrencySapId, @AccountHolderName, @OtherUsedERP,
-                         @EDocumentType,
-                         @Location_Latitude, @Location_Longitude,
-                         @CreditLimit_Amount, @CreditLimit_Currency,
-                         @RiskLimit_Amount, @RiskLimit_Currency,
-                         @CreditUsageAmountForLastMonth_Amount, @CreditUsageAmountForLastMonth_Currency,
-                         @CreditUsageAmountForLastThreeMonths_Amount, @CreditUsageAmountForLastThreeMonths_Currency,
-                         @CreditUsageAmountForYear_Amount, @CreditUsageAmountForYear_Currency
-                     )
-            ON CONFLICT(Id) DO UPDATE SET
-                Name = excluded.Name, Code = excluded.Code, Title = excluded.Title, Type = excluded.Type,
-                ParentAccountId = excluded.ParentAccountId, OwnerId = excluded.OwnerId, TerritoryId = excluded.TerritoryId,
-                State = excluded.State, DefaultDiscount = excluded.DefaultDiscount, DefaultCurrency = excluded.DefaultCurrency,
-                IdentificationNumber = excluded.IdentificationNumber, SurName = excluded.SurName, CellPhone = excluded.CellPhone,
-                Phone = excluded.Phone, TaxOffice = excluded.TaxOffice, TaxNumber = excluded.TaxNumber, Email = excluded.Email,
-                DealerId = excluded.DealerId, AccountGroupId = excluded.AccountGroupId, AccountAdditionalGroupId = excluded.AccountAdditionalGroupId,
-                CurrencyRateType = excluded.CurrencyRateType, IsVATExempt = excluded.IsVATExempt, AccountAutoNumberNextGen = excluded.AccountAutoNumberNextGen,
-                WebSite = excluded.WebSite, Sector = excluded.Sector, ActivitySummary = excluded.ActivitySummary,
-                LastTouchDate = excluded.LastTouchDate, SignBoardName = excluded.SignBoardName, Emplooyes = excluded.Emplooyes,
-                LeadSource = excluded.LeadSource, AccountNumber = excluded.AccountNumber, Instagram = excluded.Instagram,
-                Fax = excluded.Fax, RelatedDepartment = excluded.RelatedDepartment, ParamBusinessCardNo = excluded.ParamBusinessCardNo,
-                ReferenceCode = excluded.ReferenceCode, MonthlyTurnoverLevel = excluded.MonthlyTurnoverLevel, RivalFirmId = excluded.RivalFirmId,
-                AccountNameSurname = excluded.AccountNameSurname, MonthlyTurnoverLevelTR = excluded.MonthlyTurnoverLevelTR,
-                SectorTR = excluded.SectorTR, FirstCreatedDate = excluded.FirstCreatedDate, FirstCreatedByName = excluded.FirstCreatedByName,
-                Email2 = excluded.Email2, Email3 = excluded.Email3, BusinessPartnerId = excluded.BusinessPartnerId, UsedERP = excluded.UsedERP,
-                IsInvoiceGenerated = excluded.IsInvoiceGenerated, IsTrainingProvided = excluded.IsTrainingProvided, IsContractReceived = excluded.IsContractReceived,
-                NumberOfEmployees = excluded.NumberOfEmployees, NumberOfDealer = excluded.NumberOfDealer, NumberOfWorkingBank = excluded.NumberOfWorkingBank,
-                ENumberOfGroupComplaints = excluded.ENumberOfGroupComplaints, CapitalSize = excluded.CapitalSize, AccountGroupInfo = excluded.AccountGroupInfo,
-                CompanyAge = excluded.CompanyAge, InRefCode = excluded.InRefCode, City = excluded.City, LeadSourceNextGenId = excluded.LeadSourceNextGenId,
-                IsSpecialField = excluded.IsSpecialField, IsoThousandRank = excluded.IsoThousandRank, CommunicationInfo = excluded.CommunicationInfo,
-                CreditUsageCountForLastMonth = excluded.CreditUsageCountForLastMonth, CreditUsageCountForLastThreeMonth = excluded.CreditUsageCountForLastThreeMonth,
-                CreditUsageCountForYear = excluded.CreditUsageCountForYear, FieldSalesRepresentativeId = excluded.FieldSalesRepresentativeId,
-                TPOutReferenceCode = excluded.TPOutReferenceCode, CountrySapId = excluded.CountrySapId, CountryRegionSapId = excluded.CountryRegionSapId,
-                CurrencySapId = excluded.CurrencySapId, CustomerAccountGroupSapId = excluded.CustomerAccountGroupSapId, LanguageSapId = excluded.LanguageSapId,
-                PaymentTermSapId = excluded.PaymentTermSapId, SalesOfficeSapId = excluded.SalesOfficeSapId, TaxClassificationSapId = excluded.TaxClassificationSapId,
-                SAPOutReferenceCode = excluded.SAPOutReferenceCode, IBAN = excluded.IBAN, BankCountryId = excluded.BankCountryId,
-                BankCurrencySapId = excluded.BankCurrencySapId, AccountHolderName = excluded.AccountHolderName, OtherUsedERP = excluded.OtherUsedERP,
-                EDocumentType = excluded.EDocumentType,
-                Location_Latitude = excluded.Location_Latitude, Location_Longitude = excluded.Location_Longitude,
-                CreditLimit_Amount = excluded.CreditLimit_Amount, CreditLimit_Currency = excluded.CreditLimit_Currency,
-                RiskLimit_Amount = excluded.RiskLimit_Amount, RiskLimit_Currency = excluded.RiskLimit_Currency,
-                CreditUsageAmountForLastMonth_Amount = excluded.CreditUsageAmountForLastMonth_Amount, CreditUsageAmountForLastMonth_Currency = excluded.CreditUsageAmountForLastMonth_Currency,
-                CreditUsageAmountForLastThreeMonths_Amount = excluded.CreditUsageAmountForLastThreeMonths_Amount, CreditUsageAmountForLastThreeMonths_Currency = excluded.CreditUsageAmountForLastThreeMonths_Currency,
-                CreditUsageAmountForYear_Amount = excluded.CreditUsageAmountForYear_Amount, CreditUsageAmountForYear_Currency = excluded.CreditUsageAmountForYear_Currency,
-                _SyncedAt = datetime('now')
-        `);
+        const binding = {
+            Id: payload.Id,
+            Name: payload.Name ?? null,
+            Code: payload.Code ?? null,
+            Title: payload.Title ?? null,
+            Type: payload.Type ?? null,
+            ParentAccountId: payload.ParentAccountId ?? null,
+            OwnerId: payload.OwnerId,
+            TerritoryId: payload.TerritoryId ?? null,
+            State: payload.State ?? null,
+            DefaultDiscount: payload.DefaultDiscount ?? null,
+            DefaultCurrency: payload.DefaultCurrency ?? null,
+            IdentificationNumber: payload.IdentificationNumber ?? null,
+            SurName: payload.SurName ?? null,
+            CellPhone: payload.CellPhone ?? null,
+            Phone: payload.Phone ?? null,
+            TaxOffice: payload.TaxOffice ?? null,
+            TaxNumber: payload.TaxNumber ?? null,
+            Email: payload.Email ?? null,
+            DealerId: payload.DealerId ?? null,
+            AccountGroupId: payload.AccountGroupId ?? null,
+            AccountAdditionalGroupId: payload.AccountAdditionalGroupId ?? null,
+            CurrencyRateType: payload.CurrencyRateType ?? null,
+            IsVATExempt: payload.IsVATExempt ?? null,
+            AccountAutoNumberNextGen: payload.AccountAutoNumberNextGen ?? null,
+            WebSite: payload.WebSite ?? null,
+            Sector: payload.Sector ?? null,
+            ActivitySummary: payload.ActivitySummary ?? null,
+            LastTouchDate: payload.LastTouchDate ?? null,
+            SignBoardName: payload.SignBoardName ?? null,
+            Emplooyes: payload.Emplooyes ?? null,
+            LeadSource: payload.LeadSource ?? null,
+            AccountNumber: payload.AccountNumber ?? null,
+            Instagram: payload.Instagram ?? null,
+            Fax: payload.Fax ?? null,
+            RelatedDepartment: payload.RelatedDepartment ?? null,
+            ParamBusinessCardNo: payload.ParamBusinessCardNo ?? null,
+            ReferenceCode: payload.ReferenceCode ?? null,
+            MonthlyTurnoverLevel: payload.MonthlyTurnoverLevel ?? null,
+            RivalFirmId: payload.RivalFirmId ?? null,
+            AccountNameSurname: payload.AccountNameSurname ?? null,
+            MonthlyTurnoverLevelTR: payload.MonthlyTurnoverLevelTR ?? null,
+            SectorTR: payload.SectorTR ?? null,
+            FirstCreatedDate: payload.FirstCreatedDate ?? null,
+            FirstCreatedByName: payload.FirstCreatedByName ?? null,
+            Email2: payload.Email2 ?? null,
+            Email3: payload.Email3 ?? null,
+            BusinessPartnerId: payload.BusinessPartnerId ?? null,
+            UsedERP: payload.UsedERP ?? null,
+            IsInvoiceGenerated: payload.IsInvoiceGenerated ?? null,
+            IsTrainingProvided: payload.IsTrainingProvided ?? null,
+            IsContractReceived: payload.IsContractReceived ?? null,
+            NumberOfEmployees: payload.NumberOfEmployees ?? null,
+            NumberOfDealer: payload.NumberOfDealer ?? null,
+            NumberOfWorkingBank: payload.NumberOfWorkingBank ?? null,
+            ENumberOfGroupComplaints: payload.ENumberOfGroupComplaints ?? null,
+            CapitalSize: payload.CapitalSize ?? null,
+            AccountGroupInfo: payload.AccountGroupInfo ?? null,
+            CompanyAge: payload.CompanyAge ?? null,
+            InRefCode: payload.InRefCode ?? null,
+            City: payload.City ?? null,
+            LeadSourceNextGenId: payload.LeadSourceNextGenId ?? null,
+            IsSpecialField: payload.IsSpecialField ?? null,
+            IsoThousandRank: payload.IsoThousandRank ?? null,
+            CommunicationInfo: payload.CommunicationInfo ?? null,
+            CreditUsageCountForLastMonth: payload.CreditUsageCountForLastMonth ?? null,
+            CreditUsageCountForLastThreeMonth: payload.CreditUsageCountForLastThreeMonth ?? null,
+            CreditUsageCountForYear: payload.CreditUsageCountForYear ?? null,
+            FieldSalesRepresentativeId: payload.FieldSalesRepresentativeId ?? null,
+            TPOutReferenceCode: payload.TPOutReferenceCode ?? null,
+            CountrySapId: payload.CountrySapId ?? null,
+            CountryRegionSapId: payload.CountryRegionSapId ?? null,
+            CurrencySapId: payload.CurrencySapId ?? null,
+            CustomerAccountGroupSapId: payload.CustomerAccountGroupSapId ?? null,
+            LanguageSapId: payload.LanguageSapId ?? null,
+            PaymentTermSapId: payload.PaymentTermSapId ?? null,
+            SalesOfficeSapId: payload.SalesOfficeSapId ?? null,
+            TaxClassificationSapId: payload.TaxClassificationSapId ?? null,
+            SAPOutReferenceCode: payload.SAPOutReferenceCode ?? null,
+            IBAN: payload.IBAN ?? null,
+            BankCountryId: payload.BankCountryId ?? null,
+            BankCurrencySapId: payload.BankCurrencySapId ?? null,
+            AccountHolderName: payload.AccountHolderName ?? null,
+            OtherUsedERP: payload.OtherUsedERP ?? null,
+            EDocumentType: payload.EDocumentType ?? null,
 
-        // Prepare statements for Detail Tables
-        const insertAddress = db.prepare('INSERT INTO Addresses (AccountId, AddressType, AccountLocation, CentralAddress, Address_Country, Address_Subdivision1, Address_Subdivision2, Address_Subdivision3, Address_Subdivision4, Address_OpenAddress) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-        const insertContact = db.prepare('INSERT INTO AccountContacts (AccountId, ContactDetailId) VALUES (?, ?)');
-        const insertNote = db.prepare('INSERT INTO AccountNotes (AccountId, Note, NoteText, CreatedOn, CreatedBy) VALUES (?, ?, ?, ?, ?)');
-        const insertRep = db.prepare('INSERT INTO AccountRepresentatives (AccountId, AccountOwnerId, CompanyId, EnterpriceAccountRepresentativeId) VALUES (?, ?, ?, ?)');
-        const insertComp = db.prepare('INSERT INTO AccountCompanies (AccountId, CompanyId) VALUES (?, ?)');
-        const insertCur = db.prepare('INSERT INTO IntegrationCurrencyDetails (AccountId, CurrencyCode, ReferenceCode) VALUES (?, ?, ?)');
-        const insertNetsis = db.prepare('INSERT INTO NetsisCompanyReferenceCodes (AccountId, CompanyId, TPOutReferenceCode) VALUES (?, ?, ?)');
-        const insertWho = db.prepare('INSERT INTO WhoAreWeDealingWith (AccountId, WhoAreWeDealingWith) VALUES (?, ?)');
-        const insertInstall = db.prepare('INSERT INTO InstallProcessRepresentatives (AccountId, InstallProcessRePresentId) VALUES (?, ?)');
+            Location_Latitude: payload.Location?.Latitude ?? null,
+            Location_Longitude: payload.Location?.Longitude ?? null,
+            CreditLimit_Amount: payload.CreditLimit?.Amount ?? null,
+            CreditLimit_Currency: payload.CreditLimit?.Currency ?? null,
+            RiskLimit_Amount: payload.RiskLimit?.Amount ?? null,
+            RiskLimit_Currency: payload.RiskLimit?.Currency ?? null,
+            CreditUsageAmountForLastMonth_Amount: payload.CreditUsageAmountForLastMonth?.Amount ?? null,
+            CreditUsageAmountForLastMonth_Currency: payload.CreditUsageAmountForLastMonth?.Currency ?? null,
+            CreditUsageAmountForLastThreeMonths_Amount: payload.CreditUsageAmountForLastThreeMonths?.Amount ?? null,
+            CreditUsageAmountForLastThreeMonths_Currency: payload.CreditUsageAmountForLastThreeMonths?.Currency ?? null,
+            CreditUsageAmountForYear_Amount: payload.CreditUsageAmountForYear?.Amount ?? null,
+            CreditUsageAmountForYear_Currency: payload.CreditUsageAmountForYear?.Currency ?? null
+        };
 
-        // Run as a transaction
-        const syncTransaction = db.transaction((data) => {
-            // 1. Upsert Account
-            const info = upsertAccount.run({
-                Id: data.Id,
-                Name: data.Name ?? null,
-                Code: data.Code ?? null,
-                Title: data.Title ?? null,
-                Type: data.Type ?? null,
-                ParentAccountId: data.ParentAccountId ?? null,
-                OwnerId: data.OwnerId,
-                TerritoryId: data.TerritoryId ?? null,
-                State: data.State ?? null,
-                DefaultDiscount: data.DefaultDiscount ?? null,
-                DefaultCurrency: data.DefaultCurrency ?? null,
-                IdentificationNumber: data.IdentificationNumber ?? null,
-                SurName: data.SurName ?? null,
-                CellPhone: data.CellPhone ?? null,
-                Phone: data.Phone ?? null,
-                TaxOffice: data.TaxOffice ?? null,
-                TaxNumber: data.TaxNumber ?? null,
-                Email: data.Email ?? null,
-                DealerId: data.DealerId ?? null,
-                AccountGroupId: data.AccountGroupId ?? null,
-                AccountAdditionalGroupId: data.AccountAdditionalGroupId ?? null,
-                CurrencyRateType: data.CurrencyRateType ?? null,
-                IsVATExempt: data.IsVATExempt ?? null,
-                AccountAutoNumberNextGen: data.AccountAutoNumberNextGen ?? null,
-                WebSite: data.WebSite ?? null,
-                Sector: data.Sector ?? null,
-                ActivitySummary: data.ActivitySummary ?? null,
-                LastTouchDate: data.LastTouchDate ?? null,
-                SignBoardName: data.SignBoardName ?? null,
-                Emplooyes: data.Emplooyes ?? null,
-                LeadSource: data.LeadSource ?? null,
-                AccountNumber: data.AccountNumber ?? null,
-                Instagram: data.Instagram ?? null,
-                Fax: data.Fax ?? null,
-                RelatedDepartment: data.RelatedDepartment ?? null,
-                ParamBusinessCardNo: data.ParamBusinessCardNo ?? null,
-                ReferenceCode: data.ReferenceCode ?? null,
-                MonthlyTurnoverLevel: data.MonthlyTurnoverLevel ?? null,
-                RivalFirmId: data.RivalFirmId ?? null,
-                AccountNameSurname: data.AccountNameSurname ?? null,
-                MonthlyTurnoverLevelTR: data.MonthlyTurnoverLevelTR ?? null,
-                SectorTR: data.SectorTR ?? null,
-                FirstCreatedDate: data.FirstCreatedDate ?? null,
-                FirstCreatedByName: data.FirstCreatedByName ?? null,
-                Email2: data.Email2 ?? null,
-                Email3: data.Email3 ?? null,
-                BusinessPartnerId: data.BusinessPartnerId ?? null,
-                UsedERP: data.UsedERP ?? null,
-                IsInvoiceGenerated: data.IsInvoiceGenerated ?? null,
-                IsTrainingProvided: data.IsTrainingProvided ?? null,
-                IsContractReceived: data.IsContractReceived ?? null,
-                NumberOfEmployees: data.NumberOfEmployees ?? null,
-                NumberOfDealer: data.NumberOfDealer ?? null,
-                NumberOfWorkingBank: data.NumberOfWorkingBank ?? null,
-                ENumberOfGroupComplaints: data.ENumberOfGroupComplaints ?? null,
-                CapitalSize: data.CapitalSize ?? null,
-                AccountGroupInfo: data.AccountGroupInfo ?? null,
-                CompanyAge: data.CompanyAge ?? null,
-                InRefCode: data.InRefCode ?? null,
-                City: data.City ?? null,
-                LeadSourceNextGenId: data.LeadSourceNextGenId ?? null,
-                IsSpecialField: data.IsSpecialField ?? null,
-                IsoThousandRank: data.IsoThousandRank ?? null,
-                CommunicationInfo: data.CommunicationInfo ?? null,
-                CreditUsageCountForLastMonth: data.CreditUsageCountForLastMonth ?? null,
-                CreditUsageCountForLastThreeMonth: data.CreditUsageCountForLastThreeMonth ?? null,
-                CreditUsageCountForYear: data.CreditUsageCountForYear ?? null,
-                FieldSalesRepresentativeId: data.FieldSalesRepresentativeId ?? null,
-                TPOutReferenceCode: data.TPOutReferenceCode ?? null,
-                CountrySapId: data.CountrySapId ?? null,
-                CountryRegionSapId: data.CountryRegionSapId ?? null,
-                CurrencySapId: data.CurrencySapId ?? null,
-                CustomerAccountGroupSapId: data.CustomerAccountGroupSapId ?? null,
-                LanguageSapId: data.LanguageSapId ?? null,
-                PaymentTermSapId: data.PaymentTermSapId ?? null,
-                SalesOfficeSapId: data.SalesOfficeSapId ?? null,
-                TaxClassificationSapId: data.TaxClassificationSapId ?? null,
-                SAPOutReferenceCode: data.SAPOutReferenceCode ?? null,
-                IBAN: data.IBAN ?? null,
-                BankCountryId: data.BankCountryId ?? null,
-                BankCurrencySapId: data.BankCurrencySapId ?? null,
-                AccountHolderName: data.AccountHolderName ?? null,
-                OtherUsedERP: data.OtherUsedERP ?? null,
-                EDocumentType: data.EDocumentType ?? null,
+        const existing = db.queryOne('SELECT Id FROM Account WHERE Id = ?', [payload.Id]);
+        const isInsert = !existing;
 
-                Location_Latitude: data.Location?.Latitude ?? null,
-                Location_Longitude: data.Location?.Longitude ?? null,
-                CreditLimit_Amount: data.CreditLimit?.Amount ?? null,
-                CreditLimit_Currency: data.CreditLimit?.Currency ?? null,
-                RiskLimit_Amount: data.RiskLimit?.Amount ?? null,
-                RiskLimit_Currency: data.RiskLimit?.Currency ?? null,
-                CreditUsageAmountForLastMonth_Amount: data.CreditUsageAmountForLastMonth?.Amount ?? null,
-                CreditUsageAmountForLastMonth_Currency: data.CreditUsageAmountForLastMonth?.Currency ?? null,
-                CreditUsageAmountForLastThreeMonths_Amount: data.CreditUsageAmountForLastThreeMonths?.Amount ?? null,
-                CreditUsageAmountForLastThreeMonths_Currency: data.CreditUsageAmountForLastThreeMonths?.Currency ?? null,
-                CreditUsageAmountForYear_Amount: data.CreditUsageAmountForYear?.Amount ?? null,
-                CreditUsageAmountForYear_Currency: data.CreditUsageAmountForYear?.Currency ?? null
-            });
+        let upsertSql: string;
+        if (db.driver === 'mssql') {
+            upsertSql = `
+                MERGE INTO Account AS target
+                USING (SELECT @Id AS Id) AS source
+                ON (target.Id = source.Id)
+                WHEN MATCHED THEN
+                    UPDATE SET
+                        Name = @Name, Code = @Code, Title = @Title, [Type] = @Type,
+                        ParentAccountId = @ParentAccountId, OwnerId = @OwnerId, TerritoryId = @TerritoryId,
+                        [State] = @State, DefaultDiscount = @DefaultDiscount, DefaultCurrency = @DefaultCurrency,
+                        IdentificationNumber = @IdentificationNumber, SurName = @SurName, CellPhone = @CellPhone,
+                        Phone = @Phone, TaxOffice = @TaxOffice, TaxNumber = @TaxNumber, Email = @Email,
+                        DealerId = @DealerId, AccountGroupId = @AccountGroupId, AccountAdditionalGroupId = @AccountAdditionalGroupId,
+                        CurrencyRateType = @CurrencyRateType, IsVATExempt = @IsVATExempt, AccountAutoNumberNextGen = @AccountAutoNumberNextGen,
+                        WebSite = @WebSite, Sector = @Sector, ActivitySummary = @ActivitySummary,
+                        LastTouchDate = @LastTouchDate, SignBoardName = @SignBoardName, Emplooyes = @Emplooyes,
+                        LeadSource = @LeadSource, AccountNumber = @AccountNumber, Instagram = @Instagram,
+                        Fax = @Fax, RelatedDepartment = @RelatedDepartment, ParamBusinessCardNo = @ParamBusinessCardNo,
+                        ReferenceCode = @ReferenceCode, MonthlyTurnoverLevel = @MonthlyTurnoverLevel, RivalFirmId = @RivalFirmId,
+                        AccountNameSurname = @AccountNameSurname, MonthlyTurnoverLevelTR = @MonthlyTurnoverLevelTR,
+                        SectorTR = @SectorTR, FirstCreatedDate = @FirstCreatedDate, FirstCreatedByName = @FirstCreatedByName,
+                        Email2 = @Email2, Email3 = @Email3, BusinessPartnerId = @BusinessPartnerId, UsedERP = @UsedERP,
+                        IsInvoiceGenerated = @IsInvoiceGenerated, IsTrainingProvided = @IsTrainingProvided, IsContractReceived = @IsContractReceived,
+                        NumberOfEmployees = @NumberOfEmployees, NumberOfDealer = @NumberOfDealer, NumberOfWorkingBank = @NumberOfWorkingBank,
+                        ENumberOfGroupComplaints = @ENumberOfGroupComplaints, CapitalSize = @CapitalSize, AccountGroupInfo = @AccountGroupInfo,
+                        CompanyAge = @CompanyAge, InRefCode = @InRefCode, City = @City, LeadSourceNextGenId = @LeadSourceNextGenId,
+                        IsSpecialField = @IsSpecialField, IsoThousandRank = @IsoThousandRank, CommunicationInfo = @CommunicationInfo,
+                        CreditUsageCountForLastMonth = @CreditUsageCountForLastMonth, CreditUsageCountForLastThreeMonth = @CreditUsageCountForLastThreeMonth,
+                        CreditUsageCountForYear = @CreditUsageCountForYear, FieldSalesRepresentativeId = @FieldSalesRepresentativeId,
+                        TPOutReferenceCode = @TPOutReferenceCode, CountrySapId = @CountrySapId, CountryRegionSapId = @CountryRegionSapId,
+                        CurrencySapId = @CurrencySapId, CustomerAccountGroupSapId = @CustomerAccountGroupSapId, LanguageSapId = @LanguageSapId,
+                        PaymentTermSapId = @PaymentTermSapId, SalesOfficeSapId = @SalesOfficeSapId, TaxClassificationSapId = @TaxClassificationSapId,
+                        SAPOutReferenceCode = @SAPOutReferenceCode, IBAN = @IBAN, BankCountryId = @BankCountryId,
+                        BankCurrencySapId = @BankCurrencySapId, AccountHolderName = @AccountHolderName, OtherUsedERP = @OtherUsedERP,
+                        EDocumentType = @EDocumentType,
+                        Location_Latitude = @Location_Latitude, Location_Longitude = @Location_Longitude,
+                        CreditLimit_Amount = @CreditLimit_Amount, CreditLimit_Currency = @CreditLimit_Currency,
+                        RiskLimit_Amount = @RiskLimit_Amount, RiskLimit_Currency = @RiskLimit_Currency,
+                        CreditUsageAmountForLastMonth_Amount = @CreditUsageAmountForLastMonth_Amount, CreditUsageAmountForLastMonth_Currency = @CreditUsageAmountForLastMonth_Currency,
+                        CreditUsageAmountForLastThreeMonths_Amount = @CreditUsageAmountForLastThreeMonths_Amount, CreditUsageAmountForLastThreeMonths_Currency = @CreditUsageAmountForLastThreeMonths_Currency,
+                        CreditUsageAmountForYear_Amount = @CreditUsageAmountForYear_Amount, CreditUsageAmountForYear_Currency = @CreditUsageAmountForYear_Currency,
+                        _SyncedAt = GETUTCDATE()
+                WHEN NOT MATCHED THEN
+                    INSERT (
+                        Id, Name, Code, Title, [Type], ParentAccountId, OwnerId, TerritoryId, [State], DefaultDiscount,
+                        DefaultCurrency, IdentificationNumber, SurName, CellPhone, Phone, TaxOffice, TaxNumber, Email,
+                        DealerId, AccountGroupId, AccountAdditionalGroupId, CurrencyRateType, IsVATExempt,
+                        AccountAutoNumberNextGen, WebSite, Sector, ActivitySummary, LastTouchDate, SignBoardName,
+                        Emplooyes, LeadSource, AccountNumber, Instagram, Fax, RelatedDepartment, ParamBusinessCardNo,
+                        ReferenceCode, MonthlyTurnoverLevel, RivalFirmId, AccountNameSurname, MonthlyTurnoverLevelTR,
+                        SectorTR, FirstCreatedDate, FirstCreatedByName, Email2, Email3, BusinessPartnerId, UsedERP,
+                        IsInvoiceGenerated, IsTrainingProvided, IsContractReceived, NumberOfEmployees, NumberOfDealer,
+                        NumberOfWorkingBank, ENumberOfGroupComplaints, CapitalSize, AccountGroupInfo, CompanyAge,
+                        InRefCode, City, LeadSourceNextGenId, IsSpecialField, IsoThousandRank, CommunicationInfo,
+                        CreditUsageCountForLastMonth, CreditUsageCountForLastThreeMonth, CreditUsageCountForYear,
+                        FieldSalesRepresentativeId, TPOutReferenceCode, CountrySapId, CountryRegionSapId, CurrencySapId,
+                        CustomerAccountGroupSapId, LanguageSapId, PaymentTermSapId, SalesOfficeSapId, TaxClassificationSapId,
+                        SAPOutReferenceCode, IBAN, BankCountryId, BankCurrencySapId, AccountHolderName, OtherUsedERP,
+                        EDocumentType,
+                        Location_Latitude, Location_Longitude,
+                        CreditLimit_Amount, CreditLimit_Currency,
+                        RiskLimit_Amount, RiskLimit_Currency,
+                        CreditUsageAmountForLastMonth_Amount, CreditUsageAmountForLastMonth_Currency,
+                        CreditUsageAmountForLastThreeMonths_Amount, CreditUsageAmountForLastThreeMonths_Currency,
+                        CreditUsageAmountForYear_Amount, CreditUsageAmountForYear_Currency, _SyncedAt
+                    ) VALUES (
+                        @Id, @Name, @Code, @Title, @Type, @ParentAccountId, @OwnerId, @TerritoryId, @State, @DefaultDiscount,
+                        @DefaultCurrency, @IdentificationNumber, @SurName, @CellPhone, @Phone, @TaxOffice, @TaxNumber, @Email,
+                        @DealerId, @AccountGroupId, @AccountAdditionalGroupId, @CurrencyRateType, @IsVATExempt,
+                        @AccountAutoNumberNextGen, @WebSite, @Sector, @ActivitySummary, @LastTouchDate, @SignBoardName,
+                        @Emplooyes, @LeadSource, @AccountNumber, @Instagram, @Fax, @RelatedDepartment, @ParamBusinessCardNo,
+                        @ReferenceCode, @MonthlyTurnoverLevel, @RivalFirmId, @AccountNameSurname, @MonthlyTurnoverLevelTR,
+                        @SectorTR, @FirstCreatedDate, @FirstCreatedByName, @Email2, @Email3, @BusinessPartnerId, @UsedERP,
+                        @IsInvoiceGenerated, @IsTrainingProvided, @IsContractReceived, @NumberOfEmployees, @NumberOfDealer,
+                        @NumberOfWorkingBank, @ENumberOfGroupComplaints, @CapitalSize, @AccountGroupInfo, @CompanyAge,
+                        @InRefCode, @City, @LeadSourceNextGenId, @IsSpecialField, @IsoThousandRank, @CommunicationInfo,
+                        @CreditUsageCountForLastMonth, @CreditUsageCountForLastThreeMonth, @CreditUsageCountForYear,
+                        @FieldSalesRepresentativeId, @TPOutReferenceCode, @CountrySapId, @CountryRegionSapId, @CurrencySapId,
+                        @CustomerAccountGroupSapId, @LanguageSapId, @PaymentTermSapId, @SalesOfficeSapId, @TaxClassificationSapId,
+                        @SAPOutReferenceCode, @IBAN, @BankCountryId, @BankCurrencySapId, @AccountHolderName, @OtherUsedERP,
+                        @EDocumentType,
+                        @Location_Latitude, @Location_Longitude,
+                        @CreditLimit_Amount, @CreditLimit_Currency,
+                        @RiskLimit_Amount, @RiskLimit_Currency,
+                        @CreditUsageAmountForLastMonth_Amount, @CreditUsageAmountForLastMonth_Currency,
+                        @CreditUsageAmountForLastThreeMonths_Amount, @CreditUsageAmountForLastThreeMonths_Currency,
+                        @CreditUsageAmountForYear_Amount, @CreditUsageAmountForYear_Currency, GETUTCDATE()
+                    );
+            `;
+        } else {
+            upsertSql = `
+                INSERT INTO Account (
+                    Id, Name, Code, Title, Type, ParentAccountId, OwnerId, TerritoryId, State, DefaultDiscount,
+                    DefaultCurrency, IdentificationNumber, SurName, CellPhone, Phone, TaxOffice, TaxNumber, Email,
+                    DealerId, AccountGroupId, AccountAdditionalGroupId, CurrencyRateType, IsVATExempt,
+                    AccountAutoNumberNextGen, WebSite, Sector, ActivitySummary, LastTouchDate, SignBoardName,
+                    Emplooyes, LeadSource, AccountNumber, Instagram, Fax, RelatedDepartment, ParamBusinessCardNo,
+                    ReferenceCode, MonthlyTurnoverLevel, RivalFirmId, AccountNameSurname, MonthlyTurnoverLevelTR,
+                    SectorTR, FirstCreatedDate, FirstCreatedByName, Email2, Email3, BusinessPartnerId, UsedERP,
+                    IsInvoiceGenerated, IsTrainingProvided, IsContractReceived, NumberOfEmployees, NumberOfDealer,
+                    NumberOfWorkingBank, ENumberOfGroupComplaints, CapitalSize, AccountGroupInfo, CompanyAge,
+                    InRefCode, City, LeadSourceNextGenId, IsSpecialField, IsoThousandRank, CommunicationInfo,
+                    CreditUsageCountForLastMonth, CreditUsageCountForLastThreeMonth, CreditUsageCountForYear,
+                    FieldSalesRepresentativeId, TPOutReferenceCode, CountrySapId, CountryRegionSapId, CurrencySapId,
+                    CustomerAccountGroupSapId, LanguageSapId, PaymentTermSapId, SalesOfficeSapId, TaxClassificationSapId,
+                    SAPOutReferenceCode, IBAN, BankCountryId, BankCurrencySapId, AccountHolderName, OtherUsedERP,
+                    EDocumentType,
+                    Location_Latitude, Location_Longitude,
+                    CreditLimit_Amount, CreditLimit_Currency,
+                    RiskLimit_Amount, RiskLimit_Currency,
+                    CreditUsageAmountForLastMonth_Amount, CreditUsageAmountForLastMonth_Currency,
+                    CreditUsageAmountForLastThreeMonths_Amount, CreditUsageAmountForLastThreeMonths_Currency,
+                    CreditUsageAmountForYear_Amount, CreditUsageAmountForYear_Currency, _SyncedAt
+                ) VALUES (
+                    :Id, :Name, :Code, :Title, :Type, :ParentAccountId, :OwnerId, :TerritoryId, :State, :DefaultDiscount,
+                    :DefaultCurrency, :IdentificationNumber, :SurName, :CellPhone, :Phone, :TaxOffice, :TaxNumber, :Email,
+                    :DealerId, :AccountGroupId, :AccountAdditionalGroupId, :CurrencyRateType, :IsVATExempt,
+                    :AccountAutoNumberNextGen, :WebSite, :Sector, :ActivitySummary, :LastTouchDate, :SignBoardName,
+                    :Emplooyes, :LeadSource, :AccountNumber, :Instagram, :Fax, :RelatedDepartment, :ParamBusinessCardNo,
+                    :ReferenceCode, :MonthlyTurnoverLevel, :RivalFirmId, :AccountNameSurname, :MonthlyTurnoverLevelTR,
+                    :SectorTR, :FirstCreatedDate, :FirstCreatedByName, :Email2, :Email3, :BusinessPartnerId, :UsedERP,
+                    :IsInvoiceGenerated, :IsTrainingProvided, :IsContractReceived, :NumberOfEmployees, :NumberOfDealer,
+                    :NumberOfWorkingBank, :ENumberOfGroupComplaints, :CapitalSize, :AccountGroupInfo, :CompanyAge,
+                    :InRefCode, :City, :LeadSourceNextGenId, :IsSpecialField, :IsoThousandRank, :CommunicationInfo,
+                    :CreditUsageCountForLastMonth, :CreditUsageCountForLastThreeMonth, :CreditUsageCountForYear,
+                    :FieldSalesRepresentativeId, :TPOutReferenceCode, :CountrySapId, :CountryRegionSapId, :CurrencySapId,
+                    :CustomerAccountGroupSapId, :LanguageSapId, :PaymentTermSapId, :SalesOfficeSapId, :TaxClassificationSapId,
+                    :SAPOutReferenceCode, :IBAN, :BankCountryId, :BankCurrencySapId, :AccountHolderName, :OtherUsedERP,
+                    :EDocumentType,
+                    :Location_Latitude, :Location_Longitude,
+                    :CreditLimit_Amount, :CreditLimit_Currency,
+                    :RiskLimit_Amount, :RiskLimit_Currency,
+                    :CreditUsageAmountForLastMonth_Amount, :CreditUsageAmountForLastMonth_Currency,
+                    :CreditUsageAmountForLastThreeMonths_Amount, :CreditUsageAmountForLastThreeMonths_Currency,
+                    :CreditUsageAmountForYear_Amount, :CreditUsageAmountForYear_Currency, datetime('now')
+                )
+                ON CONFLICT(Id) DO UPDATE SET
+                    Name = excluded.Name, Code = excluded.Code, Title = excluded.Title, Type = excluded.Type,
+                    ParentAccountId = excluded.ParentAccountId, OwnerId = excluded.OwnerId, TerritoryId = excluded.TerritoryId,
+                    State = excluded.State, DefaultDiscount = excluded.DefaultDiscount, DefaultCurrency = excluded.DefaultCurrency,
+                    IdentificationNumber = excluded.IdentificationNumber, SurName = excluded.SurName, CellPhone = excluded.CellPhone,
+                    Phone = excluded.Phone, TaxOffice = excluded.TaxOffice, TaxNumber = excluded.TaxNumber, Email = excluded.Email,
+                    DealerId = excluded.DealerId, AccountGroupId = excluded.AccountGroupId, AccountAdditionalGroupId = excluded.AccountAdditionalGroupId,
+                    CurrencyRateType = excluded.CurrencyRateType, IsVATExempt = excluded.IsVATExempt, AccountAutoNumberNextGen = excluded.AccountAutoNumberNextGen,
+                    WebSite = excluded.WebSite, Sector = excluded.Sector, ActivitySummary = excluded.ActivitySummary,
+                    LastTouchDate = excluded.LastTouchDate, SignBoardName = excluded.SignBoardName, Emplooyes = excluded.Emplooyes,
+                    LeadSource = excluded.LeadSource, AccountNumber = excluded.AccountNumber, Instagram = excluded.Instagram,
+                    Fax = excluded.Fax, RelatedDepartment = excluded.RelatedDepartment, ParamBusinessCardNo = excluded.ParamBusinessCardNo,
+                    ReferenceCode = excluded.ReferenceCode, MonthlyTurnoverLevel = excluded.MonthlyTurnoverLevel, RivalFirmId = excluded.RivalFirmId,
+                    AccountNameSurname = excluded.AccountNameSurname, MonthlyTurnoverLevelTR = excluded.MonthlyTurnoverLevelTR,
+                    SectorTR = excluded.SectorTR, FirstCreatedDate = excluded.FirstCreatedDate, FirstCreatedByName = excluded.FirstCreatedByName,
+                    Email2 = excluded.Email2, Email3 = excluded.Email3, BusinessPartnerId = excluded.BusinessPartnerId, UsedERP = excluded.UsedERP,
+                    IsInvoiceGenerated = excluded.IsInvoiceGenerated, IsTrainingProvided = excluded.IsTrainingProvided, IsContractReceived = excluded.IsContractReceived,
+                    NumberOfEmployees = excluded.NumberOfEmployees, NumberOfDealer = excluded.NumberOfDealer, NumberOfWorkingBank = excluded.NumberOfWorkingBank,
+                    ENumberOfGroupComplaints = excluded.ENumberOfGroupComplaints, CapitalSize = excluded.CapitalSize, AccountGroupInfo = excluded.AccountGroupInfo,
+                    CompanyAge = excluded.CompanyAge, InRefCode = excluded.InRefCode, City = excluded.City, LeadSourceNextGenId = excluded.LeadSourceNextGenId,
+                    IsSpecialField = excluded.IsSpecialField, IsoThousandRank = excluded.IsoThousandRank, CommunicationInfo = excluded.CommunicationInfo,
+                    CreditUsageCountForLastMonth = excluded.CreditUsageCountForLastMonth, CreditUsageCountForLastThreeMonth = excluded.CreditUsageCountForLastThreeMonth,
+                    CreditUsageCountForYear = excluded.CreditUsageCountForYear, FieldSalesRepresentativeId = excluded.FieldSalesRepresentativeId,
+                    TPOutReferenceCode = excluded.TPOutReferenceCode, CountrySapId = excluded.CountrySapId, CountryRegionSapId = excluded.CountryRegionSapId,
+                    CurrencySapId = excluded.CurrencySapId, CustomerAccountGroupSapId = excluded.CustomerAccountGroupSapId, LanguageSapId = excluded.LanguageSapId,
+                    PaymentTermSapId = excluded.PaymentTermSapId, SalesOfficeSapId = excluded.SalesOfficeSapId, TaxClassificationSapId = excluded.TaxClassificationSapId,
+                    SAPOutReferenceCode = excluded.SAPOutReferenceCode, IBAN = excluded.IBAN, BankCountryId = excluded.BankCountryId,
+                    BankCurrencySapId = excluded.BankCurrencySapId, AccountHolderName = excluded.AccountHolderName, OtherUsedERP = excluded.OtherUsedERP,
+                    EDocumentType = excluded.EDocumentType,
+                    Location_Latitude = excluded.Location_Latitude, Location_Longitude = excluded.Location_Longitude,
+                    CreditLimit_Amount = excluded.CreditLimit_Amount, CreditLimit_Currency = excluded.CreditLimit_Currency,
+                    RiskLimit_Amount = excluded.RiskLimit_Amount, RiskLimit_Currency = excluded.RiskLimit_Currency,
+                    CreditUsageAmountForLastMonth_Amount = excluded.CreditUsageAmountForLastMonth_Amount, CreditUsageAmountForLastMonth_Currency = excluded.CreditUsageAmountForLastMonth_Currency,
+                    CreditUsageAmountForLastThreeMonths_Amount = excluded.CreditUsageAmountForLastThreeMonths_Amount, CreditUsageAmountForLastThreeMonths_Currency = excluded.CreditUsageAmountForLastThreeMonths_Currency,
+                    CreditUsageAmountForYear_Amount = excluded.CreditUsageAmountForYear_Amount, CreditUsageAmountForYear_Currency = excluded.CreditUsageAmountForYear_Currency,
+                    _SyncedAt = datetime('now')
+            `;
+        }
 
-            const isInsert = info.changes === 1;
+        db.transaction(() => {
+            db.execute(upsertSql, binding);
 
-            // 2. Clear old detail records (Cascade delete won't trigger on UPDATE, so we do it manually)
-            db.prepare('DELETE FROM Addresses WHERE AccountId = ?').run(data.Id);
-            db.prepare('DELETE FROM AccountContacts WHERE AccountId = ?').run(data.Id);
-            db.prepare('DELETE FROM AccountNotes WHERE AccountId = ?').run(data.Id);
-            db.prepare('DELETE FROM AccountRepresentatives WHERE AccountId = ?').run(data.Id);
-            db.prepare('DELETE FROM AccountCompanies WHERE AccountId = ?').run(data.Id);
-            db.prepare('DELETE FROM IntegrationCurrencyDetails WHERE AccountId = ?').run(data.Id);
-            db.prepare('DELETE FROM NetsisCompanyReferenceCodes WHERE AccountId = ?').run(data.Id);
-            db.prepare('DELETE FROM WhoAreWeDealingWith WHERE AccountId = ?').run(data.Id);
-            db.prepare('DELETE FROM InstallProcessRepresentatives WHERE AccountId = ?').run(data.Id);
+            db.execute('DELETE FROM Addresses WHERE AccountId = ?', [payload.Id]);
+            db.execute('DELETE FROM AccountContacts WHERE AccountId = ?', [payload.Id]);
+            db.execute('DELETE FROM AccountNotes WHERE AccountId = ?', [payload.Id]);
+            db.execute('DELETE FROM AccountRepresentatives WHERE AccountId = ?', [payload.Id]);
+            db.execute('DELETE FROM AccountCompanies WHERE AccountId = ?', [payload.Id]);
+            db.execute('DELETE FROM IntegrationCurrencyDetails WHERE AccountId = ?', [payload.Id]);
+            db.execute('DELETE FROM NetsisCompanyReferenceCodes WHERE AccountId = ?', [payload.Id]);
+            db.execute('DELETE FROM WhoAreWeDealingWith WHERE AccountId = ?', [payload.Id]);
+            db.execute('DELETE FROM InstallProcessRepresentatives WHERE AccountId = ?', [payload.Id]);
 
-            // 3. Insert new detail records
-            data.Addresses?.forEach((d: any) => insertAddress.run(data.Id, d.AddressType ?? null, d.AccountLocation ?? null, d.CentralAddress ?? null, d.Address?.Country ?? null, d.Address?.Subdivision1 ?? null, d.Address?.Subdivision2 ?? null, d.Address?.Subdivision3 ?? null, d.Address?.Subdivision4 ?? null, d.Address?.OpenAddress ?? null));
-            data.Contacts?.forEach((d: any) => insertContact.run(data.Id, d.ContactDetailId ?? null));
-            data.AccountNotes?.forEach((d: any) => insertNote.run(data.Id, d.Note ?? null, d.NoteText ?? null, d.CreatedOn ?? null, d.CreatedBy ?? null));
-            data.AccountRepresentatives?.forEach((d: any) => insertRep.run(data.Id, d.AccountOwnerId ?? null, d.CompanyId ?? null, d.EnterpriceAccountRepresentativeId ?? null));
-            data.AccountCompanies?.forEach((d: any) => insertComp.run(data.Id, d.CompanyId ?? null));
-            data.IntegrationCurrencyDetails?.forEach((d: any) => insertCur.run(data.Id, d.CurrencyCode ?? null, d.ReferenceCode ?? null));
-            data.NetsisCompanyReferenceCodes?.forEach((d: any) => insertNetsis.run(data.Id, d.CompanyId ?? null, d.TPOutReferenceCode ?? null));
-            data.WhoAreWeDealingWith?.forEach((d: any) => insertWho.run(data.Id, d.WhoAreWeDealingWith ?? null));
-            data.InstallProcessRepresentatives?.forEach((d: any) => insertInstall.run(data.Id, d.InstallProcessRePresentId ?? null));
-
-            return isInsert;
+            payload.Addresses?.forEach((d: any) => db.execute('INSERT INTO Addresses (AccountId, AddressType, AccountLocation, CentralAddress, Address_Country, Address_Subdivision1, Address_Subdivision2, Address_Subdivision3, Address_Subdivision4, Address_OpenAddress) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [payload.Id, d.AddressType ?? null, d.AccountLocation ?? null, d.CentralAddress ?? null, d.Address?.Country ?? null, d.Address?.Subdivision1 ?? null, d.Address?.Subdivision2 ?? null, d.Address?.Subdivision3 ?? null, d.Address?.Subdivision4 ?? null, d.Address?.OpenAddress ?? null]));
+            payload.Contacts?.forEach((d: any) => db.execute('INSERT INTO AccountContacts (AccountId, ContactDetailId) VALUES (?, ?)', [payload.Id, d.ContactDetailId ?? null]));
+            payload.AccountNotes?.forEach((d: any) => db.execute('INSERT INTO AccountNotes (AccountId, Note, NoteText, CreatedOn, CreatedBy) VALUES (?, ?, ?, ?, ?)', [payload.Id, d.Note ?? null, d.NoteText ?? null, d.CreatedOn ?? null, d.CreatedBy ?? null]));
+            payload.AccountRepresentatives?.forEach((d: any) => db.execute('INSERT INTO AccountRepresentatives (AccountId, AccountOwnerId, CompanyId, EnterpriceAccountRepresentativeId) VALUES (?, ?, ?, ?)', [payload.Id, d.AccountOwnerId ?? null, d.CompanyId ?? null, d.EnterpriceAccountRepresentativeId ?? null]));
+            payload.AccountCompanies?.forEach((d: any) => db.execute('INSERT INTO AccountCompanies (AccountId, CompanyId) VALUES (?, ?)', [payload.Id, d.CompanyId ?? null]));
+            payload.IntegrationCurrencyDetails?.forEach((d: any) => db.execute('INSERT INTO IntegrationCurrencyDetails (AccountId, CurrencyCode, ReferenceCode) VALUES (?, ?, ?)', [payload.Id, d.CurrencyCode ?? null, d.ReferenceCode ?? null]));
+            payload.NetsisCompanyReferenceCodes?.forEach((d: any) => db.execute('INSERT INTO NetsisCompanyReferenceCodes (AccountId, CompanyId, TPOutReferenceCode) VALUES (?, ?, ?)', [payload.Id, d.CompanyId ?? null, d.TPOutReferenceCode ?? null]));
+            payload.WhoAreWeDealingWith?.forEach((d: any) => db.execute('INSERT INTO WhoAreWeDealingWith (AccountId, WhoAreWeDealingWith) VALUES (?, ?)', [payload.Id, d.WhoAreWeDealingWith ?? null]));
+            payload.InstallProcessRepresentatives?.forEach((d: any) => db.execute('INSERT INTO InstallProcessRepresentatives (AccountId, InstallProcessRePresentId) VALUES (?, ?)', [payload.Id, d.InstallProcessRePresentId ?? null]));
         });
-
-        const wasInserted = syncTransaction(payload);
 
         res.json({
             status: 'ok',
-            upserted: wasInserted,
+            upserted: isInsert,
             id: payload.Id,
             syncedAt: new Date().toISOString()
         });

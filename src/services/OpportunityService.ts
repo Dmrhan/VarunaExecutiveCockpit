@@ -2,8 +2,8 @@
 import type { Deal, Contact, OpportunityNote } from '../types/crm';
 import { generateMockData } from '../data/mockData';
 
-const API_BASE_URL = (window as any)['__RUNTIME_CONFIG__']?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
-const API_URL = `${API_BASE_URL}/opportunities`;
+const getApiBaseUrl = () => (window as any)['__RUNTIME_CONFIG__']?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+const getOpportunityUrl = () => `${getApiBaseUrl()}/opportunities`;
 
 // Helper to map API response (snake_case) to Frontend Model (camelCase)
 const mapToDeal = (data: any): Deal => ({
@@ -97,7 +97,7 @@ export const OpportunityService = {
         if (params.$count) searchParams.append('$count', 'true');
 
         try {
-            const response = await fetch(`${API_URL}?${searchParams.toString()}`);
+            const response = await fetch(`${getOpportunityUrl()}?${searchParams.toString()}`);
             if (!response.ok) throw new Error('Failed to fetch opportunities');
 
             // Handle both array and ODATA wrapper response
@@ -150,7 +150,7 @@ export const OpportunityService = {
 
     getById: async (id: string): Promise<Deal | undefined> => {
         try {
-            const response = await fetch(`${API_URL}/${id}`);
+            const response = await fetch(`${getOpportunityUrl()}/${id}`);
             if (!response.ok) throw new Error('Failed to fetch deal');
             const data = await response.json();
             return mapToDeal(data);
@@ -168,7 +168,7 @@ export const OpportunityService = {
 
     getContacts: async (id: string): Promise<Contact[]> => {
         try {
-            const response = await fetch(`${API_URL}/${id}/contacts`);
+            const response = await fetch(`${getOpportunityUrl()}/${id}/contacts`);
             if (!response.ok) throw new Error('Fetch contacts failed');
             const data = await response.json();
             return data.map(mapToContact);
@@ -183,7 +183,7 @@ export const OpportunityService = {
 
     getNotes: async (id: string): Promise<OpportunityNote[]> => {
         try {
-            const response = await fetch(`${API_URL}/${id}/notes`);
+            const response = await fetch(`${getOpportunityUrl()}/${id}/notes`);
             if (!response.ok) throw new Error('Fetch notes failed');
             const data = await response.json();
             return data.map(mapToNote);
@@ -198,7 +198,7 @@ export const OpportunityService = {
     create: async (dealData: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'aging' | 'velocity' | 'healthScore'>): Promise<Deal> => {
         const payload = mapToPayload(dealData);
 
-        const response = await fetch(API_URL, {
+        const response = await fetch(getOpportunityUrl(), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -212,7 +212,7 @@ export const OpportunityService = {
     update: async (id: string, updates: Partial<Deal>): Promise<Deal> => {
         const payload = mapToPayload(updates);
 
-        const response = await fetch(`${API_URL}/${id}`, {
+        const response = await fetch(`${getOpportunityUrl()}/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -224,7 +224,7 @@ export const OpportunityService = {
     },
 
     delete: async (id: string): Promise<void> => {
-        const response = await fetch(`${API_URL}/${id}`, {
+        const response = await fetch(`${getOpportunityUrl()}/${id}`, {
             method: 'DELETE'
         });
 

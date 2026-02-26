@@ -24,15 +24,15 @@ export class SqliteAdapter implements IDbAdapter {
         console.log('[DB:SQLite] Schema applied.');
     }
 
-    query<T = any>(sql: string, params: any[] = []): T[] {
+    query<T = any>(sql: string, params: any[] | Record<string, any> = []): T[] {
         return this.db.prepare(sql).all(params) as T[];
     }
 
-    queryOne<T = any>(sql: string, params: any[] = []): T | undefined {
+    queryOne<T = any>(sql: string, params: any[] | Record<string, any> = []): T | undefined {
         return this.db.prepare(sql).get(params) as T | undefined;
     }
 
-    execute(sql: string, params: any[] = []): IDbResult {
+    execute(sql: string, params: any[] | Record<string, any> = []): IDbResult {
         const result = this.db.prepare(sql).run(params);
         return {
             changes: result.changes,

@@ -5,7 +5,11 @@ import { useData } from '../../context/DataContext';
 
 export function Header() {
     const { users } = useData();
-    const currentUser = users.find(u => u.role === 'executive') || users[0];
+    const currentUser = users.find(u => u.role === 'executive') || users[0] || {
+        name: 'Guest User',
+        avatar: 'https://i.pravatar.cc/150?u=guest',
+        role: 'sales_rep'
+    };
 
     return (
         <header className="h-16 border-b border-transparent bg-white/50 dark:bg-slate-700/50 backdrop-blur-sm sticky top-0 z-10 px-8 flex items-center justify-between">
@@ -27,12 +31,12 @@ export function Header() {
                 <div className="h-8 w-[1px] bg-slate-200 dark:bg-slate-800" />
                 <div className="flex items-center gap-3">
                     <div className="text-right hidden md:block">
-                        <div className="text-sm font-medium text-slate-900 dark:text-slate-100">{currentUser.name}</div>
+                        <div className="text-sm font-medium text-slate-900 dark:text-slate-100">{currentUser?.name}</div>
                         <div className="text-xs text-slate-500">Sales Leader</div>
                     </div>
                     <img
-                        src={currentUser.avatar}
-                        alt={currentUser.name}
+                        src={currentUser?.avatar}
+                        alt={currentUser?.name}
                         className="w-9 h-9 rounded-full ring-2 ring-white dark:ring-slate-800"
                     />
                 </div>

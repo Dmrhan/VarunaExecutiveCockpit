@@ -2,7 +2,6 @@
 DELETE FROM SystemEnums;
 GO
 
-
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EFileType_1', 'EFileType', 1, 'ExplodedPicture', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EFileType_2', 'EFileType', 2, 'ServiceManual', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EFileType_3', 'EFileType', 3, 'Instruction', NULL);
@@ -171,7 +170,6 @@ INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES 
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('ECompanyAge_10', 'ECompanyAge', 10, 'Ten', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('ECurrencyRateFrequencyType_1', 'ECurrencyRateFrequencyType', 1, 'Day', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('ECurrencyRateFrequencyType_2', 'ECurrencyRateFrequencyType', 2, 'Week', NULL);
-INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('ECurrencyRateFrequencyType_2', 'ECurrencyRateFrequencyType', 2, 'Month', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('ECurrencyRateType_1', 'ECurrencyRateType', 1, 'ForeksBuying', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('ECurrencyRateType_2', 'ECurrencyRateType', 2, 'ForeksSelling', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('ECurrencyRateType_3', 'ECurrencyRateType', 3, 'BanknoteBuying', NULL);
@@ -567,8 +565,6 @@ INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES 
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('ESpecialFieldDefinition_1', 'ESpecialFieldDefinition', 1, 'NegativeClosed', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('ESpecialFieldDefinition_2', 'ESpecialFieldDefinition', 2, 'DemoUnavailable', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('ESpecialFieldDefinition_3', 'ESpecialFieldDefinition', 3, 'WorkingWithRival', NULL);
-INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EState_1', 'EState', 1, 'Active', NULL);
-INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EState_2', 'EState', 2, 'Passive', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('ESurveyAccountType_1', 'ESurveyAccountType', 1, 'EnterpriseAccount', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('ESurveyAccountType_2', 'ESurveyAccountType', 2, 'Contact', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('ESurveyAccountType_3', 'ESurveyAccountType', 3, 'All', NULL);
@@ -951,13 +947,6 @@ INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES 
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EFromWhere_2', 'EFromWhere', 2, 'TransferAll', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('ELineDiscountType_1', 'ELineDiscountType', 1, 'DiscountRate', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('ELineDiscountType_2', 'ELineDiscountType', 2, 'DiscountAmount', NULL);
-INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EMonthlyTurnoverLevel_1', 'EMonthlyTurnoverLevel', 1, 'None', NULL);
-INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EMonthlyTurnoverLevel_2', 'EMonthlyTurnoverLevel', 2, 'UpTo100K', NULL);
-INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EMonthlyTurnoverLevel_3', 'EMonthlyTurnoverLevel', 3, 'From100KTo250K', NULL);
-INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EMonthlyTurnoverLevel_4', 'EMonthlyTurnoverLevel', 4, 'From250KTo500K', NULL);
-INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EMonthlyTurnoverLevel_5', 'EMonthlyTurnoverLevel', 5, 'From500KTo1M', NULL);
-INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EMonthlyTurnoverLevel_6', 'EMonthlyTurnoverLevel', 6, 'From1MTo5M', NULL);
-INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EMonthlyTurnoverLevel_7', 'EMonthlyTurnoverLevel', 7, 'Over5M', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EMustHaveCustomerSegment_0', 'EMustHaveCustomerSegment', 0, 'MicroSegment', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EMustHaveCustomerSegment_1', 'EMustHaveCustomerSegment', 1, 'SMEsSegment', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EMustHaveCustomerSegment_2', 'EMustHaveCustomerSegment', 2, 'ObiSegment', NULL);
@@ -976,9 +965,6 @@ INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES 
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EOtherRelatedFieldCrm_4', 'EOtherRelatedFieldCrm', 4, 'Partner', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EPFApplicationType_0', 'EPFApplicationType', 0, 'ParamPF', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EPFApplicationType_1', 'EPFApplicationType', 1, 'Other', NULL);
-INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EPartnerCandidateType_0', 'EPartnerCandidateType', 0, 'SalesPartner', NULL);
-INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EPartnerCandidateType_1', 'EPartnerCandidateType', 1, 'SolutionPartner', NULL);
-INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EPartnerCandidateType_2', 'EPartnerCandidateType', 2, 'Integrator', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EPaymentType_1', 'EPaymentType', 1, 'Cash', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EPaymentType_2', 'EPaymentType', 2, 'CreditCard', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EPaymentType_3', 'EPaymentType', 3, 'Check', NULL);
@@ -1142,9 +1128,6 @@ INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES 
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EStageType_1', 'EStageType', 1, 'Open', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EStageType_2', 'EStageType', 2, 'ClosedWon', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EStageType_3', 'EStageType', 3, 'ClosedLost', NULL);
-INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EStatus_1', 'EStatus', 1, 'Active', NULL);
-INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EStatus_2', 'EStatus', 2, 'Passive', NULL);
-INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EStatus_3', 'EStatus', 3, 'Blocked', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EStatus_4', 'EStatus', 4, 'Suspended', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EStatusType_0', 'EStatusType', 0, 'Active', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EStatusType_1', 'EStatusType', 1, 'Passive', NULL);

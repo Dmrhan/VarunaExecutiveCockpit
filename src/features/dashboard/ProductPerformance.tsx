@@ -478,9 +478,9 @@ export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps
                                                         <td className="bg-white dark:bg-white/5 p-4 border-y border-slate-200 dark:border-white/10 shadow-sm">
                                                             <div className="flex items-center gap-2">
                                                                 <div className="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center text-[10px] font-bold text-indigo-500">
-                                                                    {owner?.name.charAt(0)}
+                                                                    {(deal.ownerName || owner?.name || '?').charAt(0)}
                                                                 </div>
-                                                                <span className="text-xs md:text-sm text-slate-600 dark:text-slate-300">{owner?.name || deal.ownerId}</span>
+                                                                <span className="text-xs md:text-sm text-slate-600 dark:text-slate-300">{deal.ownerName || owner?.name || deal.ownerId}</span>
                                                             </div>
                                                         </td>
                                                         <td className="bg-white dark:bg-white/5 p-4 border-y border-slate-200 dark:border-white/10 shadow-sm">

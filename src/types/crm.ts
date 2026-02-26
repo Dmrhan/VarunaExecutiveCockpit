@@ -41,6 +41,7 @@ export type Deal = {
     stage: DealStage;
     probability: number;
     ownerId: string;
+    ownerName?: string;
     source: DealSource;
     topic: string;
     createdAt: string;

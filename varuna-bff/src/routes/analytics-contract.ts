@@ -133,4 +133,171 @@ router.get('/', (_req: Request, res: Response) => {
     }
 });
 
+// ============================================================================
+// Enhanced Dashboard Analytics for GM Cockpit
+// ============================================================================
+router.post('/dashboard', (req: Request, res: Response) => {
+    try {
+        const db = getDb();
+        const {
+            asOfDate = new Date().toISOString().split('T')[0],
+            companyId,
+            salesRepId,
+            accountId,
+            statuses // array of numbers
+        } = req.body;
+
+        // Base filter parts
+        const filters: string[] = ["c.StartDate <= ?"];
+        const params: any[] = [asOfDate];
+
+        if (companyId) {
+            filters.push("c.CompanyId = ?");
+            params.push(companyId);
+        }
+        if (salesRepId) {
+            filters.push("c.SalesRepresentativeId = ?");
+            params.push(salesRepId);
+        }
+        if (accountId) {
+            filters.push("c.AccountId = ?");
+            params.push(accountId);
+        }
+        if (statuses && Array.isArray(statuses) && statuses.length > 0) {
+            filters.push(`c.ContractStatus IN (${statuses.map(() => '?').join(',')})`);
+            params.push(...statuses);
+        }
+
+        const whereClause = filters.length > 0 ? "WHERE " + filters.join(" AND ") : "";
+
+        // Status mapping as requested
+        const statusCase = `
+            CASE c.ContractStatus
+                WHEN 0 THEN 'Hazırlık Aşamasında'
+                WHEN 1 THEN 'Satışta - Bilgi Bekliyor'
+                WHEN 2 THEN 'Fiyat Müzakerede'
+                WHEN 3 THEN 'Metin Müzakerede'
+                WHEN 4 THEN 'Univera İmzasında'
+                WHEN 5 THEN 'Müşteri İmzasında'
+                WHEN 6 THEN 'Süresi Dolmadı'
+                WHEN 7 THEN 'Bakıma Devir Olmadı'
+                WHEN 8 THEN 'Arşivlendi'
+                WHEN 9 THEN 'Fesih / İptal'
+                WHEN 10 THEN 'Yenilendi / Süresi Doldu'
+                ELSE 'Bilinmiyor'
+            END
+        `;
+
+        // 1. KPI Cards (Current AsOfDate)
+        const kpisQuery = `
+            SELECT
+                COUNT(*) as totalCount,
+                COALESCE(SUM(TotalAmountLocalCurrency_Amount), 0) as totalAmount,
+                SUM(CASE WHEN c.StartDate <= ? AND c.FinishDate >= ? THEN 1 ELSE 0 END) as activeCount,
+                COALESCE(SUM(CASE WHEN c.StartDate <= ? AND c.FinishDate >= ? THEN TotalAmountLocalCurrency_Amount ELSE 0 END), 0) as activeAmount,
+                SUM(CASE WHEN c.ContractStatus IN (1,2,3,4,5) THEN 1 ELSE 0 END) as riskCount,
+                COALESCE(SUM(CASE WHEN c.ContractStatus IN (1,2,3,4,5) THEN TotalAmountLocalCurrency_Amount ELSE 0 END), 0) as riskAmount,
+                SUM(CASE WHEN c.ContractStatus IN (8,9) THEN 1 ELSE 0 END) as archiveCount,
+                COALESCE(SUM(CASE WHEN c.ContractStatus IN (8,9) THEN TotalAmountLocalCurrency_Amount ELSE 0 END), 0) as archiveAmount,
+                SUM(CASE WHEN c.ContractStatus = 10 THEN 1 ELSE 0 END) as expiredCount,
+                COALESCE(SUM(CASE WHEN c.ContractStatus = 10 THEN TotalAmountLocalCurrency_Amount ELSE 0 END), 0) as expiredAmount
+            FROM Contract c
+            ${whereClause}
+        `;
+        const kpis = db.prepare(kpisQuery).get(asOfDate, asOfDate, asOfDate, asOfDate, ...params);
+
+        // 2. Delta KPI Cards (D-1)
+        const yesterday = new Date(new Date(asOfDate).getTime() - 86400000).toISOString().split('T')[0];
+        const deltaParams = [yesterday, yesterday, yesterday, yesterday, yesterday, ...params.slice(1)];
+        const deltaKpis = db.prepare(kpisQuery).get(...deltaParams);
+
+        // 3. Status Breakdown
+        const statusBreakdown = db.prepare(`
+            SELECT
+                ${statusCase} as statusLabel,
+                c.ContractStatus as statusCode,
+                COUNT(*) as count,
+                COALESCE(SUM(c.TotalAmountLocalCurrency_Amount), 0) as amount
+            FROM Contract c
+            ${whereClause}
+            GROUP BY c.ContractStatus
+            ORDER BY amount DESC
+        `).all(...params);
+
+        // 4. Müşteri Breakdown (Top 10)
+        const accountBreakdown = db.prepare(`
+            SELECT
+                COALESCE(a.Name, c.AccountId) as accountName,
+                c.AccountId as accountId,
+                COUNT(c.Id) as count,
+                COALESCE(SUM(c.TotalAmountLocalCurrency_Amount), 0) as amount,
+                COALESCE(AVG(c.TotalAmountLocalCurrency_Amount), 0) as avgAmount,
+                SUM(CASE WHEN c.StartDate <= ? AND c.FinishDate >= ? THEN 1 ELSE 0 END) as activeCount,
+                COALESCE(SUM(CASE WHEN c.StartDate <= ? AND c.FinishDate >= ? THEN TotalAmountLocalCurrency_Amount ELSE 0 END), 0) as activeAmount
+            FROM Contract c
+            LEFT JOIN Account a ON c.AccountId = a.Id
+            ${whereClause}
+            GROUP BY c.AccountId, a.Name
+            ORDER BY amount DESC
+            LIMIT 10
+        `).all(asOfDate, asOfDate, asOfDate, asOfDate, ...params);
+
+        // 5. Satıcı Breakdown
+        const repBreakdown = db.prepare(`
+            SELECT
+                COALESCE(p.PersonNameSurname, p.Name || ' ' || p.SurName, c.SalesRepresentativeId) as repName,
+                c.SalesRepresentativeId as repId,
+                COUNT(c.Id) as count,
+                COALESCE(SUM(c.TotalAmountLocalCurrency_Amount), 0) as amount,
+                SUM(CASE WHEN c.StartDate <= ? AND c.FinishDate >= ? THEN 1 ELSE 0 END) as activeCount,
+                COALESCE(SUM(CASE WHEN c.StartDate <= ? AND c.FinishDate >= ? THEN TotalAmountLocalCurrency_Amount ELSE 0 END), 0) as activeAmount,
+                SUM(CASE WHEN c.ContractStatus IN (1,2,3,4,5) THEN 1 ELSE 0 END) as riskCount,
+                COALESCE(SUM(CASE WHEN c.ContractStatus IN (1,2,3,4,5) THEN TotalAmountLocalCurrency_Amount ELSE 0 END), 0) as riskAmount
+            FROM Contract c
+            LEFT JOIN Person p ON c.SalesRepresentativeId = p.Id
+            ${whereClause}
+            GROUP BY c.SalesRepresentativeId, p.PersonNameSurname, p.Name, p.SurName
+            ORDER BY amount DESC
+        `).all(asOfDate, asOfDate, asOfDate, asOfDate, ...params);
+
+        // 6. Trend Data (Monthly for last 12 months from asOfDate)
+        const trendData = [];
+        for (let i = 11; i >= 0; i--) {
+            const date = new Date(asOfDate);
+            date.setMonth(date.getMonth() - i);
+            const monthLabel = date.toLocaleString('default', { month: 'short' });
+            const year = date.getFullYear();
+            const startOfMonth = new Date(year, date.getMonth(), 1).toISOString().split('T')[0];
+            const endOfMonth = new Date(year, date.getMonth() + 1, 0).toISOString().split('T')[0];
+
+            const monthlyKpis = db.prepare(`
+                SELECT
+                    COUNT(*) as count,
+                    COALESCE(SUM(TotalAmountLocalCurrency_Amount), 0) as amount
+                FROM Contract c
+                ${whereClause} AND c.StartDate <= ?
+            `).get(endOfMonth, ...params);
+
+            trendData.push({
+                name: `${monthLabel} ${year}`,
+                count: (monthlyKpis as any).count,
+                amount: (monthlyKpis as any).amount
+            });
+        }
+
+        res.json({
+            kpis,
+            deltaKpis,
+            statusBreakdown,
+            accountBreakdown,
+            repBreakdown,
+            trendData
+        });
+
+    } catch (e: any) {
+        console.error("Dashboard error:", e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 export default router;

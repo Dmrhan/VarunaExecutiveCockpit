@@ -60,7 +60,7 @@ export const RenewalRiskAnalysis = () => {
     const totalRiskValue = riskDistribution.reduce((acc, curr) => acc + curr.value, 0);
 
     return (
-        <Card className="xl:col-span-2 bg-white/40 dark:bg-slate-700/40 backdrop-blur-md border border-slate-200 dark:border-white/10 shadow-sm h-[380px] flex flex-col">
+        <Card className="bg-white/40 dark:bg-slate-700/40 backdrop-blur-md border border-slate-200 dark:border-white/10 shadow-sm h-full flex flex-col">
             <CardHeader className="py-3 border-b border-slate-100 dark:border-white/5 bg-white/30 dark:bg-white/5 flex flex-row items-center gap-3 shrink-0">
                 <div className="p-2 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">
                     <ShieldAlert size={18} />

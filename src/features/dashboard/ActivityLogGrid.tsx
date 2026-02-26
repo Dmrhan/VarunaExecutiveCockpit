@@ -211,13 +211,11 @@ export function ActivityLogGrid({ activities }: ActivityLogGridProps) {
                                         </td>
                                         <td className="p-3">
                                             <div className="flex items-center gap-2">
-                                                <img
-                                                    src={user?.avatar}
-                                                    className="w-6 h-6 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm"
-                                                    alt={user?.name}
-                                                />
-                                                <span className="text-slate-700 dark:text-slate-200 font-medium truncate max-w-[100px]" title={user?.name}>
-                                                    {user?.name}
+                                                <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[9px] font-bold text-slate-600">
+                                                    {(deal?.ownerName || user?.name || '?').charAt(0)}
+                                                </div>
+                                                <span className="text-slate-700 dark:text-slate-200 font-medium truncate max-w-[100px]" title={deal?.ownerName || user?.name || activity.userId}>
+                                                    {deal?.ownerName || user?.name || activity.userId}
                                                 </span>
                                             </div>
                                         </td>

@@ -6,7 +6,7 @@ import type { Contract, ContractStatus } from '../../types/crm';
 import {
     FileText, AlertTriangle, CheckCircle, Clock, ShieldAlert,
     DollarSign, Filter, Search, MoreHorizontal, ChevronLeft, ChevronRight,
-    ChevronsLeft, ChevronsRight
+    ChevronsLeft, ChevronsRight, BarChart as BarChartIcon
 } from 'lucide-react';
 import {
     BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -20,6 +20,7 @@ import { ContractDetailView } from '../../components/contracts/ContractDetailVie
 import { RenewalRiskAnalysis } from '../../components/contracts/RenewalRiskAnalysis'; // New component
 import { LayoutDashboard, List, Users } from 'lucide-react';
 
+import { ContractService } from '../../services/ListingServices';
 import { ContractOwnershipPanel } from '../../components/contracts/ContractOwnershipPanel';
 import { ContractStatusDistribution } from '../../components/contracts/ContractStatusDistribution';
 import { ProductContractHealth } from '../../components/contracts/ProductContractHealth';
@@ -28,7 +29,34 @@ import { RenewalCalendar } from '../../components/contracts/RenewalCalendar';
 // Internal component for the overview stats and charts
 const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string) => void }) => {
     const { t } = useTranslation();
-    const { contracts } = useData();
+    const { contracts } = useData(); // Keep for list filtering
+    const [filters, setFilters] = useState({
+        asOfDate: new Date().toISOString().split('T')[0],
+        salesRepId: '',
+        accountId: '',
+        status: 'All'
+    });
+    const [dashboardData, setDashboardData] = useState<any>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [trendMetric, setTrendMetric] = useState<'amount' | 'count'>('amount');
+
+    const fetchDashboard = async () => {
+        setIsLoading(true);
+        const data = await ContractService.getDashboardAnalytics({
+            asOfDate: filters.asOfDate,
+            salesRepId: filters.salesRepId || undefined,
+            accountId: filters.accountId || undefined,
+            statuses: filters.status !== 'All' ? [parseInt(filters.status)] : undefined
+        });
+        if (data) setDashboardData(data);
+        setIsLoading(false);
+    };
+
+    React.useEffect(() => {
+        fetchDashboard();
+    }, [filters.asOfDate, filters.salesRepId, filters.accountId, filters.status]); // Depend on individual filter values
+
+    // --- Filtered List (for the table at the bottom) ---
     const [statusFilter, setStatusFilter] = useState<ContractStatus | 'All'>('All');
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
@@ -39,50 +67,6 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
         setCurrentPage(1);
     }, [statusFilter, searchTerm]);
 
-    // --- KPIs ---
-    const kpis = useMemo(() => {
-        const activeContracts = contracts.filter((c: Contract) => c.status === 'Active');
-        const renewalRisk = activeContracts.filter((c: Contract) => c.daysToRenewal <= 90);
-        const totalValue = activeContracts.reduce((sum: number, c: Contract) => sum + c.totalValueTL, 0);
-        const autoRenew = activeContracts.filter((c: Contract) => c.autoRenewal).length;
-
-        return {
-            activeCount: activeContracts.length,
-            renewalRiskCount: renewalRisk.length,
-            totalValue,
-            autoRenewCount: autoRenew,
-            renewalValue: renewalRisk.reduce((sum: number, c: Contract) => sum + c.totalValueTL, 0)
-        };
-    }, [contracts]);
-
-    // --- Chart Data ---
-
-
-    // 2. Revenue Projection (Quarterly)
-    const revenueData = useMemo(() => {
-        // Mocking quarterly distribution based on active contracts
-        const quarters = ['Q1 2024', 'Q2 2024', 'Q3 2024', 'Q4 2024'];
-        return quarters.map(q => ({
-            name: q,
-            revenue: Math.floor(kpis.totalValue / 4 * (0.8 + Math.random() * 0.4)),
-            billing: Math.floor(kpis.totalValue / 4 * (0.7 + Math.random() * 0.3))
-        }));
-    }, [kpis.totalValue]);
-
-    // 3. Portfolio by Owner
-    const ownerData = useMemo(() => {
-        const map: Record<string, number> = {};
-        contracts.forEach((c: Contract) => {
-            const owner = 'Rep ' + c.salesOwnerId.replace('u', '');
-            map[owner] = (map[owner] || 0) + 1;
-        });
-        return Object.entries(map)
-            .map(([name, value]) => ({ name, value }))
-            .sort((a, b) => b.value - a.value)
-            .slice(0, 5);
-    }, [contracts]);
-
-    // --- Filtered List ---
     const filteredContracts = useMemo(() => {
         return contracts.filter((c: Contract) => {
             const matchesStatus = statusFilter === 'All' || c.status === statusFilter;
@@ -93,86 +77,376 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
     }, [contracts, statusFilter, searchTerm]);
 
 
+    if (isLoading && !dashboardData) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+            </div>
+        );
+    }
+
+    const { kpis, deltaKpis, statusBreakdown, accountBreakdown, repBreakdown, trendData } = dashboardData || {};
+
+    const getDelta = (current: number, previous: number) => {
+        if (!previous || previous === 0) return 0; // Avoid division by zero
+        return ((current - previous) / previous) * 100;
+    };
+
+    // Helper component for KPI cards with delta
+    const StatCard = ({ label, value, delta, colorClass, subtext }: { label: string; value: string; delta: number; colorClass: string; subtext: string; }) => (
+        <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+            <CardContent className="p-4">
+                <div className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">{label}</div>
+                <div className="flex items-baseline gap-2">
+                    <div className={cn("text-2xl font-bold", colorClass)}>{value}</div>
+                    {delta !== 0 && (
+                        <span className={cn("text-[10px] font-bold", delta > 0 ? "text-emerald-500" : "text-red-500")}>
+                            {delta > 0 ? '▲' : '▼'} {Math.abs(delta).toFixed(1)}%
+                        </span>
+                    )}
+                </div>
+                <div className="text-xs text-slate-400 dark:text-slate-500 mt-1">{subtext}</div>
+            </CardContent>
+        </Card>
+    );
+
+    // Helper for status badge (re-used from original code)
+    const StatusBadge = ({ status }: { status: ContractStatus }) => {
+        const statusColors = {
+            'Active': 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
+            'Negotiation': 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+            'Draft': 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300',
+            'Expired': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+            'Archived': 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+            'Terminated': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+            'Renewed': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+        };
+        return (
+            <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium", statusColors[status])}>
+                {t(`status.${status}`)}
+            </span>
+        );
+    };
+
+    // Helper for risk badge (re-used from original code)
+    const RiskBadge = ({ level }: { level: 'Low' | 'Medium' | 'High' }) => {
+        const riskColors = {
+            'Low': 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
+            'Medium': 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+            'High': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+        };
+        const riskIcons = {
+            'Low': <CheckCircle size={12} />,
+            'Medium': <AlertTriangle size={12} />,
+            'High': <ShieldAlert size={12} />,
+        };
+        return (
+            <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium", riskColors[level])}>
+                {riskIcons[level]} {level}
+            </span>
+        );
+    };
+
+    // Helper for product badge (re-used from original code)
+    const getProductBadgeColor = (productGroup: string) => {
+        switch (productGroup) {
+            case 'ERP': return 'border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-900/30 dark:text-blue-300';
+            case 'CRM': return 'border-green-300 bg-green-50 text-green-700 dark:border-green-700 dark:bg-green-900/30 dark:text-green-300';
+            case 'BI': return 'border-purple-300 bg-purple-50 text-purple-700 dark:border-purple-700 dark:bg-purple-900/30 dark:text-purple-300';
+            default: return 'border-slate-300 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-900/30 dark:text-slate-300';
+        }
+    };
+
+
     return (
-        <div className="space-y-8 animate-in fade-in duration-700">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-light tracking-tight text-slate-900 dark:text-white">
-                        {t('contracts.title')}
-                    </h1>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-                        {t('contracts.subtitle')}
-                    </p>
-                </div>
-            </div>
-
-            {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <StatCard
-                    label={t('contracts.kpis.activeContracts')}
-                    value={kpis.activeCount.toString()}
-                    colorClass="text-slate-900 dark:text-white"
-                    subtext={t('contracts.kpis.sub.autoRenew', { count: kpis.activeCount > 0 ? kpis.autoRenewCount : 0 })}
-                />
-                <StatCard
-                    label={t('contracts.kpis.totalValue')}
-                    value={formatCurrency(kpis.totalValue)}
-                    colorClass="text-slate-900 dark:text-white"
-                    subtext={t('contracts.kpis.sub.annualized')}
-                />
-                <StatCard
-                    label={t('contracts.kpis.renewalRisk')}
-                    value={kpis.renewalRiskCount.toString()}
-                    colorClass={kpis.renewalRiskCount > 0 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"}
-                    subtext={t('contracts.kpis.sub.atRisk', { value: formatCurrency(kpis.renewalValue) })}
-                />
-                <StatCard
-                    label={t('contracts.kpis.executionHealth')}
-                    value="94%"
-                    colorClass="text-emerald-600 dark:text-emerald-400"
-                    subtext={t('contracts.kpis.sub.onTrack')}
-                />
-            </div>
-
-            {/* Main Visualizations: Radar & Revenue (Control Tower Layout) */}
-            {/* Main Visualizations: Radar & Revenue (Control Tower Layout) */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-
-                {/* --- Row 1: Executive Overview --- */}
-
-                {/* Renewal Radar (2/3 width) */}
-                {/* Renewal Risk Analysis (Replaces Radar) */}
-                <RenewalRiskAnalysis />
-
-                {/* Revenue Projection (1/3 width) */}
-                {/* Status Distribution (1/3 width) - Replaces Revenue Projection for better state visibility */}
-                <ContractStatusDistribution />
-
-                {/* --- Row 2: Planning (Full Width) --- */}
-                <div className="xl:col-span-3">
-                    <div className="mb-4 flex items-center gap-2">
-                        <Clock size={16} className="text-slate-400" />
-                        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">{t('contracts.section.planning')}</h3>
+        <div className="space-y-6 animate-in fade-in duration-700">
+            {/* Header & Filter Bar */}
+            <div className="flex flex-col gap-4">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-light tracking-tight text-slate-900 dark:text-white">
+                            {t('contracts.title', { defaultValue: 'Gelir Güvencesi & Sözleşmeler' })}
+                        </h1>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+                            {t('contracts.subtitle', { defaultValue: 'Sözleşme portföyü, risk analizi ve gelir projeksiyonları.' })}
+                        </p>
                     </div>
-                    <RenewalCalendar />
                 </div>
 
-                {/* --- Row 3: Ownership & Deep Dives --- */}
+                {/* Filters */}
+                <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-slate-200 dark:border-slate-700 shadow-sm">
+                    <CardContent className="p-4 flex flex-wrap items-center gap-4">
+                        <div className="flex flex-col gap-1">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase">Durum Tarihi</label>
+                            <input
+                                type="date"
+                                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500 outline-none"
+                                value={filters.asOfDate}
+                                onChange={(e) => setFilters({ ...filters, asOfDate: e.target.value })}
+                            />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase">Satış Temsilcisi</label>
+                            <select
+                                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500 outline-none min-w-[150px]"
+                                value={filters.salesRepId}
+                                onChange={(e) => setFilters({ ...filters, salesRepId: e.target.value })}
+                            >
+                                <option value="">Tümü</option>
+                                {/* We would ideally fetch these from a user list, but for now we'll use active selection */}
+                                {repBreakdown?.map((rep: any) => (
+                                    <option key={rep.repId} value={rep.repId}>{rep.repName}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase">Müşteri</label>
+                            <select
+                                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500 outline-none min-w-[150px]"
+                                value={filters.accountId}
+                                onChange={(e) => setFilters({ ...filters, accountId: e.target.value })}
+                            >
+                                <option value="">Tümü</option>
+                                {accountBreakdown?.map((acc: any) => (
+                                    <option key={acc.accountId} value={acc.accountId}>{acc.accountName}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase">Sözleşme Durumu</label>
+                            <select
+                                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500 outline-none min-w-[150px]"
+                                value={filters.status}
+                                onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                            >
+                                <option value="All">Tümü</option>
+                                <option value="0">Hazırlık Aşamasında</option>
+                                <option value="1">Satışta - Bilgi Bekliyor</option>
+                                <option value="2">Fiyat Müzakerede</option>
+                                <option value="3">Metin Müzakerede</option>
+                                <option value="4">Univera İmzasında</option>
+                                <option value="5">Müşteri İmzasında</option>
+                                <option value="6">Süresi Dolmadı</option>
+                                <option value="7">Bakıma Devir Olmadı</option>
+                                <option value="8">Arşivlendi</option>
+                                <option value="9">Fesih / İptal</option>
+                                <option value="10">Yenilendi / Süresi Doldu</option>
+                            </select>
+                        </div>
+                        <button
+                            onClick={fetchDashboard}
+                            className="mt-auto p-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
+                        >
+                            <Search size={16} />
+                        </button>
+                    </CardContent>
+                </Card>
+            </div>
 
-                {/* Product Health (2/3 width) */}
-                <div className="xl:col-span-2">
+            {/* KPI Cards - Grid 3x2 for GM balance */}
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+                <StatCard
+                    label="Toplam Sözleşme"
+                    value={kpis?.totalCount?.toString() || '0'}
+                    delta={getDelta(kpis?.totalCount, deltaKpis?.totalCount)}
+                    colorClass="text-slate-900 dark:text-white"
+                    subtext={formatCurrency(kpis?.totalAmount || 0)}
+                />
+                <StatCard
+                    label="Aktif Portföy"
+                    value={kpis?.activeCount?.toString() || '0'}
+                    delta={getDelta(kpis?.activeCount, deltaKpis?.activeCount)}
+                    colorClass="text-emerald-600 dark:text-emerald-400"
+                    subtext={formatCurrency(kpis?.activeAmount || 0)}
+                />
+                <StatCard
+                    label="Riskli / Müzakere"
+                    value={kpis?.riskCount?.toString() || '0'}
+                    delta={getDelta(kpis?.riskCount, deltaKpis?.riskCount)}
+                    colorClass="text-amber-600 dark:text-amber-400"
+                    subtext={formatCurrency(kpis?.riskAmount || 0)}
+                />
+                <StatCard
+                    label="Arşivlendi / İptal"
+                    value={kpis?.archiveCount?.toString() || '0'}
+                    delta={getDelta(kpis?.archiveCount, deltaKpis?.archiveCount)}
+                    colorClass="text-slate-500"
+                    subtext={formatCurrency(kpis?.archiveAmount || 0)}
+                />
+                <StatCard
+                    label="Süresi Dolan"
+                    value={kpis?.expiredCount?.toString() || '0'}
+                    delta={getDelta(kpis?.expiredCount, deltaKpis?.expiredCount)}
+                    colorClass="text-red-500"
+                    subtext={formatCurrency(kpis?.expiredAmount || 0)}
+                />
+                <StatCard
+                    label="Toplam Bedel (TL)"
+                    value={formatCurrency(kpis?.totalAmount || 0)}
+                    delta={0}
+                    colorClass="text-indigo-600 dark:text-indigo-400"
+                    subtext="Tüm sözleşmeler"
+                />
+            </div>
+
+            {/* Breakdown Sections (3rd Row Idea - Tabs or Side-by-Side) */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* 1. Status Breakdown */}
+                <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 h-full flex flex-col">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                            <BarChartIcon size={14} /> Durum Dağılımı
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                            {statusBreakdown?.map((item: any) => (
+                                <div key={item.statusLabel} className="px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
+                                    <div className="flex flex-col">
+                                        <span className="text-xs font-medium text-slate-700 dark:text-slate-200">{item.statusLabel}</span>
+                                        <span className="text-[10px] text-slate-400">{item.count} Adet</span>
+                                    </div>
+                                    <span className="text-xs font-mono font-bold text-slate-600 dark:text-slate-400">
+                                        {formatCurrency(item.amount)}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* 2. Customer Breakdown */}
+                <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 h-full flex flex-col">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                            <Users size={14} /> En Büyük 10 Müşteri
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                            {accountBreakdown?.map((item: any) => (
+                                <div key={item.accountId} className="px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
+                                    <div className="flex flex-col">
+                                        <span className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate max-w-[150px]">{item.accountName}</span>
+                                        <span className="text-[10px] text-slate-400">{item.count} Sözleşme / {item.activeCount} Aktif</span>
+                                    </div>
+                                    <span className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                                        {formatCurrency(item.amount)}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* 3. Sales Rep Breakdown */}
+                <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 h-full flex flex-col">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                            <Search size={14} /> Satış Temsilcisi Performansı
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                            {repBreakdown?.map((item: any) => (
+                                <div key={item.repId} className="px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
+                                    <div className="flex flex-col">
+                                        <span className="text-xs font-medium text-slate-700 dark:text-slate-200">{item.repName}</span>
+                                        <span className="text-[10px] text-slate-400">{item.count} Portföy / {item.riskCount} Risk</span>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-xs font-mono font-bold text-slate-600 dark:text-slate-400">
+                                            {formatCurrency(item.amount)}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Insights Row 1 - Product & Ownership Side-by-Side */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 pt-4 items-stretch min-h-[440px]">
+                <div className="flex flex-col h-full">
                     <ProductContractHealth />
                 </div>
-
-                {/* Ownership (1/3 width) */}
-                <div className="xl:col-span-1">
+                <div className="flex flex-col h-full">
                     <ContractOwnershipPanel />
                 </div>
-
             </div>
 
-            {/* Intelligent Contract List (Updated Columns) */}
+            {/* Insights Row 2 - Charts & Distributions */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 pt-4 items-stretch min-h-[380px]">
+                <div className="xl:col-span-2">
+                    <Card className="bg-white/40 dark:bg-slate-700/40 backdrop-blur-md border border-slate-200 dark:border-white/10 shadow-sm h-full flex flex-col">
+                        <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-white/5 bg-white/5">
+                            <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                                Sözleşme Trendi (Son 12 Ay)
+                            </CardTitle>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setTrendMetric('amount')}
+                                    className={`px-2 py-1 rounded text-[10px] font-bold transition-colors ${trendMetric === 'amount' ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' : 'text-slate-400 hover:text-slate-600'}`}
+                                >
+                                    TUTAR
+                                </button>
+                                <button
+                                    onClick={() => setTrendMetric('count')}
+                                    className={`px-2 py-1 rounded text-[10px] font-bold transition-colors ${trendMetric === 'count' ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' : 'text-slate-400 hover:text-slate-600'}`}
+                                >
+                                    ADET
+                                </button>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="pt-6 h-[300px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={trendData}>
+                                    <XAxis
+                                        dataKey="name"
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fill: '#94a3b8', fontSize: 10 }}
+                                        dy={10}
+                                    />
+                                    <YAxis
+                                        hide
+                                    />
+                                    <Tooltip
+                                        contentStyle={{
+                                            backgroundColor: '#1e293b',
+                                            borderRadius: '12px',
+                                            border: 'none',
+                                            color: '#fff',
+                                            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'
+                                        }}
+                                        itemStyle={{ color: '#fff', fontSize: '11px' }}
+                                        formatter={(value: any) => trendMetric === 'amount' ? formatCurrency(value) : value}
+                                    />
+                                    <Bar
+                                        dataKey={trendMetric}
+                                        fill={trendMetric === 'amount' ? '#6366f1' : '#10b981'}
+                                        radius={[4, 4, 0, 0]}
+                                        barSize={40}
+                                    />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </CardContent>
+                    </Card>
+                </div>
+                <div className="xl:col-span-1">
+                    <ContractStatusDistribution />
+                </div>
+            </div>
+
+            {/* Insights Row 3 - Risk & Planning */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 pt-4 items-stretch min-h-[380px]">
+                <RenewalRiskAnalysis />
+                <RenewalCalendar />
+            </div>
+
+
+            {/* Intelligent Contract List */}
             <Card className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
                 <CardHeader className="py-3 border-b border-slate-100 dark:border-white/5">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -526,7 +800,8 @@ const StatusBadge = ({ status }: { status: ContractStatus }) => {
         Negotiation: "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 border-blue-100 dark:border-blue-800",
         Draft: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700",
         Archived: "bg-gray-50 text-gray-600 dark:bg-gray-800 dark:text-gray-500 border-gray-200 dark:border-gray-700",
-        Terminated: "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 border-red-100 dark:border-red-800"
+        Terminated: "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 border-red-100 dark:border-red-800",
+        Expired: "bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400 border-orange-100 dark:border-orange-800"
     };
 
     return (

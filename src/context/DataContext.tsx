@@ -2,6 +2,7 @@ import React, { createContext, useContext, useMemo, useState, useEffect } from '
 import type { Deal, Activity, User, DashboardMetrics, DealStage, Quote, Order, Contract } from '../types/crm';
 import { generateMockData, generateActivitiesForDeals, generateAuxiliaryDataForDeals, USERS } from '../data/mockData';
 import { OpportunityService } from '../services/OpportunityService';
+import { UserService } from '../services/UserService';
 import { ContractService, QuoteService, OrderService } from '../services/ListingServices';
 
 interface DataContextType {
@@ -24,23 +25,26 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [quotes, setQuotes] = useState<Quote[]>([]);
     const [orders, setOrders] = useState<Order[]>([]);
     const [contracts, setContracts] = useState<Contract[]>([]);
+    const [users, setUsers] = useState<User[]>(USERS);
     const [isLoading, setIsLoading] = useState(true);
 
     const refreshData = async () => {
         setIsLoading(true);
         try {
             // Fetch persistent data from Services
-            const [fetchedDeals, fetchedContracts, fetchedQuotes, fetchedOrders] = await Promise.all([
+            const [fetchedDeals, fetchedContracts, fetchedQuotes, fetchedOrders, fetchedUsers] = await Promise.all([
                 OpportunityService.getAll(),
                 ContractService.getAll(),
                 QuoteService.getAll(),
-                OrderService.getAll()
+                OrderService.getAll(),
+                UserService.getAll()
             ]);
 
             setDeals(fetchedDeals);
             setContracts(fetchedContracts);
             setQuotes(fetchedQuotes);
             setOrders(fetchedOrders);
+            setUsers(fetchedUsers);
 
             // Generate activities linked to fetched deals
             const newActivities = generateActivitiesForDeals(fetchedDeals);
@@ -104,7 +108,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [deals, activities]);
 
     return (
-        <DataContext.Provider value={{ deals, activities, quotes, orders, contracts, users: USERS, metrics, isLoading, refreshData }}>
+        <DataContext.Provider value={{ deals, activities, quotes, orders, contracts, users, metrics, isLoading, refreshData }}>
             {children}
         </DataContext.Provider>
     );

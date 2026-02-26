@@ -231,7 +231,7 @@ export function OpportunitiesDashboard() {
         if (columnFilters.owner) {
             const search = columnFilters.owner.toLowerCase();
             result = result.filter(d => {
-                const ownerName = users.find(u => u.id === d.ownerId)?.name.toLowerCase() || '';
+                const ownerName = (d.ownerName || users.find(u => u.id === d.ownerId)?.name || '').toLowerCase();
                 return ownerName.includes(search);
             });
         }
@@ -279,7 +279,7 @@ export function OpportunitiesDashboard() {
         if (columnFilters.owner) {
             const search = columnFilters.owner.toLowerCase();
             result = result.filter(d => {
-                const ownerName = users.find(u => u.id === d.ownerId)?.name.toLowerCase() || '';
+                const ownerName = (d.ownerName || users.find(u => u.id === d.ownerId)?.name || '').toLowerCase();
                 return ownerName.includes(search);
             });
         }
@@ -310,7 +310,7 @@ export function OpportunitiesDashboard() {
             dataMaps.sourceCount[d.source] = (dataMaps.sourceCount[d.source] || 0) + 1;
             dataMaps.sourceRev[d.source] = (dataMaps.sourceRev[d.source] || 0) + d.value;
             dataMaps.customerRev[d.customerName] = (dataMaps.customerRev[d.customerName] || 0) + d.value;
-            const ownerName = users.find(u => u.id === d.ownerId)?.name || 'Unknown';
+            const ownerName = d.ownerName || users.find(u => u.id === d.ownerId)?.name || 'Unknown';
             dataMaps.ownerRev[ownerName] = (dataMaps.ownerRev[ownerName] || 0) + d.value;
             dataMaps.topicRev[d.topic] = (dataMaps.topicRev[d.topic] || 0) + d.value;
             dataMaps.statusRev[d.stage] = (dataMaps.statusRev[d.stage] || 0) + d.value;
@@ -342,8 +342,8 @@ export function OpportunitiesDashboard() {
                 let bVal: any;
 
                 if (sortConfig.key === 'ownerName') {
-                    aVal = users.find(u => u.id === a.ownerId)?.name || '';
-                    bVal = users.find(u => u.id === b.ownerId)?.name || '';
+                    aVal = a.ownerName || users.find(u => u.id === a.ownerId)?.name || '';
+                    bVal = b.ownerName || users.find(u => u.id === b.ownerId)?.name || '';
                 } else {
                     aVal = a[sortConfig.key];
                     bVal = b[sortConfig.key];
@@ -657,9 +657,9 @@ export function OpportunitiesDashboard() {
                                                 <td className="p-4">
                                                     <div className="flex items-center gap-2">
                                                         <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[9px] font-bold text-slate-600">
-                                                            {user?.name.charAt(0) || '?'}
+                                                            {(deal.ownerName || user?.name || '?').charAt(0)}
                                                         </div>
-                                                        <span className="text-slate-600 dark:text-slate-400">{user?.name}</span>
+                                                        <span className="text-slate-600 dark:text-slate-400">{deal.ownerName || user?.name}</span>
                                                     </div>
                                                 </td>
                                                 <td className="p-4 text-center">
@@ -747,8 +747,16 @@ export function OpportunitiesDashboard() {
                                                         </div>
                                                         <div className="text-xs text-slate-500 mb-3">{deal.customerName}</div>
                                                         <div className="flex justify-between items-center pt-2 border-t border-slate-50 dark:border-slate-600">
-                                                            <div className="font-mono text-xs font-medium text-slate-700 dark:text-slate-300">${(deal.value / 1000).toFixed(0)}k</div>
-                                                            <div className="text-[10px] bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-slate-500">{deal.probability}%</div>
+                                                            <div className="flex items-center gap-1.5">
+                                                                <div className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-600 flex items-center justify-center text-[8px] font-bold text-slate-500">
+                                                                    {(deal.ownerName || users.find(u => u.id === deal.ownerId)?.name || '?').charAt(0)}
+                                                                </div>
+                                                                <span className="text-[10px] text-slate-500 truncate max-w-[80px]">{deal.ownerName || users.find(u => u.id === deal.ownerId)?.name || deal.ownerId}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="font-mono text-xs font-medium text-slate-700 dark:text-slate-300">${(deal.value / 1000).toFixed(0)}k</div>
+                                                                <div className="text-[10px] bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-slate-500">{deal.probability}%</div>
+                                                            </div>
                                                         </div>
                                                         <button
                                                             onClick={(e) => {

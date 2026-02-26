@@ -15,6 +15,7 @@ const mapToDeal = (data: any): Deal => ({
     stage: data.stage,
     probability: data.probability,
     ownerId: data.owner_id,
+    ownerName: data.owner_name,
     source: data.source,
     topic: data.topic,
     createdAt: data.created_at,

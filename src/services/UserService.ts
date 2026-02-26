@@ -1,8 +1,8 @@
 import type { User } from '../types/crm';
 import { USERS } from '../data/mockData';
 
-const API_BASE_URL = (window as any)['__RUNTIME_CONFIG__']?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
-const API_URL = `${API_BASE_URL}/users`;
+const getApiBaseUrl = () => (window as any)['__RUNTIME_CONFIG__']?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+const API_URL = `${getApiBaseUrl()}/users`;
 
 export const UserService = {
     getAll: async (): Promise<User[]> => {

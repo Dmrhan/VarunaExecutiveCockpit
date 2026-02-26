@@ -9,7 +9,7 @@ router.get('/', (req: Request, res: Response) => {
     const top = parseInt(req.query.$top as string) || 100;
     const skip = parseInt(req.query.$skip as string) || 0;
 
-    const rows = db.prepare(`
+    let querySql = `
         SELECT q.*, a.Name as AccountName, p.PersonNameSurname as OwnerName
         FROM Quote q
         LEFT JOIN Account a ON q.AccountId = a.Id

@@ -31,6 +31,16 @@ export interface IDbAdapter {
     transaction<T>(fn: () => T): T;
 
     /**
+     * Prepare a statement for execution.
+     * Returns a wrapper with .all(), .get(), .run() for compatibility.
+     */
+    prepare(sql: string): {
+        all(...params: any[]): any[];
+        get(...params: any[]): any | undefined;
+        run(...params: any[]): IDbResult;
+    };
+
+    /**
      * Driver name for diagnostics.
      */
     readonly driver: 'sqlite' | 'mssql';

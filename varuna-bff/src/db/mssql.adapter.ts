@@ -156,6 +156,24 @@ export class MssqlAdapter implements IDbAdapter {
         }
     }
 
+    prepare(sql: string): any {
+        // Return a wrapper that matches better-sqlite3 Statement interface
+        return {
+            all: (...params: any[]) => {
+                const p = params.length === 1 && (Array.isArray(params[0]) || typeof params[0] === 'object') ? params[0] : params;
+                return this.query(sql, p);
+            },
+            get: (...params: any[]) => {
+                const p = params.length === 1 && (Array.isArray(params[0]) || typeof params[0] === 'object') ? params[0] : params;
+                return this.queryOne(sql, p);
+            },
+            run: (...params: any[]) => {
+                const p = params.length === 1 && (Array.isArray(params[0]) || typeof params[0] === 'object') ? params[0] : params;
+                return this.execute(sql, p);
+            }
+        };
+    }
+
     getPool(): any {
         return this.pool;
     }

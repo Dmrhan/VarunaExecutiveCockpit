@@ -64,7 +64,7 @@ router.get('/', (req: Request, res: Response) => {
     }
 
     // ── Paginated fetch ───────────────────────────────────────────────────────
-    const rows = db.prepare(`
+    let querySql = `
         SELECT o.*, a.Name as AccountName, p.PersonNameSurname as OwnerName
         FROM Opportunity o
         LEFT JOIN Account a ON o.AccountId = a.Id
@@ -79,7 +79,7 @@ router.get('/', (req: Request, res: Response) => {
         querySql += ` LIMIT @limit OFFSET @offset`;
     }
 
-    const rows = db.query(querySql, { ...filterParams, limit: top, offset: skip });
+    const rows = db.query(querySql, { ...filterParams, limit: top, offset: skip }) as Record<string, any>[];
 
     // ── Map rows → frontend Deal shape ──
     const mapped = rows.map(row => ({

@@ -27,10 +27,9 @@ RUN npm ci --omit=dev
 # Copy compiled JS from builder
 COPY --from=builder /app/dist ./dist
 
-# Copy schema files (needed by adapters at runtime)
-# Use RUN to ensure target dir exists, then COPY individual files
+# Copy schema and seed files (needed by adapters at runtime)
 RUN mkdir -p ./dist/db
-COPY src/db/schema.sql ./dist/db/schema.sql
+COPY src/db/*.sql ./dist/db/
 
 EXPOSE 3001
 

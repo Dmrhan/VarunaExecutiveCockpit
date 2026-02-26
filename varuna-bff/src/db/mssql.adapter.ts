@@ -56,6 +56,7 @@ export class MssqlAdapter implements IDbAdapter {
         this.pool = runSync(new mssql.ConnectionPool(config).connect());
         console.log(`[DB:MSSQL] Connected → ${config.server}/${config.database}`);
         this._applySchema();
+        this._applySeed();
     }
 
     private _applySchema(): void {
@@ -72,6 +73,23 @@ export class MssqlAdapter implements IDbAdapter {
             runSync(this.pool.request().query(batch));
         }
         console.log('[DB:MSSQL] Schema applied.');
+    }
+
+    private _applySeed(): void {
+        const fs = require('fs');
+        const path = require('path');
+        const seedPath = path.join(__dirname, 'seed_enums.mssql.sql');
+        if (!fs.existsSync(seedPath)) {
+            // Seeding is optional but recommended
+            return;
+        }
+        const sql = fs.readFileSync(seedPath, 'utf-8');
+        // MSSQL can handle multiple inserts, but let's be safe and split if there are GO markers
+        const batches = sql.split(/^\s*GO\s*$/im).filter((b: string) => b.trim());
+        for (const batch of batches) {
+            runSync(this.pool.request().query(batch));
+        }
+        console.log('[DB:MSSQL] Seed data applied.');
     }
 
     private _buildRequest(sql: string, params: any[] | Record<string, any>): { sql: string; request: any } {

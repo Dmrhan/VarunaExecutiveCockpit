@@ -10,15 +10,15 @@ BEGIN
 CREATE TABLE [dbo].[Opportunity] (
     Id                      NVARCHAR(450) PRIMARY KEY,
     Name                    NVARCHAR(MAX),
-    AccountId               NVARCHAR(MAX),
-    OwnerId                 NVARCHAR(MAX),
-    LeadOwnerId             NVARCHAR(MAX),
-    PartnerId               NVARCHAR(MAX),
-    PersonId                NVARCHAR(MAX),
-    CompanyId               NVARCHAR(MAX),
-    PipelineId              NVARCHAR(MAX),
-    ProductGroupId          NVARCHAR(MAX),
-    ProductCategoryId       NVARCHAR(MAX),
+    AccountId               NVARCHAR(450),
+    OwnerId                 NVARCHAR(450),
+    LeadOwnerId             NVARCHAR(450),
+    PartnerId               NVARCHAR(450),
+    PersonId                NVARCHAR(450),
+    CompanyId               NVARCHAR(450),
+    PipelineId              NVARCHAR(450),
+    ProductGroupId          NVARCHAR(450),
+    ProductCategoryId       NVARCHAR(450),
     [Type]                  INT,
     [Source]                INT,
     DealType                INT,
@@ -26,7 +26,7 @@ CREATE TABLE [dbo].[Opportunity] (
     DealStatus              INT,
     ProbabilityBand         INT,
     OpportunityStageName    INT,
-    OpportunityStageId      NVARCHAR(MAX),
+    OpportunityStageId      NVARCHAR(450),
     OpportunityStageNameTr  NVARCHAR(MAX),
     Amount_Value            FLOAT,
     ExpectedRevenue_Value   FLOAT,
@@ -125,15 +125,15 @@ CREATE TABLE [dbo].[Person] (
     Weight FLOAT,
     Size INT,
     ShoeSize FLOAT,
-    ManagerId NVARCHAR(MAX),
+    ManagerId NVARCHAR(450),
     [Status] INT,
-    DealerId NVARCHAR(MAX),
-    RoleId NVARCHAR(MAX),
+    DealerId NVARCHAR(450),
+    RoleId NVARCHAR(450),
     MaxDiscountRate FLOAT,
-    CompanyId NVARCHAR(MAX),
+    CompanyId NVARCHAR(450),
     PersonNameSurname NVARCHAR(MAX),
     ManagerType INT,
-    PlaCod NVARCHAR(MAX),
+    PlaCod NVARCHAR(450),
     AddressInfo_City NVARCHAR(MAX),
     AddressInfo_Town NVARCHAR(MAX),
     AddressInfo_AddressLine NVARCHAR(MAX),
@@ -637,8 +637,8 @@ CREATE TABLE [dbo].[CalenderEvent] (
     Subject NVARCHAR(MAX) NOT NULL,
     [Type] INT NOT NULL,
     Description NVARCHAR(MAX),
-    StartDate NVARCHAR(MAX),
-    FinishDate NVARCHAR(MAX),
+    StartDate NVARCHAR(450),
+    FinishDate NVARCHAR(450),
     Location NVARCHAR(MAX),
     AccountId NVARCHAR(MAX),
     LeadId NVARCHAR(MAX),
@@ -659,17 +659,17 @@ CREATE TABLE [dbo].[CalenderEvent] (
     RepeatEveryDays INT,
     RepeatOnMonthly INT,
     RepeatOnYearly INT,
-    EndRepeatDate NVARCHAR(MAX),
+    EndRepeatDate NVARCHAR(450),
     [Status] INT NOT NULL,
     RecurrenceRule NVARCHAR(MAX),
     RecurrenceException NVARCHAR(MAX),
     ParticipantType INT,
     SubjectType INT,
     ExcludeWeekends INT,
-    FirstCreatedBy NVARCHAR(MAX),
-    FirstCreatedDate NVARCHAR(MAX),
+    FirstCreatedBy NVARCHAR(450),
+    FirstCreatedDate NVARCHAR(450),
     EventEnvironment INT,
-    CalendarEventResultId NVARCHAR(MAX),
+    CalendarEventResultId NVARCHAR(450),
     GoogleCalendarEventCreatedMail NVARCHAR(MAX),
     SubjectTypeTr NVARCHAR(MAX),
     TypeTr NVARCHAR(MAX),
@@ -678,6 +678,13 @@ CREATE TABLE [dbo].[CalenderEvent] (
     ParticipantTypeTr NVARCHAR(MAX),
     _SyncedAt DATETIME DEFAULT GETUTCDATE()
 );
+END
+GO
+
+-- Ensure StartDate is indexable if table already exists
+IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('CalenderEvent') AND name = 'StartDate' AND max_length = -1)
+BEGIN
+    ALTER TABLE [dbo].[CalenderEvent] ALTER COLUMN StartDate NVARCHAR(450);
 END
 GO
 
@@ -748,27 +755,27 @@ IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Qu
 BEGIN
 CREATE TABLE [dbo].[Quote] (
     Id NVARCHAR(450) PRIMARY KEY,
-    OpportunityId NVARCHAR(MAX),
-    RevisionId NVARCHAR(MAX),
-    Number NVARCHAR(MAX) NOT NULL,
+    OpportunityId NVARCHAR(450),
+    RevisionId NVARCHAR(450),
+    Number NVARCHAR(450) NOT NULL,
     Name NVARCHAR(MAX) NOT NULL,
-    ExpirationDate NVARCHAR(MAX) NOT NULL,
+    ExpirationDate NVARCHAR(450) NOT NULL,
     SubTotalDiscount FLOAT,
-    WarehouseId NVARCHAR(MAX),
-    ProposalOwnerId NVARCHAR(MAX) NOT NULL,
+    WarehouseId NVARCHAR(450),
+    ProposalOwnerId NVARCHAR(450) NOT NULL,
     PaymentType INT NOT NULL,
     PaymentTypeTime INT,
     [Status] INT NOT NULL,
-    AddressIdentifier NVARCHAR(MAX),
+    AddressIdentifier NVARCHAR(450),
     DeliveryType INT,
     DeliveryTime INT,
-    DeliveryDate NVARCHAR(MAX),
+    DeliveryDate NVARCHAR(450),
     CustomerOrderNumber NVARCHAR(MAX),
     PaymentTime INT,
     DeliveryTypeTime INT,
-    PersonId NVARCHAR(MAX),
-    SpecialCodeId NVARCHAR(MAX),
-    AccountId NVARCHAR(MAX) NOT NULL,
+    PersonId NVARCHAR(450),
+    SpecialCodeId NVARCHAR(450),
+    AccountId NVARCHAR(450) NOT NULL,
     Description NVARCHAR(MAX),
     RevNo INT,
     NetSubTotalLocalCurrency_Amount FLOAT,
@@ -793,9 +800,9 @@ CREATE TABLE [dbo].[Quote] (
     IsVATExempt INT,
     TermsAndConditions NVARCHAR(MAX),
     ProductsAndServices NVARCHAR(MAX),
-    ServiceStartDate NVARCHAR(MAX),
-    ServiceFinishDate NVARCHAR(MAX),
-    ReferenceCode NVARCHAR(MAX),
+    ServiceStartDate NVARCHAR(450),
+    ServiceFinishDate NVARCHAR(450),
+    ReferenceCode NVARCHAR(450),
     TransferWithForeignCurrency INT,
     ContactId NVARCHAR(MAX),
     FirstCreatedDate NVARCHAR(MAX),
@@ -996,11 +1003,18 @@ IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Sy
 BEGIN
 CREATE TABLE [dbo].[SystemEnums] (
     Id NVARCHAR(450) PRIMARY KEY,
-    EnumType NVARCHAR(MAX) NOT NULL,
+    EnumType NVARCHAR(450) NOT NULL,
     EnumValue INT NOT NULL,
     EnumName NVARCHAR(MAX) NOT NULL,
     DisplayName NVARCHAR(MAX)
 );
+END
+GO
+
+-- Ensure EnumType is indexable
+IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('SystemEnums') AND name = 'EnumType' AND max_length = -1)
+BEGIN
+    ALTER TABLE [dbo].[SystemEnums] ALTER COLUMN EnumType NVARCHAR(450) NOT NULL;
 END
 GO
 

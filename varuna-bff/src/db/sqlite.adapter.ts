@@ -44,6 +44,28 @@ export class SqliteAdapter implements IDbAdapter {
         return this.db.transaction(fn)() as T;
     }
 
+    prepare(sql: string): any {
+        const stmt = this.db.prepare(sql);
+        return {
+            all: (...params: any[]) => {
+                const p = params.length === 1 && (Array.isArray(params[0]) || typeof params[0] === 'object') ? params[0] : params;
+                return stmt.all(p);
+            },
+            get: (...params: any[]) => {
+                const p = params.length === 1 && (Array.isArray(params[0]) || typeof params[0] === 'object') ? params[0] : params;
+                return stmt.get(p);
+            },
+            run: (...params: any[]) => {
+                const p = params.length === 1 && (Array.isArray(params[0]) || typeof params[0] === 'object') ? params[0] : params;
+                const result = stmt.run(p);
+                return {
+                    changes: result.changes,
+                    lastInsertRowid: result.lastInsertRowid,
+                };
+            }
+        };
+    }
+
     /** Expose raw db for routes that still need prepare() directly (legacy compat). */
     getRawDb(): Database.Database {
         return this.db;

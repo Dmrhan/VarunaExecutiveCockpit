@@ -79,7 +79,7 @@ router.get('/', (req: Request, res: Response) => {
         querySql += ` LIMIT @limit OFFSET @offset`;
     }
 
-    const rows = db.query(querySql, { ...filterParams, limit: top, offset: skip });
+    const rows = db.query(querySql, { ...filterParams, limit: top, offset: skip }) as Record<string, any>[];
 
     // ── Map rows → frontend Deal shape ──
     const mapped = rows.map(row => ({

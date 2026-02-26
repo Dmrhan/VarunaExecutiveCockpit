@@ -1001,13 +1001,38 @@ GO
 -- ============================================================
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[SystemEnums]') AND type in (N'U'))
 BEGIN
-CREATE TABLE [dbo].[SystemEnums] (
-    Id NVARCHAR(450) PRIMARY KEY,
-    EnumType NVARCHAR(450) NOT NULL,
-    EnumValue INT NOT NULL,
-    EnumName NVARCHAR(MAX) NOT NULL,
-    DisplayName NVARCHAR(MAX)
-);
+    CREATE TABLE [dbo].[SystemEnums] (
+        EnumType NVARCHAR(450) NOT NULL,
+        EnumValue INT NOT NULL,
+        Id NVARCHAR(450),
+        EnumName NVARCHAR(MAX) NOT NULL,
+        DisplayName NVARCHAR(MAX),
+        PRIMARY KEY (EnumType, EnumValue)
+    );
+END
+ELSE
+BEGIN
+    -- Migration: Check if PK is on Id instead of (EnumType, EnumValue)
+    IF EXISTS (
+        SELECT 1 
+        FROM sys.index_columns ic
+        JOIN sys.columns c ON ic.object_id = c.object_id AND ic.column_id = c.column_id
+        JOIN sys.indexes i ON ic.object_id = i.object_id AND ic.index_id = i.index_id
+        WHERE i.is_primary_key = 1 
+        AND i.object_id = OBJECT_ID(N'[dbo].[SystemEnums]')
+        AND c.name = 'Id'
+    )
+    BEGIN
+        DECLARE @ConstraintName NVARCHAR(128);
+        SELECT @ConstraintName = name FROM sys.key_constraints WHERE parent_object_id = OBJECT_ID(N'[dbo].[SystemEnums]') AND type = 'PK';
+        IF @ConstraintName IS NOT NULL
+        BEGIN
+            EXEC('ALTER TABLE [dbo].[SystemEnums] DROP CONSTRAINT ' + @ConstraintName);
+        END
+        ALTER TABLE [dbo].[SystemEnums] ALTER COLUMN EnumType NVARCHAR(450) NOT NULL;
+        ALTER TABLE [dbo].[SystemEnums] ALTER COLUMN EnumValue INT NOT NULL;
+        ALTER TABLE [dbo].[SystemEnums] ADD PRIMARY KEY (EnumType, EnumValue);
+    END
 END
 GO
 

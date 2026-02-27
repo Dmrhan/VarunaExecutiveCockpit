@@ -57,37 +57,62 @@ export function GamifiedLeaderboard({ deals: propDeals, orders: propOrders }: Ga
                 const userOrders = orders.filter(o => o.salesRepId === user.id && o.status === 'Closed');
                 const invoicedAmount = userOrders.reduce((sum, o) => sum + o.amount, 0);
 
-                // Advanced Overall Score Calculation (Weighted)
-                // Normalize metrics roughly to 0-100 scale then apply weights
-                const normalizedInvoiced = Math.min(100, (invoicedAmount / 5000000) * 100); // Target $5M
-                const normalizedWinRate = Math.min(100, winRate * 1.5); // Target ~66% winrate
-                const normalizedActivity = Math.min(100, (dealCount / 10) * 100); // Target 10 deals
-
-                const overallScore = (normalizedInvoiced * 0.50) + (normalizedWinRate * 0.30) + (normalizedActivity * 0.20);
-
-                const trendData = generateTrendData(user.name);
-                const isTrendingUp = trendData[trendData.length - 1].value > trendData[0].value;
-
                 return {
                     id: user.id,
                     name: user.name,
                     avatar: user.avatar,
-                    revenue: invoicedAmount, // We use invoiced as the primary revenue metric for the leaderboard
+                    revenue: invoicedAmount,
                     invoicedAmount,
                     winRate,
                     dealCount,
-                    overallScore,
-                    trendData,
-                    isTrendingUp,
-                    gapToLeader: 0,
-                    comparisons: {
-                        vsAvgRevenue: avgInvoiced > 0 ? ((invoicedAmount - avgInvoiced) / avgInvoiced) * 100 : 0,
-                    },
-                    streak: Math.floor(Math.random() * 8) + 2
+                    // Temporary zero for now, we will calculate relative score in a second pass
+                    overallScore: 0,
                 };
-            })
-            .sort((a, b) => b.overallScore - a.overallScore)
-        const sortedStats = stats
+            });
+
+        // Second pass: Calculate relative scores based on dataset maximums
+        const maxInvoiced = Math.max(...stats.map(s => s.invoicedAmount), 1);
+        const maxDeals = Math.max(...stats.map(s => s.dealCount), 1);
+
+        const scoredStats = stats.map(stat => {
+            // Relative normalization (0-100)
+            const normalizedInvoiced = (stat.invoicedAmount / maxInvoiced) * 100;
+            const normalizedWinRate = stat.winRate; // Already 0-100
+            const normalizedActivity = (stat.dealCount / maxDeals) * 100;
+
+            // Updated weights: Revenue is king (60%), Win Rate (25%), Activity (15%)
+            let overallScore = (normalizedInvoiced * 0.60) + (normalizedWinRate * 0.25) + (normalizedActivity * 0.15);
+
+            // Add a small boost for purely invoiced amount to ensure monetary leaders stay at top
+            if (normalizedInvoiced === 100) overallScore += 2;
+
+            // Cap at 99 to leave room for the +2 boost, max 100
+            overallScore = Math.min(100, Math.max(0, overallScore));
+
+            const trendData = generateTrendData(stat.name);
+            const isTrendingUp = trendData[trendData.length - 1].value > trendData[0].value;
+
+            return {
+                id: stat.id,
+                name: stat.name,
+                avatar: stat.avatar,
+                revenue: stat.invoicedAmount, // We use invoiced as the primary revenue metric for the leaderboard
+                invoicedAmount: stat.invoicedAmount,
+                winRate: stat.winRate,
+                dealCount: stat.dealCount,
+                overallScore,
+                trendData,
+                isTrendingUp,
+                gapToLeader: 0,
+                comparisons: {
+                    vsAvgRevenue: avgInvoiced > 0 ? ((stat.invoicedAmount - avgInvoiced) / avgInvoiced) * 100 : 0,
+                },
+                streak: Math.floor(Math.random() * 8) + 2
+            };
+        });
+
+        // Third pass: Sort and rank
+        const sortedStats = scoredStats
             .sort((a, b) => b.overallScore - a.overallScore)
             .slice(0, 10);
 
@@ -99,7 +124,7 @@ export function GamifiedLeaderboard({ deals: propDeals, orders: propOrders }: Ga
         }
 
         return sortedStats;
-    }, [deals, users]);
+    }, [deals, orders, users]);
 
     const getRankIcon = (index: number) => {
         switch (index) {

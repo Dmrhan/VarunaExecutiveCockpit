@@ -317,7 +317,17 @@ async function main() {
 
         let qIdx = 0;
         for (const opp of opportunities) {
-            if (rng() < 0.28) continue; // %28 fırsatta teklif yok
+            // Gerçekçi teklif dönüşüm oranları (UI'da yaklaşık %80'e denk gelecek şekilde)
+            let skipProb = 0;
+            if (opp.dealStatus === WON_STAGE.status) {
+                skipProb = 0.05; // Kazanılanların %95'i teklif içerir
+            } else if (opp.dealStatus === LOST_STAGE.status) {
+                skipProb = 0.60; // Kaybedilenlerin sadece %40'ına teklif verilebilmiş
+            } else {
+                skipProb = 0.40; // Açık olanların %60'ına teklif verilmiş
+            }
+
+            if (rng() < skipProb) continue;
 
             qIdx++;
             const qId = `qte-${String(qIdx).padStart(4, '0')}`;

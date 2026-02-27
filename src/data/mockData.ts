@@ -49,17 +49,27 @@ export const PRODUCT_COLORS: Record<ProductGroup, string> = {
 };
 
 export const USERS: User[] = [
-    { id: 'u1', name: 'Ali Yılmaz', avatar: 'https://i.pravatar.cc/150?u=1', role: 'manager', department: 'Univera Satış' },
-    { id: 'u2', name: 'Ayşe Demir', avatar: 'https://i.pravatar.cc/150?u=2', role: 'sales_rep', department: 'EnRoute PY' },
-    { id: 'u3', name: 'Mehmet Kaya', avatar: 'https://i.pravatar.cc/150?u=3', role: 'sales_rep', department: 'İş Ortakları' },
-    { id: 'u4', name: 'Zeynep Çelik', avatar: 'https://i.pravatar.cc/150?u=4', role: 'manager', department: 'Univera Satış' },
-    { id: 'u5', name: 'Mülkiye Akdoğaner', avatar: 'https://i.pravatar.cc/150?u=5', role: 'sales_rep', department: 'Univera Satış' },
-    { id: 'u6', name: 'Begüm Hayta', avatar: 'https://i.pravatar.cc/150?u=6', role: 'sales_rep', department: 'Univera Satış' },
-    { id: 'u7', name: 'Semih Balaban', avatar: 'https://i.pravatar.cc/150?u=7', role: 'sales_rep', department: 'Univera Satış' },
-    { id: 'u8', name: 'Nigar Uygun', avatar: 'https://i.pravatar.cc/150?u=8', role: 'sales_rep', department: 'Univera Satış' },
-    { id: 'u9', name: 'Gülçin Erçebi', avatar: 'https://i.pravatar.cc/150?u=9', role: 'sales_rep', department: 'Stokbar PY' },
-    { id: 'u10', name: 'Eren Oral', avatar: 'https://i.pravatar.cc/150?u=10', role: 'sales_rep', department: 'Quest PY' },
+    // ─── Univera Satış ─────────────────────────────────────────────────────────
+    { id: 'u1', name: 'Ali Yılmaz', avatar: 'https://i.pravatar.cc/150?u=u1', role: 'manager', department: 'Univera Satış' },
+    { id: 'u4', name: 'Zeynep Çelik', avatar: 'https://i.pravatar.cc/150?u=u4', role: 'manager', department: 'Univera Satış' },
+    { id: 'u5', name: 'Mülkiye Akoğaner', avatar: 'https://i.pravatar.cc/150?u=u5', role: 'sales_rep', department: 'Univera Satış' },
+    { id: 'u6', name: 'Begüm Hayta', avatar: 'https://i.pravatar.cc/150?u=u6', role: 'sales_rep', department: 'Univera Satış' },
+    { id: 'u7', name: 'Semih Balaban', avatar: 'https://i.pravatar.cc/150?u=u7', role: 'sales_rep', department: 'Univera Satış' },
+    { id: 'u8', name: 'Nigar Uygun', avatar: 'https://i.pravatar.cc/150?u=u8', role: 'sales_rep', department: 'Univera Satış' },
+    // ─── EnRoute PY ────────────────────────────────────────────────────────────
+    { id: 'u2', name: 'Ayşe Demir', avatar: 'https://i.pravatar.cc/150?u=u2', role: 'sales_rep', department: 'EnRoute PY' },
+    { id: 'u11', name: 'Kemal Aydın', avatar: 'https://i.pravatar.cc/150?u=u11', role: 'sales_rep', department: 'EnRoute PY' },
+    // ─── Quest PY ──────────────────────────────────────────────────────────────
+    { id: 'u10', name: 'Eren Oral', avatar: 'https://i.pravatar.cc/150?u=u10', role: 'sales_rep', department: 'Quest PY' },
+    { id: 'u12', name: 'Deniz Korkmaz', avatar: 'https://i.pravatar.cc/150?u=u12', role: 'sales_rep', department: 'Quest PY' },
+    // ─── Stokbar PY ────────────────────────────────────────────────────────────
+    { id: 'u9', name: 'Gülçin Erçebi', avatar: 'https://i.pravatar.cc/150?u=u9', role: 'sales_rep', department: 'Stokbar PY' },
+    { id: 'u13', name: 'Hasan Polat', avatar: 'https://i.pravatar.cc/150?u=u13', role: 'sales_rep', department: 'Stokbar PY' },
+    // ─── İş Ortakları ──────────────────────────────────────────────────────────
+    { id: 'u3', name: 'Mehmet Kaya', avatar: 'https://i.pravatar.cc/150?u=u3', role: 'sales_rep', department: 'İş Ortakları' },
+    { id: 'u14', name: 'Selin Arslan', avatar: 'https://i.pravatar.cc/150?u=u14', role: 'sales_rep', department: 'İş Ortakları' },
 ];
+
 
 const generateRandomDate = (start: Date, end: Date) => {
     return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime())).toISOString();

@@ -82,21 +82,38 @@ router.get('/', (req: Request, res: Response) => {
     const rows = db.query(querySql, { ...filterParams, limit: top, offset: skip }) as Record<string, any>[];
 
     // ── Map rows → frontend Deal shape ──
+    const PRODUCT_GROUP_NAMES: Record<string, string> = {
+        'PG-ENR': 'EnRoute',
+        'PG-QST': 'Quest',
+        'PG-STB': 'Stokbar',
+        'PG-SVC': 'ServiceCore',
+        'PG-VRN': 'Varuna',
+        'PG-HST': 'Hosting',
+        'PG-UDX': 'Unidox',
+    };
+
     const mapped = rows.map(row => ({
         id: row.Id,
         title: row.Name || '',
         customer_name: row.AccountName || row.AccountId || 'Bilinmiyor',
-        product: row.ProductGroupId || 'EnRoute',
+        customerName: row.AccountName || row.AccountId || 'Bilinmiyor',
+        product: PRODUCT_GROUP_NAMES[row.ProductGroupId] || row.ProductGroupId || 'EnRoute',
+        productGroupId: row.ProductGroupId || '',
         value: row.Amount_Value || 0,
         stage: row.OpportunityStageNameTr || row.OpportunityStageName?.toString() || 'Lead',
         probability: row.Probability || 0,
         owner_id: row.OwnerId || '',
+        ownerId: row.OwnerId || '',
         owner_name: row.OwnerName || row.OwnerId || 'Unknown',
+        ownerName: row.OwnerName || row.OwnerId || 'Unknown',
         source: row.Source?.toString() || 'Diğer',
         topic: row.Name || '',
         created_at: row.FirstCreatedDate || new Date().toISOString(),
+        createdAt: row.FirstCreatedDate || new Date().toISOString(),
         expected_close_date: row.CloseDate || new Date().toISOString(),
+        expectedCloseDate: row.CloseDate || new Date().toISOString(),
         last_activity_date: row.FirstCreatedDate || new Date().toISOString(),
+        lastActivityDate: row.FirstCreatedDate || new Date().toISOString(),
         updated_at: row._SyncedAt || new Date().toISOString(),
         notes: null,
         currency: 'TRY',

@@ -1,7 +1,12 @@
 /**
- * seed-all.ts
- * Deterministic, FK-ordered seed script for Varuna Intelligence SQLite DB.
- * SEED = 2026 — produces identical output on every run.
+ * seed-all.ts – v2
+ * Deterministik seed (SEED=2026). Her çalıştırmada aynı sonuç.
+ * Düzeltmeler:
+ *  - Tüm ürünler fırsatlara dağıtılır (EnRoute / Quest / Stokbar / Varuna / ServiceCore / Hosting / Unidox)
+ *  - Fırsat aşamaları gerçekçi dağılımda (Lead → Kazanıldı / Kaybedildi)
+ *  - Tahmini kapanış tarihleri önümüzdeki 7 aya yayılır
+ *  - Tekliflerin tüm statüsleri kullanılır (10 farklı durum)
+ *  - Siparişlerde müşteri adı + sipariş adı + tüm ürünler mevcut
  * Run: npx ts-node src/scripts/seed-all.ts
  */
 
@@ -30,12 +35,15 @@ const rng = makePrng(SEED);
 
 function rand(min: number, max: number) { return Math.floor(rng() * (max - min + 1)) + min; }
 function pick<T>(arr: T[]): T { return arr[rand(0, arr.length - 1)]; }
-function uid(prefix: string) { return `${prefix}-${Math.floor(rng() * 1e9).toString(16).toUpperCase().padStart(8, '0')}`; }
+function pickWeighted<T>(arr: T[], weights: number[]): T {
+    const total = weights.reduce((a, b) => a + b, 0);
+    let r = rng() * total;
+    for (let i = 0; i < arr.length; i++) { r -= weights[i]; if (r <= 0) return arr[i]; }
+    return arr[arr.length - 1];
+}
 
 function addDays(base: Date, days: number): Date {
-    const d = new Date(base);
-    d.setDate(d.getDate() + days);
-    return d;
+    const d = new Date(base); d.setDate(d.getDate() + days); return d;
 }
 function isoDate(d: Date) { return d.toISOString().split('T')[0]; }
 function isoDateTime(d: Date) { return d.toISOString(); }
@@ -63,6 +71,7 @@ const ACCOUNT_NAMES = [
     'OYAK Teknoloji', 'TAV Havalimanları', 'Yıldız Holding', 'Polisan Kimya', 'Metro Turizm',
 ];
 
+// 7 ürün — görsel isimleriyle
 const PRODUCTS = [
     { id: 'STK-ENROUTE', code: 'ENR', name: 'EnRoute', shortName: 'ENR', groupId: 'PG-ENR' },
     { id: 'STK-QUEST', code: 'QST', name: 'Quest', shortName: 'QST', groupId: 'PG-QST' },
@@ -72,49 +81,75 @@ const PRODUCTS = [
     { id: 'STK-HOSTING', code: 'HST', name: 'Hosting', shortName: 'HST', groupId: 'PG-HST' },
     { id: 'STK-UNIDOX', code: 'UDX', name: 'Unidox', shortName: 'UDX', groupId: 'PG-UDX' },
 ];
+// Ürün ağırlıkları: EnRoute en büyük payda, Unidox en küçük
+const PRODUCT_WEIGHTS = [30, 20, 15, 12, 10, 8, 5];
 
-// Opportunity stage enum values (integer codes, same assumption as analytics.ts)
-// DealStatus: 0=Open, 1=Negotiation, 2=Won, 3=Lost
-// OpportunityStageName: 1=Lead, 2=Qualified, 3=Proposal, 4=Negotiation, 5=Order, 6=Lost
-const OPEN_STAGES = [
+// ─── Opportunity Stage Config ─────────────────────────────────────────────────
+// DealStatus: 0=Open, 2=Won, 3=Lost
+// OpportunityStageName (integer): 1=Lead, 2=Qualified, 3=Proposal, 4=Negotiation, 5=Won, 6=Lost
+interface StageConfig { status: number; stage: number; nameTr: string; prob: number; }
+const OPEN_STAGES: StageConfig[] = [
     { status: 0, stage: 1, nameTr: 'Lead', prob: 20 },
     { status: 0, stage: 2, nameTr: 'Nitelikli', prob: 40 },
     { status: 0, stage: 3, nameTr: 'Teklif', prob: 60 },
     { status: 0, stage: 4, nameTr: 'Müzakere', prob: 75 },
 ];
-const WON_STAGE = { status: 2, stage: 5, nameTr: 'Kazanıldı', prob: 100 };
-const LOST_STAGE = { status: 3, stage: 6, nameTr: 'Kaybedildi', prob: 0 };
+// Açık fırsatları aşamalara dağıtacak ağırlıklar (sırası: Lead, Qualified, Proposal, Negotiation)
+const OPEN_STAGE_WEIGHTS = [25, 30, 30, 15]; // daha gerçekçi huni
 
-// Quote Status integers — match analytics-quote.ts assumption
-// 0=Draft, 1=Sent, 2=Accepted, 3=Rejected, 4=Review, 5=Approved, 6=Denied
-const Q_DRAFT = 0, Q_SENT = 1, Q_ACCEPTED = 2, Q_REJECTED = 3, Q_APPROVED = 5, Q_DENIED = 6;
+const WON_STAGE: StageConfig = { status: 2, stage: 5, nameTr: 'Kazanıldı', prob: 100 };
+const LOST_STAGE: StageConfig = { status: 3, stage: 6, nameTr: 'Kaybedildi', prob: 0 };
 
-// CrmOrder Status: 0=Open, 1=Closed, 2=Canceled
+// ─── Quote Status Config ──────────────────────────────────────────────────────
+// Türkçe isimleri:
+//  0  = Taslak
+//  1  = Değerlendirme Gerekiyor
+//  2  = Değerlendirmeye Alındı
+//  3  = Onaylandı
+//  4  = Reddedildi
+//  5  = Gönderildi (Aktif)
+//  6  = Kabul Edildi
+//  7  = İptal Edildi
+//  8  = Kaybedildi
+//  9  = Kısmen Siparişleşti
+const Q = { DRAFT: 0, NEEDS_REVIEW: 1, IN_REVIEW: 2, APPROVED: 3, REJECTED: 4, SENT: 5, ACCEPTED: 6, CANCELLED: 7, LOST: 8, PARTIAL: 9 };
+const Q_NAMES: Record<number, string> = {
+    0: 'Taslak', 1: 'Değerlendirme Gerekiyor', 2: 'Değerlendirmeye Alındı',
+    3: 'Onaylandı', 4: 'Reddedildi', 5: 'Gönderildi (Aktif)',
+    6: 'Kabul Edildi', 7: 'İptal Edildi', 8: 'Kaybedildi', 9: 'Kısmen Siparişleşti',
+};
+// Won quotes for order creation: Accepted + Approved + Partial
+const WON_Q_STATUSES = [Q.ACCEPTED, Q.APPROVED, Q.PARTIAL];
+
+// CrmOrder Status: 0=Open, 1=Closed
 const ORD_OPEN = 0, ORD_CLOSED = 1;
 
-// Contract Status: 0=Draft, 1=Negotiation, 2=Active, 3=Archived, 4=Terminated
-const CTR_ACTIVE = 2, CTR_DRAFT = 0;
+// Contract Status: 2=Active
+const CTR_ACTIVE = 2;
 
-// CalendarEvent Type: 1=Call, 2=Meeting, 3=Email, 4=Demo
-// CalendarEvent Status: 1=Completed, 2=Pending, 3=Cancelled
+// CalendarEvent Type+Status
 const EVT_TYPES = [1, 2, 3, 4];
 const EVT_STATUS_DONE = 1, EVT_STATUS_PENDING = 2;
+const EVT_SUBJECTS: Record<number, string[]> = {
+    1: ['Müşteri Görüşmesi', 'Tanıtım Araması', 'Takip Görüşmesi'],
+    2: ['Keşif Toplantısı', 'Demo Sunumu', 'Strateji Toplantısı'],
+    3: ['Teklif Gönderildi', 'Bilgi Talebi Yanıtı', 'Takip E-postası'],
+    4: ['Ürün Demosu', 'Pilot Demo', 'Teknik Demo'],
+};
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 async function main() {
-    console.log('[seed-all] Starting deterministic seed (SEED=2026)…');
+    console.log('[seed-all v2] SEED=2026 başlatıldı…');
 
     const db = new Database(DB_PATH);
     db.pragma('journal_mode = WAL');
-    db.pragma('foreign_keys = OFF'); // temporarily off during bulk delete
+    db.pragma('foreign_keys = OFF');
 
-    // Apply schema DDL
     const schema = fs.readFileSync(SCHEMA_PATH, 'utf-8');
     db.exec(schema);
-    console.log('[seed-all] Schema applied.');
 
-    // ── WIPE EXISTING DATA (reverse FK order) ─────────────────────────────────
-    const tablesToWipe = [
+    // ── Wipe ─────────────────────────────────────────────────────────────────
+    for (const tbl of [
         'ContractPaymentPlans', 'ContractLisances', 'Contract',
         'CrmOrderProducts', 'CrmOrder',
         'QuoteOrderDetails', 'QuoteDynamicFields', 'Quote',
@@ -125,48 +160,35 @@ async function main() {
         'AccountNotes', 'AccountRepresentatives', 'AccountCompanies', 'Addresses', 'Account',
         'Companies', 'PersonFile', 'Education', 'Person',
         'StockUnitTypes', 'AdditionalTaxes', 'StockFiles', 'Companies_Stock', 'Stock',
-        'CompanuPipelines', 'SalesPipelineStages', 'SalesPipeline',
+        'SalesPipelineStages', 'SalesPipeline',
         'CompanyCurrency', 'CompanyUserGroups', 'CompanyPipelines', 'Company',
-    ];
-    for (const tbl of tablesToWipe) {
-        try { db.exec(`DELETE FROM "${tbl}"`); } catch { /* ignore if table missing */ }
-    }
-    console.log('[seed-all] Tables wiped.');
+    ]) { try { db.exec(`DELETE FROM "${tbl}"`); } catch { } }
 
     db.pragma('foreign_keys = ON');
 
     const runTx = db.transaction(() => {
 
-        // ══════════════════════════════════════════════════════════════════════
-        // 1. COMPANY
-        // ══════════════════════════════════════════════════════════════════════
+        // ──────────────────────────────────────────────────────────────────────
+        // 1. COMPANY + CURRENCY
+        // ──────────────────────────────────────────────────────────────────────
         db.prepare(`INSERT INTO Company(Id,Name,OrderNo) VALUES(?,?,?)`).run(COMPANY_ID, 'Univera Yazılım', 1);
-        db.prepare(`INSERT INTO CompanyCurrency(Id,CompanyId,CurrencyCode) VALUES(?,?,?)`).run('CCY-001', COMPANY_ID, 1); // 1=TRY
+        db.prepare(`INSERT INTO CompanyCurrency(Id,CompanyId,CurrencyCode) VALUES(?,?,?)`).run('CCY-001', COMPANY_ID, 1);
 
-        // ══════════════════════════════════════════════════════════════════════
+        // ──────────────────────────────────────────────────────────────────────
         // 2. SALES PIPELINE
-        // ══════════════════════════════════════════════════════════════════════
+        // ──────────────────────────────────────────────────────────────────────
         db.prepare(`INSERT INTO SalesPipeline(Id,Name,CompanyId,Status,IsDefault) VALUES(?,?,?,?,?)`)
             .run(PIPELINE_ID, 'Ana Pipeline', COMPANY_ID, 1, 1);
-
-        const pipelineStages = [
-            { id: 'PST-1', stageId: 'STG-1', stageName: 1 }, // Lead
-            { id: 'PST-2', stageId: 'STG-2', stageName: 2 }, // Qualified
-            { id: 'PST-3', stageId: 'STG-3', stageName: 3 }, // Proposal
-            { id: 'PST-4', stageId: 'STG-4', stageName: 4 }, // Negotiation
-            { id: 'PST-5', stageId: 'STG-5', stageName: 5 }, // Won
-            { id: 'PST-6', stageId: 'STG-6', stageName: 6 }, // Lost
-        ];
         const stmtPStage = db.prepare(`INSERT INTO SalesPipelineStages(Id,SalesPipelineId,PipelineStageId,PipelineStageName) VALUES(?,?,?,?)`);
-        for (const s of pipelineStages) stmtPStage.run(s.id, PIPELINE_ID, s.stageId, s.stageName);
+        [{ id: 'PST-1', stageId: 'STG-1', sn: 1 }, { id: 'PST-2', stageId: 'STG-2', sn: 2 }, { id: 'PST-3', stageId: 'STG-3', sn: 3 },
+        { id: 'PST-4', stageId: 'STG-4', sn: 4 }, { id: 'PST-5', stageId: 'STG-5', sn: 5 }, { id: 'PST-6', stageId: 'STG-6', sn: 6 }]
+            .forEach(s => stmtPStage.run(s.id, PIPELINE_ID, s.stageId, s.sn));
 
-        // ══════════════════════════════════════════════════════════════════════
-        // 3. PERSONS (8 sales reps)
-        // ══════════════════════════════════════════════════════════════════════
+        // ──────────────────────────────────────────────────────────────────────
+        // 3. PERSONS (8 satış temsilcisi)
+        // ──────────────────────────────────────────────────────────────────────
         const persons: { id: string; name: string; surname: string }[] = [];
-        const stmtPerson = db.prepare(`
-            INSERT INTO Person(Id,Name,SurName,Title,Email,CompanyId,Status,PersonNameSurname)
-            VALUES(?,?,?,?,?,?,?,?)`);
+        const stmtPerson = db.prepare(`INSERT INTO Person(Id,Name,SurName,Title,Email,CompanyId,Status,PersonNameSurname) VALUES(?,?,?,?,?,?,?,?)`);
         for (let i = 0; i < 8; i++) {
             const p = PERSON_NAMES[i];
             const id = `prs-${String(i + 1).padStart(3, '0')}`;
@@ -176,23 +198,19 @@ async function main() {
                 COMPANY_ID, 1, `${p.name} ${p.surname}`);
         }
 
-        // ══════════════════════════════════════════════════════════════════════
-        // 4. STOCK (7 products)
-        // ══════════════════════════════════════════════════════════════════════
-        const stmtStock = db.prepare(`
-            INSERT INTO Stock(Id,Code,Name,ShortName,BaseUnitType,SalesVatValue,PurchaseVatValue,State,ProductGroupId,CompanyId)
-            VALUES(?,?,?,?,?,?,?,?,?,?)`);
+        // ──────────────────────────────────────────────────────────────────────
+        // 4. STOCK (7 ürün)
+        // ──────────────────────────────────────────────────────────────────────
+        const stmtStock = db.prepare(`INSERT INTO Stock(Id,Code,Name,ShortName,BaseUnitType,SalesVatValue,PurchaseVatValue,State,ProductGroupId,CompanyId) VALUES(?,?,?,?,?,?,?,?,?,?)`);
         for (const p of PRODUCTS) {
             stmtStock.run(p.id, p.code, p.name, p.shortName, 'Adet', 20, 20, 1, p.groupId, COMPANY_ID);
         }
 
-        // ══════════════════════════════════════════════════════════════════════
-        // 5. ACCOUNTS (30 customers)
-        // ══════════════════════════════════════════════════════════════════════
+        // ──────────────────────────────────────────────────────────────────────
+        // 5. ACCOUNTS (30 müşteri)
+        // ──────────────────────────────────────────────────────────────────────
         const accounts: { id: string; name: string; ownerId: string }[] = [];
-        const stmtAccount = db.prepare(`
-            INSERT INTO Account(Id,Name,OwnerId,DealerId,State,LastTouchDate)
-            VALUES(?,?,?,?,?,?)`);
+        const stmtAccount = db.prepare(`INSERT INTO Account(Id,Name,OwnerId,DealerId,State,LastTouchDate) VALUES(?,?,?,?,?,?)`);
         for (let i = 0; i < ACCOUNT_NAMES.length; i++) {
             const id = `acc-${String(i + 1).padStart(3, '0')}`;
             const owner = persons[i % persons.length];
@@ -201,74 +219,92 @@ async function main() {
                 isoDate(addDays(TODAY, -rand(1, 30))));
         }
 
-        // ══════════════════════════════════════════════════════════════════════
+        // ──────────────────────────────────────────────────────────────────────
         // 6. OPPORTUNITIES
-        // Target: ~250 opps, ~400M TL total Amount_Value
-        // Win ratio: ~24% (60 won), Lost: ~10% (25 lost), Open: ~66% (165 open)
-        // Daily spread: last 90 days
-        // ══════════════════════════════════════════════════════════════════════
-        const opportunities: {
-            id: string; accountId: string; ownerId: string;
-            amount: number; dealStatus: number; stageName: number; closeDate: Date;
-            createdDate: Date; product: typeof PRODUCTS[number];
-        }[] = [];
+        //    - Ürünler ağırlıklı random
+        //    - Aşamalar gerçekçi dağılım
+        //    - Kapanış tarihleri: geçmiş (won/lost) + önümüzdeki 7 ay (open)
+        //    - 90 günlük günlük dağılım (2-4 adet/gün) = ~250 kayıt
+        // ──────────────────────────────────────────────────────────────────────
+        interface OppRecord {
+            id: string; accountId: string; accountName: string;
+            ownerId: string; ownerName: string;
+            amount: number; dealStatus: number; stage: StageConfig;
+            closeDate: Date; createdDate: Date;
+            product: typeof PRODUCTS[number];
+        }
+        const opportunities: OppRecord[] = [];
 
         const stmtOpp = db.prepare(`
             INSERT INTO Opportunity(
-                Id,Name,AccountId,OwnerId,CompanyId,PipelineId,
+                Id,Name,AccountId,OwnerId,CompanyId,PipelineId,ProductGroupId,
                 Amount_Value,ExpectedRevenue_Value,PotentialTurnover_Value,
                 Probability,DealStatus,OpportunityStageName,OpportunityStageNameTr,
                 CloseDate,FirstCreatedDate,_SyncedAt)
-            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
 
-        // Daily spread across 90 days
         const TOTAL_OPPS = 250;
-        for (let dayOffset = 89; dayOffset >= 0; dayOffset--) {
+        for (let dayOffset = 89; dayOffset >= 0 && opportunities.length < TOTAL_OPPS; dayOffset--) {
             const createdDate = addDays(TODAY, -dayOffset);
-            const dayCount = rand(2, 4); // 2-4 opps per day
+            const dayCount = rand(2, 4);
             for (let d = 0; d < dayCount && opportunities.length < TOTAL_OPPS; d++) {
                 const id = `opp-${String(opportunities.length + 1).padStart(4, '0')}`;
                 const account = pick(accounts);
                 const person = pick(persons);
-                const product = pick(PRODUCTS);
-                // Amount: 500k to 8M TL
-                const amount = rand(500_000, 8_000_000);
-                // Assign stage based on creation date + probability
+                const product = pickWeighted(PRODUCTS, PRODUCT_WEIGHTS);
+                const amount = rand(800_000, 9_000_000);
+
+                // Aşama dağılımı: %24 Won, %11 Lost, %65 Open
                 const r = rng();
-                let stage; let closeDate: Date;
+                let stage: StageConfig;
+                let closeDate: Date;
                 if (r < 0.24) {
                     stage = WON_STAGE;
                     closeDate = addDays(createdDate, rand(20, 60));
-                } else if (r < 0.34) {
+                } else if (r < 0.35) {
                     stage = LOST_STAGE;
                     closeDate = addDays(createdDate, rand(15, 45));
                 } else {
-                    stage = pick(OPEN_STAGES);
-                    closeDate = addDays(TODAY, rand(10, 90));
+                    // Open — aşamayı ağırlıklı dağıt
+                    stage = pickWeighted(OPEN_STAGES, OPEN_STAGE_WEIGHTS);
+                    // Kapanış: önümüzdeki 1–7 ay
+                    closeDate = addDays(TODAY, rand(15, 210));
                 }
 
-                opportunities.push({ id, accountId: account.id, ownerId: person.id, amount, dealStatus: stage.status, stageName: stage.stage, closeDate, createdDate, product });
+                opportunities.push({
+                    id, accountId: account.id, accountName: account.name,
+                    ownerId: person.id, ownerName: `${person.name} ${person.surname}`,
+                    amount, dealStatus: stage.status, stage, closeDate, createdDate, product,
+                });
 
                 stmtOpp.run(
                     id,
-                    `${account.name} - ${product.name} Fırsatı`,
-                    account.id, person.id, COMPANY_ID, PIPELINE_ID,
-                    amount, Math.round(amount * stage.prob / 100), amount * 1.1,
+                    `${account.name} – ${product.name} Fırsatı`,
+                    account.id, person.id, COMPANY_ID, PIPELINE_ID, product.groupId,
+                    amount,
+                    Math.round(amount * stage.prob / 100),
+                    Math.round(amount * 1.1),
                     stage.prob, stage.status, stage.stage, stage.nameTr,
                     isoDate(closeDate), isoDate(createdDate), isoDateTime(new Date()),
                 );
             }
         }
-        console.log(`[seed-all] Opportunities: ${opportunities.length}`);
+        console.log(`[seed] Opportunities: ${opportunities.length}`);
 
-        // ══════════════════════════════════════════════════════════════════════
+        // ──────────────────────────────────────────────────────────────────────
         // 7. QUOTES
-        // Rule: ~72% of opps get a quote.
-        // Won opps -> Won quote (Accepted/Approved)
-        // Lost opps -> Rejected quote (50%) or nothing
-        // Open opps -> Sent/Draft/Review quote
-        // ══════════════════════════════════════════════════════════════════════
-        const wonQuotes: { id: string; quoteId: string; accountId: string; ownerId: string; amount: number; product: typeof PRODUCTS[number]; createdDate: Date }[] = [];
+        //    Her teklif bir Opportunity'ye bağlı (%72 oranında üretilir)
+        //    Statüler 10 farklı duruma dağıtılır
+        //    Won Opp → Kabul Edildi / Onaylandı / Kısmen Siparişleşti
+        //    Lost Opp → Kaybedildi / Reddedildi / İptal Edildi
+        //    Open Opp → Taslak / Değerlendirme Gerekiyor / Değerlendirmeye Alındı / Gönderildi
+        // ──────────────────────────────────────────────────────────────────────
+        interface QuoteRecord {
+            id: string; quoteId: string; accountId: string; accountName: string;
+            ownerId: string; ownerName: string; amount: number;
+            product: typeof PRODUCTS[number]; createdDate: Date; status: number;
+        }
+        const wonQuotes: QuoteRecord[] = [];
 
         const stmtQuote = db.prepare(`
             INSERT INTO Quote(
@@ -276,57 +312,70 @@ async function main() {
                 Status,PaymentType,ExpirationDate,FirstCreatedDate,
                 TotalNetAmountLocalCurrency_Amount,TotalNetAmountLocalCurrency_Currency,
                 TotalAmountWithTaxLocalCurrency_Amount,TotalAmountWithTaxLocalCurrency_Currency,
-                ServiceStartDate,ServiceFinishDate,_SyncedAt)
-            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
+                ServiceStartDate,ServiceFinishDate,RevNo,_SyncedAt)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
 
         let qIdx = 0;
         for (const opp of opportunities) {
-            // Skip ~28% of opps (no quote)
-            if (rng() < 0.28) continue;
+            if (rng() < 0.28) continue; // %28 fırsatta teklif yok
 
             qIdx++;
             const qId = `qte-${String(qIdx).padStart(4, '0')}`;
             const qDate = addDays(opp.createdDate, rand(3, 14));
             const expDate = addDays(qDate, rand(30, 90));
-            // Quote amount = 80-100% of opp amount (discount applied)
-            const discountFactor = 0.80 + rng() * 0.20;
-            const netAmount = Math.round(opp.amount * discountFactor);
+            const discount = 0.80 + rng() * 0.20;
+            const netAmount = Math.round(opp.amount * discount);
             const vatAmount = Math.round(netAmount * 1.20);
 
+            // Durum seçimi
             let status: number;
             if (opp.dealStatus === WON_STAGE.status) {
-                status = rng() < 0.6 ? Q_ACCEPTED : Q_APPROVED;
+                // Won opp → ağırlıklı Kabul Edildi / Onaylandı / Kısmen Siparişleşti
+                status = pickWeighted([Q.ACCEPTED, Q.APPROVED, Q.PARTIAL], [50, 30, 20]);
             } else if (opp.dealStatus === LOST_STAGE.status) {
-                status = rng() < 0.5 ? Q_REJECTED : Q_DENIED;
+                // Lost opp → Kaybedildi / Reddedildi / İptal Edildi
+                status = pickWeighted([Q.LOST, Q.REJECTED, Q.CANCELLED], [50, 30, 20]);
             } else {
-                const r2 = rng();
-                if (r2 < 0.35) status = Q_SENT;
-                else if (r2 < 0.60) status = Q_DRAFT;
-                else status = 4; // Review
+                // Open opp → açık teklif durumları
+                status = pickWeighted(
+                    [Q.DRAFT, Q.NEEDS_REVIEW, Q.IN_REVIEW, Q.SENT],
+                    [20, 20, 25, 35]
+                );
             }
-
-            const svcStart = isoDate(qDate);
-            const svcEnd = isoDate(addDays(qDate, 365));
 
             stmtQuote.run(
                 qId, `TKL-${String(qIdx).padStart(5, '0')}`,
-                `${opp.accountId.replace('acc-', 'Müşteri ')} - ${opp.product.name} Teklifi`,
+                `${opp.accountName} – ${opp.product.name} Teklifi`,
                 opp.id, opp.accountId, opp.ownerId, COMPANY_ID,
                 status, 1, isoDate(expDate), isoDate(qDate),
                 netAmount, 'TRY', vatAmount, 'TRY',
-                svcStart, svcEnd, isoDateTime(new Date()),
+                isoDate(qDate), isoDate(addDays(qDate, 365)), rand(0, 2),
+                isoDateTime(new Date()),
             );
 
-            if (status === Q_ACCEPTED || status === Q_APPROVED) {
-                wonQuotes.push({ id: `ord-from-${qId}`, quoteId: qId, accountId: opp.accountId, ownerId: opp.ownerId, amount: vatAmount, product: opp.product, createdDate: qDate });
+            if (WON_Q_STATUSES.includes(status)) {
+                wonQuotes.push({
+                    id: `ord-from-${qId}`, quoteId: qId,
+                    accountId: opp.accountId, accountName: opp.accountName,
+                    ownerId: opp.ownerId, ownerName: opp.ownerName,
+                    amount: vatAmount, product: opp.product,
+                    createdDate: qDate, status,
+                });
             }
         }
-        console.log(`[seed-all] Quotes: ${qIdx}, Won: ${wonQuotes.length}`);
+        console.log(`[seed] Quotes: ${qIdx}, Won: ${wonQuotes.length}`);
 
-        // ══════════════════════════════════════════════════════════════════════
-        // 8. CrmOrder (from won quotes — ~95% conversion)
-        // ══════════════════════════════════════════════════════════════════════
-        const orders: { id: string; quoteId: string; accountId: string; ownerId: string; amount: number; product: typeof PRODUCTS[number]; orderDate: Date; invoiced: boolean }[] = [];
+        // ──────────────────────────────────────────────────────────────────────
+        // 8. CrmORDER + CrmOrderProducts
+        //    - Müşteri adı + sipariş adı her satırda
+        //    - Her siparişte ana ürün + 1-2 ek ürün (tüm ürünler görünür)
+        //    - %5 won quote → sipariş oluşmaz
+        // ──────────────────────────────────────────────────────────────────────
+        interface OrderRecord {
+            id: string; accountId: string; accountName: string; ownerId: string;
+            amount: number; product: typeof PRODUCTS[number]; orderDate: Date; invoiced: boolean;
+        }
+        const orders: OrderRecord[] = [];
 
         const stmtOrder = db.prepare(`
             INSERT INTO CrmOrder(
@@ -337,49 +386,72 @@ async function main() {
                 Name,_SyncedAt)
             VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
 
+        const stmtOrderProd = db.prepare(`
+            INSERT INTO CrmOrderProducts(
+                Id,CrmOrderId,StockId,Quantity,TransactionDate,Tax,StockUnitTypeIdentifier,
+                UnitPrice_Amount,UnitPrice_Currency,
+                Total_Amount,Total_Currency,
+                NetLineTotalWithTaxLocalCurrency_Amount,NetLineTotalWithTaxLocalCurrency_Currency,
+                Description,_SyncedAt)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
+
         for (const wq of wonQuotes) {
-            if (rng() < 0.05) continue; // 5% won't become orders
+            if (rng() < 0.05) continue; // %5 sipariş oluşmaz
+
             const ordId = wq.id;
             const orderDate = addDays(wq.createdDate, rand(1, 7));
-            const deliveryDate = addDays(orderDate, rand(7, 30));
-            const isInvoiced = rng() < 0.80; // 80% are invoiced
+            const delivDate = addDays(orderDate, rand(7, 30));
+            const isInvoiced = rng() < 0.80;
             const invoiceDate = isInvoiced ? isoDate(addDays(orderDate, rand(1, 14))) : null;
-            const isClosed = isInvoiced && rng() < 0.9;
-            const status = isClosed ? ORD_CLOSED : ORD_OPEN;
+            const isClosed = isInvoiced && rng() < 0.85;
 
-            orders.push({ id: ordId, quoteId: wq.quoteId, accountId: wq.accountId, ownerId: wq.ownerId, amount: wq.amount, product: wq.product, orderDate, invoiced: isInvoiced });
+            orders.push({
+                id: ordId, accountId: wq.accountId, accountName: wq.accountName,
+                ownerId: wq.ownerId, amount: wq.amount, product: wq.product,
+                orderDate, invoiced: isInvoiced,
+            });
 
             stmtOrder.run(
                 ordId, wq.quoteId, wq.accountId, wq.ownerId, COMPANY_ID,
-                status, isoDate(orderDate), isoDate(deliveryDate),
-                invoiceDate, isoDate(deliveryDate),
+                isClosed ? ORD_CLOSED : ORD_OPEN,
+                isoDate(orderDate), isoDate(delivDate),
+                invoiceDate, isoDate(delivDate),
                 Math.round(wq.amount / 1.20), 'TRY', wq.amount, 'TRY',
-                `Sipariş - ${wq.accountId}`, isoDateTime(new Date()),
-            );
-
-            // CrmOrderProducts (1 line per order)
-            const prodId = `cop-${ordId}`;
-            db.prepare(`
-                INSERT INTO CrmOrderProducts(
-                    Id,CrmOrderId,StockId,Quantity,TransactionDate,Tax,StockUnitTypeIdentifier,
-                    UnitPrice_Amount,UnitPrice_Currency,
-                    Total_Amount,Total_Currency,
-                    NetLineTotalWithTaxLocalCurrency_Amount,NetLineTotalWithTaxLocalCurrency_Currency,
-                    _SyncedAt)
-                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
-                prodId, ordId, wq.product.id, 1,
-                isoDate(orderDate), 20, 'Adet',
-                Math.round(wq.amount / 1.20), 'TRY',
-                Math.round(wq.amount / 1.20), 'TRY',
-                wq.amount, 'TRY',
+                `${wq.accountName} – ${wq.product.name} Siparişi`,
                 isoDateTime(new Date()),
             );
-        }
-        console.log(`[seed-all] Orders: ${orders.length}`);
 
-        // ══════════════════════════════════════════════════════════════════════
-        // 9. Contracts (from invoiced closed orders — ~90%)
-        // ══════════════════════════════════════════════════════════════════════
+            // Ana ürün satırı
+            const unitPrice = Math.round(wq.amount / 1.20 / 2);
+            stmtOrderProd.run(
+                `cop-${ordId}-0`, ordId, wq.product.id, 1,
+                isoDate(orderDate), 20, 'Adet',
+                unitPrice, 'TRY', unitPrice, 'TRY', Math.round(unitPrice * 1.20), 'TRY',
+                wq.product.name, isoDateTime(new Date()),
+            );
+
+            // Ek ürün satırları (1-2 farklı ürün, tüm ürünler havuza girer)
+            const extraCount = rand(1, 2);
+            const usedProductIds = new Set([wq.product.id]);
+            for (let e = 0; e < extraCount; e++) {
+                const otherProduct = PRODUCTS.filter(p => !usedProductIds.has(p.id));
+                if (!otherProduct.length) break;
+                const extraProd = pick(otherProduct);
+                usedProductIds.add(extraProd.id);
+                const extraPrice = Math.round(wq.amount / 1.20 / 2 * (0.15 + rng() * 0.35));
+                stmtOrderProd.run(
+                    `cop-${ordId}-${e + 1}`, ordId, extraProd.id, 1,
+                    isoDate(orderDate), 20, 'Adet',
+                    extraPrice, 'TRY', extraPrice, 'TRY', Math.round(extraPrice * 1.20), 'TRY',
+                    extraProd.name, isoDateTime(new Date()),
+                );
+            }
+        }
+        console.log(`[seed] Orders: ${orders.length}`);
+
+        // ──────────────────────────────────────────────────────────────────────
+        // 9. CONTRACT + PAYMENT PLANS + INVENTORY
+        // ──────────────────────────────────────────────────────────────────────
         const stmtContract = db.prepare(`
             INSERT INTO Contract(
                 Id,ContractNo,ContractName,AccountId,SalesRepresentativeId,CompanyId,
@@ -395,8 +467,7 @@ async function main() {
 
         let ctrIdx = 0;
         for (const ord of orders) {
-            if (!ord.invoiced) continue;
-            if (rng() < 0.10) continue; // 10% won't have contract yet
+            if (!ord.invoiced || rng() < 0.10) continue;
 
             ctrIdx++;
             const ctrId = `ctr-${String(ctrIdx).padStart(4, '0')}`;
@@ -405,33 +476,27 @@ async function main() {
             const renewalDate = addDays(finishDate, -30);
             const signingDate = addDays(startDate, -rand(1, 5));
             const isActive = rng() < 0.85;
-            const status = isActive ? CTR_ACTIVE : CTR_DRAFT;
-            const contractAmount = Math.round(ord.amount * (0.90 + rng() * 0.10)); // ~same as order
+            const contractAmt = Math.round(ord.amount * (0.90 + rng() * 0.10));
 
             stmtContract.run(
-                ctrId,
-                `CTR-${String(ctrIdx).padStart(5, '0')}`,
-                `${ord.accountId.replace('acc-', 'Müşteri ')} Sözleşmesi`,
+                ctrId, `CTR-${String(ctrIdx).padStart(5, '0')}`,
+                `${ord.accountName} – Hizmet Sözleşmesi`,
                 ord.accountId, ord.ownerId, COMPANY_ID,
-                1, // 1=Initialization
-                status,
+                1, isActive ? CTR_ACTIVE : 0,
                 isoDate(startDate), isoDate(finishDate), isoDate(renewalDate), isoDate(signingDate),
-                contractAmount, 'TRY', contractAmount, 'TRY',
+                contractAmt, 'TRY', contractAmt, 'TRY',
                 1, isoDateTime(new Date()),
             );
 
-            // Payment plan: 4 quarterly installments
-            const installAmount = Math.round(contractAmount / 4);
+            const installAmt = Math.round(contractAmt / 4);
             for (let q = 0; q < 4; q++) {
                 const payDate = addDays(startDate, q * 90);
-                const collected = payDate <= TODAY ? 1 : 0;
                 stmtPayPlan.run(
-                    `pp-${ctrId}-${q}`, ctrId, installAmount, 'TRY',
-                    25, collected, isoDate(payDate), `${q + 1}. Taksit`,
+                    `pp-${ctrId}-${q}`, ctrId, installAmt, 'TRY',
+                    25, payDate <= TODAY ? 1 : 0, isoDate(payDate), `${q + 1}. Taksit`,
                 );
             }
 
-            // InventoryAccountProduct (the licensed product line)
             db.prepare(`
                 INSERT INTO InventoryAccountProduct(
                     Id,AccountId,StockId,Status,InvPurchaseDate,StartDate,FinishDate,
@@ -440,30 +505,20 @@ async function main() {
                 VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
                 `inv-${ctrId}`, ord.accountId, ord.product.id,
                 1, isoDate(startDate), isoDate(startDate), isoDate(finishDate),
-                Math.round(contractAmount / 1.20), 'TRY',
-                Math.round(contractAmount * 0.20 / 1.20), 'TRY',
-                contractAmount, 'TRY',
+                Math.round(contractAmt / 1.20), 'TRY',
+                Math.round(contractAmt * 0.20 / 1.20), 'TRY',
+                contractAmt, 'TRY',
                 isoDateTime(new Date()),
             );
         }
-        console.log(`[seed-all] Contracts: ${ctrIdx}`);
+        console.log(`[seed] Contracts: ${ctrIdx}`);
 
-        // ══════════════════════════════════════════════════════════════════════
-        // 10. CalendarEvents (activities)
-        // ~1-3 events per opportunity, spread over opp lifetime
-        // ══════════════════════════════════════════════════════════════════════
+        // ──────────────────────────────────────────────────────────────────────
+        // 10. CalendarEvents
+        // ──────────────────────────────────────────────────────────────────────
         const stmtEvent = db.prepare(`
-            INSERT INTO CalenderEvent(
-                Id,OwnerId,Subject,Type,Status,StartDate,FinishDate,
-                AccountId,CompanyId,IsAllDay,IsRepeat,_SyncedAt)
+            INSERT INTO CalenderEvent(Id,OwnerId,Subject,Type,Status,StartDate,FinishDate,AccountId,CompanyId,IsAllDay,IsRepeat,_SyncedAt)
             VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`);
-
-        const EVT_SUBJECTS: Record<number, string[]> = {
-            1: ['Müşteri Görüşmesi', 'Tanıtım Araması', 'Takip Görüşmesi'],
-            2: ['Keşif Toplantısı', 'Demo Sunumu', 'Strateji Toplantısı'],
-            3: ['Teklif Gönderildi', 'Bilgi Talebi Yanıtı', 'Takip E-postası'],
-            4: ['Ürün Demosu', 'Pilot Demo', 'Teknik Demo'],
-        };
 
         let evtIdx = 0;
         for (const opp of opportunities) {
@@ -472,51 +527,81 @@ async function main() {
                 evtIdx++;
                 const evtId = `evt-${String(evtIdx).padStart(5, '0')}`;
                 const type = pick(EVT_TYPES);
-                const evtDate = addDays(opp.createdDate, rand(0, 30)); // within 30d of opp creation
+                const evtDate = addDays(opp.createdDate, rand(0, 30));
                 const isPast = evtDate <= TODAY;
-                const status = isPast ? EVT_STATUS_DONE : EVT_STATUS_PENDING;
-                const subject = pick(EVT_SUBJECTS[type] || ['Görüşme']);
-                const finishDate = addDays(evtDate, 0);
-                finishDate.setHours(evtDate.getHours() + 1);
-
+                const finEnd = new Date(evtDate); finEnd.setHours(evtDate.getHours() + 1);
                 stmtEvent.run(
-                    evtId, opp.ownerId, subject, type, status,
-                    isoDateTime(evtDate), isoDateTime(finishDate),
+                    evtId, opp.ownerId, pick(EVT_SUBJECTS[type] || ['Görüşme']),
+                    type, isPast ? EVT_STATUS_DONE : EVT_STATUS_PENDING,
+                    isoDateTime(evtDate), isoDateTime(finEnd),
                     opp.accountId, COMPANY_ID, 0, 0, isoDateTime(new Date()),
                 );
             }
         }
-        console.log(`[seed-all] CalendarEvents: ${evtIdx}`);
+        console.log(`[seed] CalendarEvents: ${evtIdx}`);
     });
 
     try {
         runTx();
-        console.log('[seed-all] ✅ Seed complete!');
+        console.log('\n[seed] ✅ Tamamlandı!\n');
 
-        // ─── Verification summary ─────────────────────────────────────────────
+        // ─── Verification ───────────────────────────────────────────────────
         const checks = [
-            { label: 'Company', sql: 'SELECT COUNT(*) as n FROM Company' },
-            { label: 'Person', sql: 'SELECT COUNT(*) as n FROM Person' },
-            { label: 'Account', sql: 'SELECT COUNT(*) as n FROM Account' },
-            { label: 'Opportunity', sql: 'SELECT COUNT(*) as n FROM Opportunity' },
-            { label: 'Quote', sql: 'SELECT COUNT(*) as n FROM Quote' },
-            { label: 'CrmOrder', sql: 'SELECT COUNT(*) as n FROM CrmOrder' },
-            { label: 'Contract', sql: 'SELECT COUNT(*) as n FROM Contract' },
-            { label: 'CalenderEvent', sql: 'SELECT COUNT(*) as n FROM CalenderEvent' },
-            { label: 'InventoryAccountProduct', sql: 'SELECT COUNT(*) as n FROM InventoryAccountProduct' },
-            { label: 'Opp Total Amount (M TL)', sql: 'SELECT ROUND(SUM(Amount_Value)/1000000.0,1) as n FROM Opportunity' },
-            { label: 'Quote Sent+ Net Amount (M TL)', sql: `SELECT ROUND(SUM(TotalNetAmountLocalCurrency_Amount)/1000000.0,1) as n FROM Quote WHERE Status != 0` },
-            { label: 'Won Quote Amount (M TL)', sql: `SELECT ROUND(SUM(TotalAmountWithTaxLocalCurrency_Amount)/1000000.0,1) as n FROM Quote WHERE Status IN (2,5)` },
-            { label: 'Order Total VAT Amount (M TL)', sql: `SELECT ROUND(SUM(TotalAmountWithTaxLocalCurrency_Amount)/1000000.0,1) as n FROM CrmOrder` },
-            { label: 'Contract Total Amount (M TL)', sql: `SELECT ROUND(SUM(TotalAmountLocalCurrency_Amount)/1000000.0,1) as n FROM Contract WHERE ContractStatus = 2` },
+            { l: 'Company', q: 'SELECT COUNT(*) n FROM Company' },
+            { l: 'Person', q: 'SELECT COUNT(*) n FROM Person' },
+            { l: 'Account', q: 'SELECT COUNT(*) n FROM Account' },
+            { l: 'Opportunity (Toplam)', q: 'SELECT COUNT(*) n FROM Opportunity' },
+            { l: 'Opportunity (Lead)', q: `SELECT COUNT(*) n FROM Opportunity WHERE OpportunityStageName=1` },
+            { l: 'Opportunity (Qualified)', q: `SELECT COUNT(*) n FROM Opportunity WHERE OpportunityStageName=2` },
+            { l: 'Opportunity (Proposal)', q: `SELECT COUNT(*) n FROM Opportunity WHERE OpportunityStageName=3` },
+            { l: 'Opportunity (Negotiation)', q: `SELECT COUNT(*) n FROM Opportunity WHERE OpportunityStageName=4` },
+            { l: 'Opportunity (Won)', q: `SELECT COUNT(*) n FROM Opportunity WHERE DealStatus=2` },
+            { l: 'Opportunity (Lost)', q: `SELECT COUNT(*) n FROM Opportunity WHERE DealStatus=3` },
+            { l: 'Opp Toplam Amount (M TL)', q: 'SELECT ROUND(SUM(Amount_Value)/1e6,1) n FROM Opportunity' },
+            { l: 'Quote (Toplam)', q: 'SELECT COUNT(*) n FROM Quote' },
+            { l: 'Quote (Taslak)', q: `SELECT COUNT(*) n FROM Quote WHERE Status=0` },
+            { l: 'Quote (Değerlendirme Gerekiyor)', q: `SELECT COUNT(*) n FROM Quote WHERE Status=1` },
+            { l: 'Quote (Değerlendirmeye Alındı)', q: `SELECT COUNT(*) n FROM Quote WHERE Status=2` },
+            { l: 'Quote (Onaylandı)', q: `SELECT COUNT(*) n FROM Quote WHERE Status=3` },
+            { l: 'Quote (Reddedildi)', q: `SELECT COUNT(*) n FROM Quote WHERE Status=4` },
+            { l: 'Quote (Gönderildi Aktif)', q: `SELECT COUNT(*) n FROM Quote WHERE Status=5` },
+            { l: 'Quote (Kabul Edildi)', q: `SELECT COUNT(*) n FROM Quote WHERE Status=6` },
+            { l: 'Quote (İptal Edildi)', q: `SELECT COUNT(*) n FROM Quote WHERE Status=7` },
+            { l: 'Quote (Kaybedildi)', q: `SELECT COUNT(*) n FROM Quote WHERE Status=8` },
+            { l: 'Quote (Kısmen Siparişleşti)', q: `SELECT COUNT(*) n FROM Quote WHERE Status=9` },
+            { l: 'Quote Sent+ Net (M TL)', q: `SELECT ROUND(SUM(TotalNetAmountLocalCurrency_Amount)/1e6,1) n FROM Quote WHERE Status NOT IN (0)` },
+            { l: 'Quote Won Net (M TL)', q: `SELECT ROUND(SUM(TotalNetAmountLocalCurrency_Amount)/1e6,1) n FROM Quote WHERE Status IN (3,6,9)` },
+            { l: 'CrmOrder', q: 'SELECT COUNT(*) n FROM CrmOrder' },
+            { l: 'CrmOrderProducts', q: 'SELECT COUNT(*) n FROM CrmOrderProducts' },
+            { l: 'Distinct products in Orders', q: 'SELECT COUNT(DISTINCT StockId) n FROM CrmOrderProducts' },
+            { l: 'Order Toplam VAT (M TL)', q: 'SELECT ROUND(SUM(TotalAmountWithTaxLocalCurrency_Amount)/1e6,1) n FROM CrmOrder' },
+            { l: 'Contract', q: 'SELECT COUNT(*) n FROM Contract' },
+            { l: 'Contract Active Amount (M TL)', q: `SELECT ROUND(SUM(TotalAmountLocalCurrency_Amount)/1e6,1) n FROM Contract WHERE ContractStatus=2` },
+            { l: 'CalenderEvent', q: 'SELECT COUNT(*) n FROM CalenderEvent' },
         ];
-        console.log('\n──── Seed Verification ────');
+
+        console.log('──── Doğrulama ────');
         for (const c of checks) {
-            const row = db.prepare(c.sql).get({}) as { n: number };
-            console.log(`  ${c.label.padEnd(35)} ${row?.n ?? 0}`);
+            const row = db.prepare(c.q).get({}) as { n: number };
+            console.log(`  ${c.l.padEnd(40)} ${row?.n ?? 0}`);
         }
+
+        // Ürün dağılım özeti
+        console.log('\n──── Ürün Dağılımı (Opportunity) ────');
+        const prodDist = db.prepare(`SELECT ProductGroupId, COUNT(*) cnt, ROUND(SUM(Amount_Value)/1e6,1) amt FROM Opportunity GROUP BY ProductGroupId ORDER BY cnt DESC`).all({}) as { ProductGroupId: string; cnt: number; amt: number }[];
+        for (const r of prodDist) {
+            console.log(`  ${(r.ProductGroupId || '?').padEnd(12)} ${String(r.cnt).padStart(4)} fırsat  ${r.amt}M TL`);
+        }
+
+        // Teklif statü özeti
+        console.log('\n──── Teklif Statü Dağılımı ────');
+        const qStatDist = db.prepare(`SELECT Status, COUNT(*) cnt FROM Quote GROUP BY Status ORDER BY Status`).all({}) as { Status: number; cnt: number }[];
+        for (const r of qStatDist) {
+            console.log(`  ${String(r.Status).padEnd(3)} ${(Q_NAMES[r.Status] || '?').padEnd(30)} ${r.cnt}`);
+        }
+
     } catch (err) {
-        console.error('[seed-all] ❌ Error:', err);
+        console.error('[seed] ❌', err);
         process.exit(1);
     } finally {
         db.close();

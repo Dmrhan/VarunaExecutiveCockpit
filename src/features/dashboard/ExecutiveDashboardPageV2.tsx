@@ -451,12 +451,22 @@ export function ExecutiveDashboardPageV2() {
 
 
     // Derived Lists for Filters
-    const departments = useMemo(() => Array.from(new Set(users.map(u => u.department))).filter(Boolean) as string[], [users]);
+    const departments = useMemo(() => {
+        const requiredTeams = ['Univera Satış', 'EnRoute PY', 'Quest PY', 'Stokbar PY', 'İş Ortakları'];
+        const apiTeams = Array.from(new Set(users.map(u => u.department))).filter(Boolean) as string[];
+        return Array.from(new Set([...requiredTeams, ...apiTeams]));
+    }, [users]);
+
     const owners = useMemo(() => users.filter(u => u.role === 'sales_rep' || u.role === 'manager'), [users]);
-    const products = useMemo(() => Array.from(new Set([
-        ...deals.map(d => (d as any).product).filter(Boolean),
-        ...orders.map(o => (o as any).product).filter(Boolean),
-    ])) as string[], [deals, orders]);
+    const products = useMemo(() => {
+        const requiredProducts = ['EnRoute', 'Quest', 'Stokbar', 'ServiceCore', 'Varuna', 'Hosting', 'Unidox'];
+        const apiProducts = Array.from(new Set([
+            ...deals.map(d => (d as any).product).filter(Boolean),
+            ...orders.map(o => (o as any).product).filter(Boolean),
+        ])) as string[];
+        return Array.from(new Set([...requiredProducts, ...apiProducts]));
+    }, [deals, orders]);
+
 
     // --- Rich Mock Data (Independent of filters for now, or could filter if dates present) ---
     const { delayedOrders, collections } = useMemo(() => {

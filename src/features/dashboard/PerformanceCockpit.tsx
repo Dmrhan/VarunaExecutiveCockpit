@@ -101,11 +101,10 @@ export function PerformanceCockpit() {
             {/* START HEADERS */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-                        <Activity className="text-indigo-500" size={32} />
-                        {t('navigation.performance')} (Daily Dashboard)
+                    <h1 className="text-3xl font-light tracking-tight text-slate-900 dark:text-white">
+                        {t('navigation.performance')}
                     </h1>
-                    <p className="text-slate-500 dark:text-slate-400 mt-2">
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
                         {t('performanceCockpit.subtitle')}
                     </p>
                 </div>

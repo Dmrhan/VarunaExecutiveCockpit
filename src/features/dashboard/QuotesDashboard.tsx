@@ -141,14 +141,17 @@ const DashboardGridCard = ({ title, data, dataKey, color, icon: Icon, insight, c
     );
 };
 
-const StatCard = ({ label, value, colorClass }: { label: string; value: string; colorClass: string }) => (
+const StatCard = ({ label, value, subtitle, colorClass }: { label: string; value: string; subtitle?: string; colorClass: string }) => (
     <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 p-5 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm h-full min-h-[100px]">
-        <span className="text-[10px] uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400 font-bold mb-2">
+        <span className="text-[10px] uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400 font-medium mb-2">
             {label}
         </span>
-        <span className={`text - xl lg: text - 2xl font - light tracking - tight ${colorClass} `}>
+        <span className={`text-2xl font-normal tracking-tight ${colorClass}`}>
             {value}
         </span>
+        {subtitle && (
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">{subtitle}</span>
+        )}
     </div>
 );
 
@@ -277,11 +280,19 @@ export function QuotesDashboard() {
     const metrics = useMemo(() => {
         const totalCount = filteredQuotes.length;
         const totalValue = filteredQuotes.reduce((s, q) => s + q.amount, 0);
-        const wonValue = filteredQuotes.filter(q => ['Accepted', 'Approved'].includes(q.status)).reduce((s, q) => s + q.amount, 0);
-        const lostValue = filteredQuotes.filter(q => ['Rejected', 'Denied'].includes(q.status)).reduce((s, q) => s + q.amount, 0);
-        const openValue = totalValue - wonValue - lostValue;
+        const wonQuotes = filteredQuotes.filter(q => ['Accepted', 'Approved'].includes(q.status));
+        const lostQuotes = filteredQuotes.filter(q => ['Rejected', 'Denied'].includes(q.status));
+        const openQuotes = filteredQuotes.filter(q => !['Accepted', 'Approved', 'Rejected', 'Denied'].includes(q.status));
+        const wonValue = wonQuotes.reduce((s, q) => s + q.amount, 0);
+        const lostValue = lostQuotes.reduce((s, q) => s + q.amount, 0);
+        const openValue = openQuotes.reduce((s, q) => s + q.amount, 0);
 
-        return { totalCount, totalValue, wonValue, lostValue, openValue };
+        return {
+            totalCount, totalValue, wonValue, lostValue, openValue,
+            wonCount: wonQuotes.length,
+            lostCount: lostQuotes.length,
+            openCount: openQuotes.length,
+        };
     }, [filteredQuotes]);
 
     // Chart Data
@@ -422,11 +433,11 @@ export function QuotesDashboard() {
 
             {/* KPI Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                <StatCard label={t('quotes.kpis.totalCount')} value={metrics.totalCount.toString()} colorClass="text-slate-600 dark:text-white" />
-                <StatCard label={t('quotes.kpis.lost')} value={formatCurrency(metrics.lostValue)} colorClass="text-rose-500" />
-                <StatCard label={t('quotes.kpis.won')} value={formatCurrency(metrics.wonValue)} colorClass="text-emerald-500" />
-                <StatCard label={t('quotes.kpis.open')} value={formatCurrency(metrics.openValue)} colorClass="text-indigo-500" />
-                <StatCard label={t('quotes.kpis.totalPotential')} value={formatCurrency(metrics.totalValue)} colorClass="text-indigo-500" />
+                <StatCard label={t('quotes.kpis.totalCount')} value={formatCurrency(metrics.totalValue)} subtitle={`${metrics.totalCount} adet`} colorClass="text-slate-600 dark:text-white" />
+                <StatCard label={t('quotes.kpis.won')} value={formatCurrency(metrics.wonValue)} subtitle={`${metrics.wonCount} adet`} colorClass="text-emerald-500" />
+                <StatCard label={t('quotes.kpis.open')} value={formatCurrency(metrics.openValue)} subtitle={`${metrics.openCount} adet`} colorClass="text-indigo-500" />
+                <StatCard label={t('quotes.kpis.totalPotential')} value={formatCurrency(metrics.totalValue)} subtitle={`${metrics.totalCount} adet`} colorClass="text-indigo-500" />
+                <StatCard label={t('quotes.kpis.lost')} value={formatCurrency(metrics.lostValue)} subtitle={`${metrics.lostCount} adet`} colorClass="text-rose-500" />
             </div>
 
 

@@ -47,7 +47,8 @@
         "activities": "Aktiviteler",
         "quotes": "Teklifler",
         "orders": "Siparişler",
-        "contracts": "Sözleşmeler"
+        "contracts": "Sözleşmeler",
+        "scorecard": "Kişi Karnesi"
     },
     "dateFilters": {
         "today": "Bugün",
@@ -67,6 +68,7 @@
             "conversionRate": "Kapanan fırsatların kazanılma oranı",
             "wonDetails": "{{value}} değerinde {{count}} kazanılan fırsat"
         },
+        "count": "Fırsat Sayısı",
         "totalDeals": "Toplam Fırsat",
         "conversionRate": "Dönüşüm Oranı",
         "wonDeals": "Kazanılan",

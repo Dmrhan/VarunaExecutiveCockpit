@@ -11,6 +11,7 @@ import { OrdersDashboard } from './features/dashboard/OrdersDashboard';
 import { ContractsDashboard } from './features/dashboard/ContractsDashboard';
 import { ExecutiveDashboardPageV2 } from './features/dashboard/ExecutiveDashboardPageV2';
 import { PerformanceCockpit } from './features/dashboard/PerformanceCockpit';
+import { PersonScorecardPage } from './features/scorecard/PersonScorecardPage';
 import { RunaAIBot } from './components/RunaAIBot';
 
 import { OpportunityForm } from './features/dashboard/OpportunityForm';
@@ -31,6 +32,7 @@ function App() {
       case 'quotes': return <QuotesDashboard />;
       case 'orders': return <OrdersDashboard />;
       case 'contracts': return <ContractsDashboard />;
+      case 'scorecard': return <PersonScorecardPage />;
       default: return <ExecutiveSummaryDashboard />;
     }
   };

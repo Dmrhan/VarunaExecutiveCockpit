@@ -1,0 +1,14 @@
+[Seed] Seeding realistic Person Scorecard data...
+[Seed] Error: SqliteError: NOT NULL constraint failed: CalenderEvent.Status
+    at /Users/demirhan.isbakan/.gemini/antigravity/scratch/executive-cockpit/varuna-bff/src/scripts/seed-scorecard.ts:100:26
+    at sqliteTransaction (/Users/demirhan.isbakan/.gemini/antigravity/scratch/executive-cockpit/varuna-bff/node_modules/better-sqlite3/lib/methods/transaction.js:65:24)
+    at Object.<anonymous> (/Users/demirhan.isbakan/.gemini/antigravity/scratch/executive-cockpit/varuna-bff/src/scripts/seed-scorecard.ts:107:5)
+    at Module._compile (node:internal/modules/cjs/loader:1803:14)
+    at Module.m._compile (/Users/demirhan.isbakan/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)
+    at node:internal/modules/cjs/loader:1934:10
+    at Object.require.extensions.<computed> [as .ts] (/Users/demirhan.isbakan/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1524:32)
+    at Module._load (node:internal/modules/cjs/loader:1326:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14) {
+  code: 'SQLITE_CONSTRAINT_NOTNULL'
+}

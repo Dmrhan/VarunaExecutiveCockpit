@@ -13,11 +13,11 @@ import 'jspdf-autotable';
 import type { Deal } from '../../types/crm';
 
 const STAGE_CONFIG: { stage: DealStage; color: string; probability: number }[] = [
-    { stage: 'Lead', color: '#6366f1', probability: 10 },
-    { stage: 'Qualified', color: '#8b5cf6', probability: 30 },
-    { stage: 'Proposal', color: '#d946ef', probability: 60 },
-    { stage: 'Negotiation', color: '#f43f5e', probability: 80 },
-    { stage: 'Order', color: '#10b981', probability: 100 },
+    { stage: 'Lead', color: '#4f46e5', probability: 10 },   // indigo-600
+    { stage: 'Qualified', color: '#2563eb', probability: 30 },   // blue-600
+    { stage: 'Proposal', color: '#0284c7', probability: 60 },   // sky-600
+    { stage: 'Negotiation', color: '#0891b2', probability: 80 },   // cyan-600
+    { stage: 'Order', color: '#0d9488', probability: 100 },   // teal-600
 ];
 
 const formatCurrency = (value: number) => {
@@ -213,36 +213,57 @@ export function FunnelChart({ deals: propDeals }: FunnelChartProps) {
                     ))}
                 </div>
             </CardHeader>
-            <CardContent className="pt-8 pb-4 flex flex-col items-center justify-center min-h-[400px]">
-                <div className="w-full max-w-2xl flex flex-col items-center gap-1.5">
-                    {funnelData.map((item) => (
-                        <motion.div
-                            key={item.stage}
-                            whileHover={{ scale: 1.02 }}
-                            onClick={() => handleStageClick(item.stage)}
-                            className="relative cursor-pointer group"
-                            style={{ width: item.width }}
-                        >
-                            <div
-                                className="h-16 flex items-center justify-between px-8 text-white relative overflow-hidden rounded-xl transition-all shadow-lg group-hover:shadow-xl"
-                                style={{ backgroundColor: item.color }}
+            <CardContent className="pt-6 pb-4 flex flex-col items-center justify-center min-h-[400px]">
+                <div className="w-full max-w-2xl flex flex-col">
+                    {funnelData.map((item, index) => {
+                        // Each step narrows: index 0 widest, index 4 narrowest
+                        // offsetPct is how much each side is cut in (%)
+                        const topOff = index * 6;       // left/right clip start %
+                        const botOff = (index + 1) * 6; // left/right clip end %
+                        const clipPath = `polygon(${topOff}% 0%, ${100 - topOff}% 0%, ${100 - botOff}% 100%, ${botOff}% 100%)`;
+                        // Text padding must exceed the larger of the two offsets so text doesn't go into clipped area
+                        const textPadding = `${botOff + 4}%`;
+
+                        return (
+                            <motion.div
+                                key={item.stage}
+                                whileHover={{ scale: 1.005 }}
+                                onClick={() => handleStageClick(item.stage)}
+                                className="relative cursor-pointer w-full"
+                                style={{ height: '70px' }}
                             >
-                                <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
-                                <div className="z-10 flex flex-col">
-                                    <span className="text-[11px] font-bold uppercase tracking-widest opacity-80">{item.stage}</span>
-                                    <span className="text-[9px] font-medium opacity-60">{t('opportunities.probabilityShort')}: {item.probability}%</span>
+                                {/* Clipped background shape */}
+                                <div
+                                    className="absolute inset-0"
+                                    style={{
+                                        clipPath,
+                                        backgroundColor: item.color,
+                                    }}
+                                >
+                                    <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent" />
                                 </div>
-                                <div className="z-10 flex flex-col items-end">
-                                    <span className="text-xl font-light tracking-tight">{formatCurrency(item.totalValue)}</span>
-                                    <span className="text-[10px] uppercase font-bold opacity-70">{item.count} {t('opportunities.opportunityCount', { defaultValue: 'Fırsat' })}</span>
+
+                                {/* Text content — full width, padded to stay inside trapezoid */}
+                                <div
+                                    className="absolute inset-0 flex items-center justify-between text-white z-10"
+                                    style={{ paddingLeft: textPadding, paddingRight: textPadding }}
+                                >
+                                    <div className="flex flex-col">
+                                        <span className="text-[11px] font-semibold uppercase tracking-widest opacity-90">{item.stage}</span>
+                                        <span className="text-[9px] opacity-60">{t('opportunities.probabilityShort')}: {item.probability}%</span>
+                                    </div>
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-base opacity-90">{formatCurrency(item.totalValue)}</span>
+                                        <span className="text-[10px] uppercase opacity-70">{item.count} {t('opportunities.opportunityCount', { defaultValue: 'Fırsat' })}</span>
+                                    </div>
                                 </div>
-                            </div>
-                        </motion.div>
-                    ))}
+                            </motion.div>
+                        );
+                    })}
                 </div>
-                <div className="mt-8 flex items-center gap-2 text-slate-400">
+                <div className="mt-6 flex items-center gap-2 text-slate-400">
                     <Info size={14} />
-                    <span className="text-[10px] uppercase tracking-wider font-bold">{t('funnel.totalVisibility')}: {formatCurrency(deals.reduce((s, d) => s + d.value, 0))}</span>
+                    <span className="text-[10px] uppercase tracking-wider">{t('funnel.totalVisibility')}: {formatCurrency(deals.reduce((s, d) => s + d.value, 0))}</span>
                 </div>
             </CardContent>
 

@@ -1,0 +1,21 @@
+/Users/demirhan.isbakan/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:859
+    return new TSError(diagnosticText, diagnosticCodes, diagnostics);
+           ^
+TSError: ⨯ Unable to compile TypeScript:
+varuna-bff/src/scripts/seed-scorecard.ts(49,27): error TS1127: Invalid character.
+varuna-bff/src/scripts/seed-scorecard.ts(49,28): error TS1134: Variable declaration expected.
+varuna-bff/src/scripts/seed-scorecard.ts(112,1): error TS1005: '}' expected.
+varuna-bff/src/scripts/seed-scorecard.ts(112,1): error TS1160: Unterminated template literal.
+
+    at createTSError (/Users/demirhan.isbakan/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:859:12)
+    at reportTSError (/Users/demirhan.isbakan/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:863:19)
+    at getOutput (/Users/demirhan.isbakan/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1077:36)
+    at Object.compile (/Users/demirhan.isbakan/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1433:41)
+    at Module.m._compile (/Users/demirhan.isbakan/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1617:30)
+    at node:internal/modules/cjs/loader:1934:10
+    at Object.require.extensions.<computed> [as .ts] (/Users/demirhan.isbakan/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1524:32)
+    at Module._load (node:internal/modules/cjs/loader:1326:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14) {
+  diagnosticCodes: [ 1127, 1134, 1005, 1160 ]
+}

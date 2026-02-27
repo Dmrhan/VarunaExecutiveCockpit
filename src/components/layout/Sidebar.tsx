@@ -1,19 +1,30 @@
 import { useState } from 'react';
-import { LayoutDashboard, Target, Phone, FileText, ShoppingCart, ShieldCheck } from 'lucide-react';
+import {
+    PieChart,
+    LayoutDashboard,
+    Gauge,
+    Briefcase,
+    CalendarCheck,
+    FileText,
+    ShoppingCart,
+    FileSignature,
+    BadgeCheck
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const NAV_ITEMS = [
-    { icon: LayoutDashboard, key: 'executive' },
+    { icon: PieChart, key: 'executive' },
     { icon: LayoutDashboard, key: 'executivev2' },
-    { icon: Target, key: 'performance' },
-    { icon: Target, key: 'opportunities' },
-    { icon: ShieldCheck, key: 'management' },
-    { icon: Phone, key: 'activities' },
+    { icon: Gauge, key: 'performance' },
+    { icon: Briefcase, key: 'opportunities' },
+    // { icon: ShieldCheck, key: 'management' }, // Hidden for now
+    { icon: CalendarCheck, key: 'activities' },
     { icon: FileText, key: 'quotes' },
     { icon: ShoppingCart, key: 'orders' },
-    { icon: ShieldCheck, key: 'contracts' },
+    { icon: FileSignature, key: 'contracts' },
+    { icon: BadgeCheck, key: 'scorecard' },
 ];
 
 interface SidebarProps {
@@ -62,7 +73,7 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -10 }}
-                            className="ml-3 font-bold text-lg text-slate-800 dark:text-white whitespace-nowrap"
+                            className="ml-3 font-normal text-lg text-slate-800 dark:text-white whitespace-nowrap"
                         >
                             Varuna CRM
                         </motion.span>
@@ -97,7 +108,7 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
                                         initial={{ opacity: 0, x: -10 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         exit={{ opacity: 0, x: -5 }}
-                                        className="ml-3 text-sm font-semibold whitespace-nowrap overflow-hidden"
+                                        className="ml-3 text-sm font-normal whitespace-nowrap overflow-hidden"
                                     >
                                         {label}
                                     </motion.span>

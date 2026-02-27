@@ -42,7 +42,8 @@
         "activities": "Activities",
         "quotes": "Quotes",
         "orders": "Orders",
-        "contracts": "Contracts"
+        "contracts": "Contracts",
+        "scorecard": "Scorecard"
     },
     "dateFilters": {
         "today": "Today",

@@ -69,7 +69,7 @@ router.get('/daily', (req: Request, res: Response) => {
         const PipelineImpactYearlyRate = yearlyTarget > 0 ? ((monthlyContractRow.amt + openContractRow.amt) / yearlyTarget) * 100 : 0;
 
         // Invoice queries
-        const activeOrderCond = `Status != 5 AND IsDeletedFromBackend = 0`;
+        const activeOrderCond = `Status != 5 AND IFNULL(IsDeletedFromBackend, 0) = 0`;
         const todayInvoiceRow = db.queryOne(`SELECT COUNT(*) as cnt, COALESCE(SUM(TotalNetAmountLocalCurrency_Amount),0) as amt FROM CrmOrder WHERE ${activeOrderCond} AND InvoiceDate = ? ${orderOwner} ${orderCompany}`, [asOf, ...orderParams]) as { cnt: number; amt: number };
         const prevTodayInvoiceRow = db.queryOne(`SELECT COALESCE(SUM(TotalNetAmountLocalCurrency_Amount),0) as amt FROM CrmOrder WHERE ${activeOrderCond} AND InvoiceDate = ? ${orderOwner} ${orderCompany}`, [yesterday, ...orderParams]) as { amt: number };
         const weeklyInvoiceRow = db.queryOne(`SELECT COUNT(*) as cnt, COALESCE(SUM(TotalNetAmountLocalCurrency_Amount),0) as amt FROM CrmOrder WHERE ${activeOrderCond} AND InvoiceDate >= ? AND InvoiceDate <= ? ${orderOwner} ${orderCompany}`, [weekStart, asOf, ...orderParams]) as { cnt: number; amt: number };
@@ -167,7 +167,7 @@ router.get('/monthly', (req: Request, res: Response) => {
         const twelveMonthsAgo = db.driver === 'mssql' ? 'DATEADD(month, -12, GETUTCDATE())' : "date('now', '-12 months')";
 
         const contractTrends = db.query(`SELECT ${dateSubstr} as PeriodKey, COALESCE(SUM(TotalAmountLocalCurrency_Amount), 0) as ContractAmount FROM Contract WHERE SigningDate IS NOT NULL AND SigningDate >= ${twelveMonthsAgo} ${ownerWhere} ${companyWhere} GROUP BY ${dateSubstr} ORDER BY PeriodKey ASC`, params) as { PeriodKey: string; ContractAmount: number }[];
-        const invoiceTrends = db.query(`SELECT ${invDateSubstr} as PeriodKey, COALESCE(SUM(TotalNetAmountLocalCurrency_Amount), 0) as InvoiceAmount FROM CrmOrder WHERE Status != 5 AND IsDeletedFromBackend = 0 AND InvoiceDate IS NOT NULL AND InvoiceDate >= ${twelveMonthsAgo} ${orderOwner} ${orderCompany} GROUP BY ${invDateSubstr} ORDER BY PeriodKey ASC`, orderParams) as { PeriodKey: string; InvoiceAmount: number }[];
+        const invoiceTrends = db.query(`SELECT ${invDateSubstr} as PeriodKey, COALESCE(SUM(TotalNetAmountLocalCurrency_Amount), 0) as InvoiceAmount FROM CrmOrder WHERE Status != 5 AND IFNULL(IsDeletedFromBackend, 0) = 0 AND InvoiceDate IS NOT NULL AND InvoiceDate >= ${twelveMonthsAgo} ${orderOwner} ${orderCompany} GROUP BY ${invDateSubstr} ORDER BY PeriodKey ASC`, orderParams) as { PeriodKey: string; InvoiceAmount: number }[];
 
         let contractJoin = ' INNER JOIN Contract c ON cpp.ContractId = c.Id';
         const joinParams: any[] = [];
@@ -227,7 +227,7 @@ router.get('/burnup', (req: Request, res: Response) => {
         const invDateSubstr = db.driver === 'mssql' ? 'LEFT(InvoiceDate, 10)' : 'substr(InvoiceDate, 1, 10)';
 
         const contractDaily = db.query(`SELECT ${dateSubstr} as date, COALESCE(SUM(TotalAmountLocalCurrency_Amount), 0) as amt FROM Contract WHERE SigningDate >= ? AND SigningDate <= ? ${ownerWhere} ${companyWhere} GROUP BY ${dateSubstr} ORDER BY date ASC`, [monthStart, asOfDate, ...params]) as { date: string; amt: number }[];
-        const invoiceDaily = db.query(`SELECT ${invDateSubstr} as date, COALESCE(SUM(TotalNetAmountLocalCurrency_Amount), 0) as amt FROM CrmOrder WHERE Status != 5 AND IsDeletedFromBackend = 0 AND InvoiceDate >= ? AND InvoiceDate <= ? ${orderOwner} ${orderCompany} GROUP BY ${invDateSubstr} ORDER BY date ASC`, [monthStart, asOfDate, ...orderParams]) as { date: string; amt: number }[];
+        const invoiceDaily = db.query(`SELECT ${invDateSubstr} as date, COALESCE(SUM(TotalNetAmountLocalCurrency_Amount), 0) as amt FROM CrmOrder WHERE Status != 5 AND IFNULL(IsDeletedFromBackend, 0) = 0 AND InvoiceDate >= ? AND InvoiceDate <= ? ${orderOwner} ${orderCompany} GROUP BY ${invDateSubstr} ORDER BY date ASC`, [monthStart, asOfDate, ...orderParams]) as { date: string; amt: number }[];
 
         const dayMap: Record<string, { date: string; contractAmt: number; invoiceAmt: number }> = {};
         const startD = new Date(monthStart);

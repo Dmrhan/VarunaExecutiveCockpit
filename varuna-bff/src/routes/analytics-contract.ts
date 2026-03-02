@@ -239,8 +239,8 @@ router.post('/dashboard', (req: Request, res: Response) => {
             ${whereClause}
             GROUP BY c.AccountId, a.Name
             ORDER BY amount DESC
-            LIMIT 10
-        `, [asOfDate, asOfDate, asOfDate, asOfDate, ...params]);
+            ${db.driver === 'mssql' ? 'OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY' : 'LIMIT 10'}
+        `).all(asOfDate, asOfDate, asOfDate, asOfDate, ...params);
 
         // 5. Satıcı Breakdown
         const repBreakdown = db.query(`

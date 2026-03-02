@@ -124,6 +124,7 @@ const accountSchema = z.object({
 
     // Detail collections
     Addresses: z.array(z.object({
+        Id: z.string().nullable().optional(),
         AddressType: z.number().nullable().optional(),
         AccountLocation: z.string().nullable().optional(),
         CentralAddress: z.number().nullable().optional(),
@@ -474,7 +475,7 @@ router.post('/', (req: Request, res: Response) => {
             db.execute('DELETE FROM WhoAreWeDealingWith WHERE AccountId = ?', [payload.Id]);
             db.execute('DELETE FROM InstallProcessRepresentatives WHERE AccountId = ?', [payload.Id]);
 
-            payload.Addresses?.forEach((d: any) => db.execute('INSERT INTO Addresses (AccountId, AddressType, AccountLocation, CentralAddress, Address_Country, Address_Subdivision1, Address_Subdivision2, Address_Subdivision3, Address_Subdivision4, Address_OpenAddress) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [payload.Id, d.AddressType ?? null, d.AccountLocation ?? null, d.CentralAddress ?? null, d.Address?.Country ?? null, d.Address?.Subdivision1 ?? null, d.Address?.Subdivision2 ?? null, d.Address?.Subdivision3 ?? null, d.Address?.Subdivision4 ?? null, d.Address?.OpenAddress ?? null]));
+            payload.Addresses?.forEach((d: any) => db.execute('INSERT INTO Addresses (Id, AccountId, AddressType, AccountLocation, CentralAddress, Address_Country, Address_Subdivision1, Address_Subdivision2, Address_Subdivision3, Address_Subdivision4, Address_OpenAddress) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [d.Id ?? null, payload.Id, d.AddressType ?? null, d.AccountLocation ?? null, d.CentralAddress ?? null, d.Address?.Country ?? null, d.Address?.Subdivision1 ?? null, d.Address?.Subdivision2 ?? null, d.Address?.Subdivision3 ?? null, d.Address?.Subdivision4 ?? null, d.Address?.OpenAddress ?? null]));
             payload.Contacts?.forEach((d: any) => db.execute('INSERT INTO AccountContacts (AccountId, ContactDetailId) VALUES (?, ?)', [payload.Id, d.ContactDetailId ?? null]));
             payload.AccountNotes?.forEach((d: any) => db.execute('INSERT INTO AccountNotes (AccountId, Note, NoteText, CreatedOn, CreatedBy) VALUES (?, ?, ?, ?, ?)', [payload.Id, d.Note ?? null, d.NoteText ?? null, d.CreatedOn ?? null, d.CreatedBy ?? null]));
             payload.AccountRepresentatives?.forEach((d: any) => db.execute('INSERT INTO AccountRepresentatives (AccountId, AccountOwnerId, CompanyId, EnterpriceAccountRepresentativeId) VALUES (?, ?, ?, ?)', [payload.Id, d.AccountOwnerId ?? null, d.CompanyId ?? null, d.EnterpriceAccountRepresentativeId ?? null]));

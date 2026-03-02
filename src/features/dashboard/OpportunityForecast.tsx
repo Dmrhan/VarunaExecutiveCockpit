@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { ArrowRight, AlertTriangle, TrendingUp, Calendar, AlertCircle } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
 import type { Deal } from '../../types/crm';
 import { cn } from '../../lib/utils'; // Assuming cn exists, based on other files
 
@@ -71,13 +71,6 @@ export function OpportunityForecast({ deals, onMonthClick, activeFilterMonth }: 
             if (monthIndex >= 0) {
                 const month = months[monthIndex];
 
-                // Only count towards value if not Lost/Won (usually forecast implies open pipeline + won in period? 
-                // Requirement says "Monitor opportunities by their expected close dates"
-                // Usually "Forecast" includes Closed Won for the period, but excludes Closed Lost.
-                // However, "Forward-looking" usually implies Open Pipeline.
-                // Let's include OPEN deals mostly, maybe Won too? 
-                // "This extension is for planning and forecasting". 
-                // Let's include everything that ISN'T Lost.
                 if (!['Kaybedildi', 'Lost'].includes(deal.stage)) {
                     month.totalValue += deal.value;
                     month.weightedValue += deal.value * (deal.probability / 100);
@@ -89,10 +82,6 @@ export function OpportunityForecast({ deals, onMonthClick, activeFilterMonth }: 
                     month.overdueCount += 1;
                 }
             } else if (isOverdue) {
-                // Deal is in a PAST month not in our 12-month window.
-                // We should probably add these to the "Current Month" bucket as "Overdue" or handle them separately.
-                // For a "Future Forecast", overdue deals are usually pushed to "Current Month" conceptually or shown as a warning.
-                // Let's add them to Current Month for visibility but mark as overdue.
                 months[0].totalValue += deal.value;
                 months[0].weightedValue += deal.value * (deal.probability / 100);
                 months[0].count += 1;
@@ -106,7 +95,8 @@ export function OpportunityForecast({ deals, onMonthClick, activeFilterMonth }: 
     const formatCurrency = (val: number) => {
         if (val >= 1000000) return `₺${(val / 1000000).toFixed(1)}M`;
         if (val >= 1000) return `₺${(val / 1000).toFixed(0)}k`;
-        return `₺${val.toFixed(0)}`;
+        if (val > 0) return `₺${val.toFixed(0)}`;
+        return '';
     };
 
     const CustomTooltip = ({ active, payload, label }: any) => {
@@ -124,10 +114,10 @@ export function OpportunityForecast({ deals, onMonthClick, activeFilterMonth }: 
                         )}
                     </p>
                     <p className="text-sm text-slate-600 dark:text-slate-300">
-                        Toplam Tutar: <span className="font-bold text-orange-600 dark:text-orange-400">{formatCurrency(data.totalValue)}</span>
+                        Toplam Tutar: <span className="font-bold text-orange-600 dark:text-orange-400">{formatCurrency(data.totalValue) || '₺0'}</span>
                     </p>
                     <p className="text-sm text-slate-600 dark:text-slate-300">
-                        Ağırlıklı Tutar: <span className="font-bold">{formatCurrency(data.weightedValue)}</span>
+                        Ağırlıklı Tutar: <span className="font-bold">{formatCurrency(data.weightedValue) || '₺0'}</span>
                     </p>
                     <p className="text-sm text-slate-600 dark:text-slate-300">
                         Açık Fırsat: <span className="font-bold">{data.count}</span>
@@ -136,6 +126,23 @@ export function OpportunityForecast({ deals, onMonthClick, activeFilterMonth }: 
             );
         }
         return null;
+    };
+
+    const renderCustomBarLabel = (props: any) => {
+        const { x, y, width, index, value } = props;
+        const monthData = forecastData[index];
+        if (value === 0) return null; // Don't show labels on empty bars
+
+        return (
+            <g transform={`translate(${x + width / 2},${y - 12})`}>
+                <text x={0} y={-8} dy={0} textAnchor="middle" fill="#f97316" fontSize={11} fontWeight={600} className="dark:fill-orange-400">
+                    {formatCurrency(value)}
+                </text>
+                <text x={0} y={4} dy={0} textAnchor="middle" fill="#64748b" fontSize={9} fontWeight={500}>
+                    {monthData.count} Fırsat
+                </text>
+            </g>
+        );
     };
 
     return (
@@ -161,7 +168,7 @@ export function OpportunityForecast({ deals, onMonthClick, activeFilterMonth }: 
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                         data={forecastData}
-                        margin={{ top: 20, right: 30, left: 10, bottom: 5 }}
+                        margin={{ top: 40, right: 30, left: 10, bottom: 5 }}
                         onClick={(data: any) => {
                             if (data && data.activePayload) {
                                 onMonthClick(data.activePayload[0].payload.date);
@@ -189,6 +196,7 @@ export function OpportunityForecast({ deals, onMonthClick, activeFilterMonth }: 
                             radius={[4, 4, 0, 0]}
                             maxBarSize={50}
                         >
+                            <LabelList dataKey="totalValue" content={renderCustomBarLabel} />
                             {forecastData.map((entry, index) => {
                                 const isSelected = activeFilterMonth &&
                                     activeFilterMonth.getMonth() === entry.date.getMonth() &&
@@ -202,6 +210,7 @@ export function OpportunityForecast({ deals, onMonthClick, activeFilterMonth }: 
                                         style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
                                         stroke={isSelected ? '#9a3412' : 'transparent'}
                                         strokeWidth={isSelected ? 2 : 0}
+                                        onClick={() => onMonthClick(entry.date)}
                                     />
                                 );
                             })}

@@ -245,7 +245,7 @@ router.post('/dashboard', (req: Request, res: Response) => {
         // 5. Satıcı Breakdown
         const repBreakdown = db.query(`
             SELECT
-                COALESCE(p.PersonNameSurname, p.Name || ' ' || p.SurName, c.SalesRepresentativeId) as repName,
+                COALESCE(p.PersonNameSurname, ${db.driver === 'mssql' ? "p.Name + ' ' + p.SurName" : "p.Name || ' ' || p.SurName"}, c.SalesRepresentativeId) as repName,
                 c.SalesRepresentativeId as repId,
                 COUNT(c.Id) as count,
                 COALESCE(SUM(c.TotalAmountLocalCurrency_Amount), 0) as amount,

@@ -359,7 +359,7 @@ export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); setIsFullScreen(!isFullScreen); }}
                                                 className="p-2.5 bg-white dark:bg-white/5 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 transition-all border border-slate-200 dark:border-white/10"
-                                                title={isFullScreen ? "Küçült" : "Tam Ekran"}
+                                                title={isFullScreen ? t('common.minimize') : t('common.fullscreen')}
                                             >
                                                 {isFullScreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
                                             </button>
@@ -415,7 +415,7 @@ export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps
                                             <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">{t('performance.distributionTitle')}</h3>
                                             {selectedStage && (
                                                 <span className="text-[10px] text-slate-400 ml-auto">
-                                                    Filter: <span className="font-bold text-indigo-500">{selectedStage}</span>
+                                                    {t('common.filter')}: <span className="font-bold text-indigo-500">{selectedStage}</span>
                                                 </span>
                                             )}
                                         </div>
@@ -444,7 +444,7 @@ export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps
                                                     </Pie>
                                                     <Tooltip
                                                         formatter={(value: any, name: any, props: any) => [
-                                                            `$${value?.toLocaleString() ?? 0} (${props.payload.count} adet)`,
+                                                            `$${value?.toLocaleString() ?? 0} (${props.payload.count} ${t('common.unit')})`,
                                                             name
                                                         ]}
                                                     />
@@ -514,7 +514,7 @@ export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps
                                                                 "px-2 py-1 rounded-lg text-[10px] font-bold uppercase",
                                                                 deal.aging > 60 ? "bg-rose-500/10 text-rose-500" : "bg-emerald-500/10 text-emerald-500"
                                                             )}>
-                                                                {deal.aging} G
+                                                                {deal.aging} {t('common.day_short')}
                                                             </span>
                                                         </td>
                                                     </tr>
@@ -552,7 +552,7 @@ export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps
                                                         <button
                                                             onClick={() => toggleTts(
                                                                 aiState.type === 'risk'
-                                                                    ? `${aiState.result.analysis} Tavsiye: ${aiState.result.advice}`
+                                                                    ? `${aiState.result.analysis} ${t('performance.strategicAdvice')}: ${aiState.result.advice}`
                                                                     : aiState.result.body
                                                             )}
                                                             className={cn(

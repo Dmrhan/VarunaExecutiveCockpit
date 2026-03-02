@@ -8,15 +8,16 @@ import { TrendMonitorCard } from './TrendMonitorCard';
 import { fetchPersonScorecard } from '../../services/ScorecardService';
 import type { ScorecardResponse } from '../../services/ScorecardService';
 import { DateRangePicker } from '../../components/ui/DateRangePicker';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { useTranslation } from 'react-i18next';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
 
 const StatCard = ({ label, value, colorClass, subtitle, icon: Icon }: any) => (
     <Card className={`bg-white/60 dark:bg-slate-700/60 backdrop-blur-md border border-slate-200 dark:border-slate-600 overflow-hidden shadow-sm flex flex-col items-center justify-center p-4 min-h-[110px]`}>
         <div className="flex items-center gap-2 mb-2 w-full justify-center text-slate-500 dark:text-slate-400">
             {Icon && <Icon size={14} className={colorClass} />}
-            <span className="text-[10px] uppercase font-medium tracking-widest text-center truncate">{label}</span>
+            <span className="text-[10px] uppercase font-bold tracking-[0.15em] text-center truncate">{label}</span>
         </div>
-        <div className={`text-2xl font-normal tracking-tight font-mono mb-1 ${colorClass}`}>
+        <div className={`text-2xl font-light tracking-tight mb-1 ${colorClass}`}>
             {value}
         </div>
         {subtitle && (
@@ -28,6 +29,7 @@ const StatCard = ({ label, value, colorClass, subtitle, icon: Icon }: any) => (
 );
 
 export const PersonScorecardPage = () => {
+    const { t } = useTranslation();
     const { users } = useData();
     const [selectedPersonId, setSelectedPersonId] = useState<string>('');
     const [asOfDate, setAsOfDate] = useState(new Date().toISOString().split('T')[0]);
@@ -85,6 +87,23 @@ export const PersonScorecardPage = () => {
         loadData();
     }, [selectedPersonId, asOfDate, dateFilter, customRange]);
 
+    const renderCustomBarLabel = (props: any) => {
+        const { x, y, width, index, value } = props;
+        const itemData = data?.opportunitiesByCloseMonth?.[index];
+        if (!itemData || value === 0) return null;
+
+        return (
+            <g transform={`translate(${x + width / 2},${y - 10})`}>
+                <text x={0} y={-8} dy={0} textAnchor="middle" fill="#64748b" fontSize={10} fontWeight={700}>
+                    {formatCurr(value)}
+                </text>
+                <text x={0} y={2} dy={0} textAnchor="middle" fill="#94a3b8" fontSize={8}>
+                    {itemData.count} {t('scorecard.expectations.opportunityUnit', 'Fırsat')}
+                </text>
+            </g>
+        );
+    };
+
     const formatCurr = (v: number) => {
         if (v >= 1000000) return `₺${(v / 1000000).toFixed(1)}M`;
         if (v >= 1000) return `₺${(v / 1000).toFixed(0)}k`;
@@ -97,7 +116,7 @@ export const PersonScorecardPage = () => {
             {/* Header & Controls */}
             <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
+                    <h1 className="text-3xl font-light tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
                         {selectedUser?.avatar ? (
                             <img
                                 src={selectedUser.avatar}
@@ -107,10 +126,10 @@ export const PersonScorecardPage = () => {
                         ) : (
                             <Users className="text-indigo-500" size={32} />
                         )}
-                        {selectedUser?.name ? `${selectedUser.name} - Satış Karnesi` : 'Kişi Bazlı Satış Operasyonları Karnesi'}
+                        {selectedUser?.name ? `${selectedUser.name} - ${t('scorecard.title', 'Satış Karnesi')}` : t('scorecard.pageTitle', 'Kişi Bazlı Satış Operasyonları Karnesi')}
                     </h1>
                     <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                        Seçilen satış temsilcisinin Opportunity'den Tahsilat'a uzanan tüm satış serüvenini as-of date (kesit) mantığı ile izleyin.
+                        {t('scorecard.subtitle', "Seçilen satış temsilcisinin Opportunity'den Tahsilat'a uzanan tüm satış serüvenini as-of date (kesit) mantığı ile izleyin.")}
                     </p>
                 </div>
 
@@ -143,10 +162,10 @@ export const PersonScorecardPage = () => {
                             value={dateFilter}
                             onChange={(e) => setDateFilter(e.target.value)}
                         >
-                            <option value="all" className="dark:bg-slate-800">Tüm Dönem</option>
-                            <option value="this_month" className="dark:bg-slate-800">Bu Ay</option>
-                            <option value="this_year" className="dark:bg-slate-800">YTD (Bu Yıl)</option>
-                            <option value="custom" className="dark:bg-slate-800">Özel Aralık</option>
+                            <option value="all" className="dark:bg-slate-800">{t('dateFilters.all', 'Tüm Dönem')}</option>
+                            <option value="this_month" className="dark:bg-slate-800">{t('dateFilters.thisMonth', 'Bu Ay')}</option>
+                            <option value="this_year" className="dark:bg-slate-800">{t('dateFilters.ytd', 'YTD (Bu Yıl)')}</option>
+                            <option value="custom" className="dark:bg-slate-800">{t('dateFilters.custom', 'Özel Aralık')}</option>
                         </select>
                     </div>
 
@@ -158,8 +177,8 @@ export const PersonScorecardPage = () => {
                                 className="text-sm font-semibold text-slate-700 dark:text-slate-200 hover:text-indigo-600 transition-colors"
                             >
                                 {customRange.start && customRange.end
-                                    ? `${new Date(customRange.start).toLocaleDateString('tr-TR')} - ${new Date(customRange.end).toLocaleDateString('tr-TR')}`
-                                    : 'Tarih Seçin'}
+                                    ? `${new Date(customRange.start).toLocaleDateString()} - ${new Date(customRange.end).toLocaleDateString()}`
+                                    : t('scorecard.selectDate', 'Tarih Seçin')}
                             </button>
                             {showPicker && (
                                 <DateRangePicker
@@ -180,7 +199,7 @@ export const PersonScorecardPage = () => {
                     {/* As-Of Date Selector */}
                     <div className="flex items-center gap-2 px-3 py-1 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl border border-indigo-100 dark:border-indigo-500/20">
                         <Clock size={16} className="text-indigo-500" />
-                        <span className="text-xs font-bold text-indigo-700 dark:text-indigo-400">As-Of:</span>
+                        <span className="text-xs font-bold text-indigo-700 dark:text-indigo-400">{t('scorecard.asOfDate', 'As-Of')}:</span>
                         <input
                             type="date"
                             value={asOfDate}
@@ -199,25 +218,25 @@ export const PersonScorecardPage = () => {
                             #{data.teamRank.rank}
                         </div>
                         <div>
-                            <h3 className="text-[10px] font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mb-0.5">Takım Sıralaması</h3>
+                            <h3 className="text-[10px] font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mb-0.5">{t('scorecard.teamRanking.title', 'Takım Sıralaması')}</h3>
                             <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                                Ekip içi (<span className="font-bold">{data.teamRank.totalMembers}</span> Kişi Arasında)
+                                {t('scorecard.teamRanking.subtitle', { defaultValue: 'Ekip içi ({{count}} Kişi Arasında)', count: data.teamRank.totalMembers })}
                             </p>
                         </div>
                     </div>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                         {data.teamRank.differenceToTop !== undefined && data.teamRank.differenceToTop > 0 && (
                             <span className="text-xs text-rose-600 dark:text-rose-400 font-bold bg-rose-500/10 px-3 py-1.5 rounded-xl whitespace-nowrap">
-                                1. ile Fark: {formatCurr(data.teamRank.differenceToTop)}
+                                {t('scorecard.teamRanking.gapToLeader', '1. ile Fark')}: {formatCurr(data.teamRank.differenceToTop)}
                             </span>
                         )}
                         {data.teamRank.differenceToTop === 0 && data.teamRank.rank === 1 && (
                             <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-3 py-1.5 rounded-xl whitespace-nowrap">
-                                🏆 Lider
+                                {t('scorecard.teamRanking.leader', '🏆 Lider')}
                             </span>
                         )}
                         <span className="text-[10px] text-slate-500 border border-slate-200 px-2 py-0.5 rounded-full dark:border-slate-600 uppercase tracking-widest bg-white/50 dark:bg-slate-800/50 self-start sm:self-auto mt-1 sm:mt-0">
-                            Based on: {data.teamRank.metric}
+                            {t('scorecard.teamRanking.basedOn', 'Based on')}: {data.teamRank.metric}
                         </span>
                     </div>
                 </div>
@@ -234,59 +253,59 @@ export const PersonScorecardPage = () => {
                     {/* KPI Strip */}
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
                         <StatCard
-                            label="Açık Fırsat"
+                            label={t('scorecard.kpis.openOpportunity', 'Açık Fırsat')}
                             icon={Briefcase}
                             value={formatCurr(data.kpis.openOpportunity.amount)}
-                            subtitle={`${data.kpis.openOpportunity.count} Adet`}
+                            subtitle={`${data.kpis.openOpportunity.count} ${t('scorecard.kpis.unit', 'Adet')}`}
                             colorClass="text-slate-600 dark:text-slate-300"
                         />
                         <StatCard
-                            label="İletilen Teklif"
+                            label={t('scorecard.kpis.quoteSent', 'İletilen Teklif')}
                             icon={FileText}
                             value={formatCurr(data.kpis.quoteSent.amount)}
-                            subtitle={`${data.kpis.quoteSent.count} Adet`}
+                            subtitle={`${data.kpis.quoteSent.count} ${t('scorecard.kpis.unit', 'Adet')}`}
                             colorClass="text-slate-600 dark:text-slate-300"
                         />
                         <StatCard
-                            label="Kazanılan Teklif"
+                            label={t('scorecard.kpis.quoteWon', 'Kazanılan Teklif')}
                             icon={CheckCircle2}
                             value={formatCurr(data.kpis.quoteWon.amount)}
-                            subtitle={`${data.kpis.quoteWon.count} Adet`}
+                            subtitle={`${data.kpis.quoteWon.count} ${t('scorecard.kpis.unit', 'Adet')}`}
                             colorClass="text-emerald-500"
                         />
                         <StatCard
-                            label="Quote Conversion Rate"
+                            label={t('scorecard.kpis.conversionRate', 'Quote Conversion Rate')}
                             icon={ArrowUpRight}
                             value={`%${(data.kpis.quoteWinRate * 100).toFixed(1)}`}
-                            subtitle="Kazanılan / İletilen Tutara Oran"
+                            subtitle={t('scorecard.kpis.conversionSubtitle', 'Kazanılan / İletilen Tutara Oran')}
                             colorClass="text-indigo-500"
                         />
                         <StatCard
-                            label="Dönüşen Siparişler"
+                            label={t('scorecard.kpis.openOrders', 'Dönüşen Siparişler')}
                             icon={ShoppingCart}
                             value={formatCurr(data.kpis.openOrder.amount)}
-                            subtitle={`${data.kpis.openOrder.count} Sipariş`}
+                            subtitle={`${data.kpis.openOrder.count} ${t('scorecard.kpis.orderUnit', 'Sipariş')}`}
                             colorClass="text-amber-500"
                         />
                         <StatCard
-                            label="Bağlanan Sözleşme"
+                            label={t('scorecard.kpis.contracts', 'Bağlanan Sözleşme')}
                             icon={FileText}
                             value={formatCurr(data.kpis.contract.amount)}
-                            subtitle={`${data.kpis.contract.count} Adet`}
+                            subtitle={`${data.kpis.contract.count} ${t('scorecard.kpis.unit', 'Adet')}`}
                             colorClass="text-purple-500"
                         />
                         <StatCard
-                            label="Faturalanan"
+                            label={t('scorecard.kpis.invoiced', 'Faturalanan')}
                             icon={CheckCircle2}
                             value={formatCurr(data.kpis.ytdInvoice.amount)}
-                            subtitle={`Toplam Fatura`}
+                            subtitle={t('scorecard.kpis.totalInvoice', 'Toplam Fatura')}
                             colorClass="text-blue-500"
                         />
                         <StatCard
-                            label="Tahsil Edilen"
+                            label={t('scorecard.kpis.collected', 'Tahsil Edilen')}
                             icon={CheckCircle2}
                             value={formatCurr(data.kpis.ytdCollection.amount)}
-                            subtitle={`(${formatCurr(data.kpis.ytdCollection.pendingAmount)} Bakiye)`}
+                            subtitle={`(${formatCurr(data.kpis.ytdCollection.pendingAmount)} ${t('scorecard.kpis.balance', 'Bakiye')})`}
                             colorClass="text-teal-500"
                         />
                     </div>
@@ -307,16 +326,16 @@ export const PersonScorecardPage = () => {
                         <Card className="lg:col-span-2 overflow-hidden flex flex-col">
                             <CardHeader className="py-4 border-b border-slate-100 dark:border-slate-700 bg-white/30 dark:bg-white/5">
                                 <CardTitle className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 font-bold">
-                                    En Büyük 10 Kontrat (Müşteri Bazlı)
+                                    {t('scorecard.tables.topContracts', 'En Büyük 10 Kontrat (Müşteri Bazlı)')}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="p-0 flex-1 overflow-x-auto">
                                 <table className="w-full text-left border-collapse min-w-[500px]">
                                     <thead>
                                         <tr className="border-b border-slate-100 dark:border-slate-700">
-                                            <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 dark:bg-slate-800/50">Müşteri</th>
-                                            <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 dark:bg-slate-800/50 text-right">Kontrat Sayısı</th>
-                                            <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 dark:bg-slate-800/50 text-right">Pano Değeri</th>
+                                            <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 dark:bg-slate-800/50">{t('scorecard.tables.customer', 'Müşteri')}</th>
+                                            <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 dark:bg-slate-800/50 text-right">{t('scorecard.tables.contractCount', 'Kontrat Sayısı')}</th>
+                                            <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 dark:bg-slate-800/50 text-right">{t('scorecard.tables.contractValue', 'Pano Değeri')}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-50 dark:divide-slate-800 text-sm font-medium">
@@ -330,7 +349,7 @@ export const PersonScorecardPage = () => {
                                             </tr>
                                         ))}
                                         {data.contractsByAccount.length === 0 && (
-                                            <tr><td colSpan={3} className="py-8 text-center text-slate-400 text-xs italic">Sonuç bulunamadı</td></tr>
+                                            <tr><td colSpan={3} className="py-8 text-center text-slate-400 text-xs italic">{t('scorecard.tables.noResults', 'Sonuç bulunamadı')}</td></tr>
                                         )}
                                     </tbody>
                                 </table>
@@ -340,7 +359,7 @@ export const PersonScorecardPage = () => {
                         <Card className="flex flex-col overflow-hidden">
                             <CardHeader className="py-4 border-b border-slate-100 dark:border-slate-700 bg-white/30 dark:bg-white/5">
                                 <CardTitle className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 font-bold">
-                                    Kontrat Safhaları
+                                    {t('scorecard.tables.contractStages', 'Kontrat Safhaları')}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="p-0 flex-1 overflow-y-auto max-h-[300px]">
@@ -349,7 +368,7 @@ export const PersonScorecardPage = () => {
                                         <li key={s.statusCode} className="p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors flex justify-between items-center group">
                                             <div>
                                                 <p className="text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase">{s.statusLabel}</p>
-                                                <p className="text-[10px] text-slate-400 hidden group-hover:block transition-all">{s.count} Kontrat</p>
+                                                <p className="text-[10px] text-slate-400 hidden group-hover:block transition-all">{s.count} {t('scorecard.kpis.contracts', 'Kontrat')}</p>
                                             </div>
                                             <span className="font-mono font-bold text-sm text-indigo-600 dark:text-indigo-400">
                                                 {formatCurr(s.amount)}
@@ -357,7 +376,7 @@ export const PersonScorecardPage = () => {
                                         </li>
                                     ))}
                                     {data.contractsByStatus.length === 0 && (
-                                        <li className="p-8 text-center text-slate-400 text-xs italic">Veri bulunamadı.</li>
+                                        <li className="p-8 text-center text-slate-400 text-xs italic">{t('scorecard.tables.noResults', 'Veri bulunamadı.')}</li>
                                     )}
                                 </ul>
                             </CardContent>
@@ -371,20 +390,23 @@ export const PersonScorecardPage = () => {
                                 <CardTitle className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 font-bold flex items-center justify-between">
                                     <span className="flex items-center gap-2">
                                         <Briefcase size={14} className="text-amber-500" />
-                                        Aylara Göre Fırsat Kapanış Beklentisi (TL)
+                                        {t('scorecard.expectations.title', 'Aylara Göre Fırsat Kapanış Beklentisi (TL)')}
                                     </span>
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="p-6 flex-1 w-full">
                                 {data.opportunitiesByCloseMonth && data.opportunitiesByCloseMonth.length > 0 ? (
                                     <ResponsiveContainer width="100%" height={280}>
-                                        <BarChart data={data.opportunitiesByCloseMonth} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
+                                        <BarChart data={data.opportunitiesByCloseMonth} margin={{ top: 25, right: 10, left: 10, bottom: 20 }}>
                                             <XAxis
                                                 dataKey="name"
                                                 axisLine={false}
                                                 tickLine={false}
                                                 tick={{ fontSize: 11, fill: '#8b949e' }}
                                                 dy={10}
+                                                interval={0}
+                                                angle={-25}
+                                                textAnchor="end"
                                             />
                                             <YAxis
                                                 hide={true}
@@ -398,8 +420,8 @@ export const PersonScorecardPage = () => {
                                                             <div className="bg-white dark:bg-slate-800 p-3 rounded-lg shadow-xl border border-slate-100 dark:border-slate-700">
                                                                 <p className="font-bold text-slate-800 dark:text-slate-200 mb-1">{d.name}</p>
                                                                 <div className="flex flex-col gap-1 text-sm">
-                                                                    <span className="text-amber-500 font-medium">Gelir: {formatCurr(d.expectedRevenue)}</span>
-                                                                    <span className="text-slate-500 dark:text-slate-400">Adet: {d.count} Fırsat</span>
+                                                                    <span className="text-amber-500 font-medium">{t('scorecard.expectations.revenue', 'Gelir')}: {formatCurr(d.expectedRevenue)}</span>
+                                                                    <span className="text-slate-500 dark:text-slate-400">{t('scorecard.funnel.count', 'Adet')}: {d.count} {t('scorecard.expectations.opportunityUnit', 'Fırsat')}</span>
                                                                 </div>
                                                             </div>
                                                         );
@@ -425,12 +447,13 @@ export const PersonScorecardPage = () => {
                                                         />
                                                     );
                                                 })}
+                                                <LabelList dataKey="expectedRevenue" content={renderCustomBarLabel} />
                                             </Bar>
                                         </BarChart>
                                     </ResponsiveContainer>
                                 ) : (
                                     <div className="h-full w-full flex items-center justify-center text-slate-400 text-xs italic">
-                                        Tahmini kapanış tarihine sahip açık fırsat verisi bulunamadı.
+                                        {t('scorecard.expectations.noData', 'Tahmini kapanış tarihine sahip açık fırsat verisi bulunamadı.')}
                                     </div>
                                 )}
                             </CardContent>
@@ -442,15 +465,15 @@ export const PersonScorecardPage = () => {
                                     <span className="flex items-center gap-2 text-indigo-500">
                                         <FileText size={14} />
                                         {selectedMonthKey
-                                            ? `${data.opportunitiesByCloseMonth?.find((m: any) => m.monthKey === selectedMonthKey)?.name} Fırsatları`
-                                            : 'Tüm Açık Fırsatlar'}
+                                            ? t('scorecard.expectations.periodOpportunities', { defaultValue: '{{period}} Fırsatları', period: data.opportunitiesByCloseMonth?.find((m: any) => m.monthKey === selectedMonthKey)?.name })
+                                            : t('scorecard.expectations.allOpportunities', 'Tüm Açık Fırsatlar')}
                                     </span>
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="p-0 flex-1 overflow-y-auto max-h-[350px]">
                                 <ul className="divide-y divide-slate-50 dark:divide-slate-800">
                                     {data.openOpportunitiesList?.filter((o: any) => selectedMonthKey ? o.monthKey === selectedMonthKey : true).length === 0 && (
-                                        <li className="p-8 text-center text-slate-400 text-xs italic">Açık fırsat bulunamadı.</li>
+                                        <li className="p-8 text-center text-slate-400 text-xs italic">{t('scorecard.expectations.noOpportunities', 'Açık fırsat bulunamadı.')}</li>
                                     )}
                                     {data.openOpportunitiesList?.filter((o: any) => selectedMonthKey ? o.monthKey === selectedMonthKey : true).map((opp: any) => (
                                         <li key={opp.id} className="p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors flex flex-col gap-1">
@@ -463,11 +486,11 @@ export const PersonScorecardPage = () => {
                                             <p className="text-[10px] text-slate-500 truncate">{opp.accountName || '-'}</p>
                                             <div className="mt-1 flex items-center justify-between">
                                                 <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
-                                                    {opp.stageName || (opp.dealStatus === 1 ? 'Açık / Müzakere' : `Statü: ${opp.dealStatus}`)}
+                                                    {opp.stageName || (opp.dealStatus === 1 ? t('status.Negotiation', 'Açık / Müzakere') : `${t('common.status', 'Statü')}: ${opp.dealStatus}`)}
                                                 </span>
                                                 {opp.expectedCloseDate && (
                                                     <span className="text-[9px] text-slate-400 font-mono">
-                                                        Kapanış: {new Date(opp.expectedCloseDate).toLocaleDateString('tr-TR')}
+                                                        {t('common.closing', 'Kapanış')}: {new Date(opp.expectedCloseDate).toLocaleDateString()}
                                                     </span>
                                                 )}
                                             </div>
@@ -482,7 +505,7 @@ export const PersonScorecardPage = () => {
                     <Card className="overflow-hidden flex flex-col">
                         <CardHeader className="py-4 border-b border-slate-100 dark:border-slate-700 bg-white/30 dark:bg-white/5">
                             <CardTitle className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 font-bold">
-                                Son Etkileşimler (Top 10)
+                                {t('scorecard.interactions.title', 'Son Etkileşimler (Top 10)')}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="p-0 flex-1 flex flex-row w-full divide-x divide-slate-100 dark:divide-slate-800">
@@ -493,14 +516,14 @@ export const PersonScorecardPage = () => {
                                         <span className="text-[10px] font-mono">{new Date(e.date).toLocaleDateString()}</span>
                                     </div>
                                     <p className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-1 leading-tight line-clamp-2">
-                                        {e.subject || 'Detaysız Plan'}
+                                        {e.subject || t('scorecard.interactions.noDetail', 'Detaysız Plan')}
                                     </p>
                                     <p className="text-[10px] text-indigo-500 dark:text-indigo-400 uppercase font-medium truncate">
-                                        {e.accountName || 'Bilinmeyen Müşteri'}
+                                        {e.accountName || t('scorecard.interactions.unknownCustomer', 'Bilinmeyen Müşteri')}
                                     </p>
                                 </div>
                             )) : (
-                                <div className="p-8 text-center text-slate-400 text-xs italic w-full flex justify-center">Aktivite logu bulunamadı.</div>
+                                <div className="p-8 text-center text-slate-400 text-xs italic w-full flex justify-center">{t('scorecard.interactions.noLog', 'Aktivite logu bulunamadı.')}</div>
                             )}
                         </CardContent>
                     </Card>

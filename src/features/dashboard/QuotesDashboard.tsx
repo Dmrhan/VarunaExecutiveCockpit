@@ -9,6 +9,7 @@ import { Sparkles, Users, Info, Search, ChevronLeft, ChevronRight, LayoutGrid, L
 import { QuotePoolAnalysis } from './QuotePoolAnalysis';
 import { SalesRepPerformance } from './SalesRepPerformance';
 import { QuoteProductPerformance } from './QuoteProductPerformance';
+import { HorizontalBarChart } from '../../components/ui/HorizontalBarChart';
 import type { Quote, QuoteStatus, ProductGroup } from '../../types/crm';
 import { PRODUCT_COLORS } from '../../data/mockData';
 
@@ -83,63 +84,8 @@ const statusSolidColors = {
     'Denied': "bg-rose-600",
 };
 
-const DashboardGridCard = ({ title, data, dataKey, color, icon: Icon, insight, className = "" }: any) => {
-    const maxValue = Math.max(...data.map((item: any) => item[dataKey]), 1);
+// Removed DashboardGridCard
 
-    return (
-        <Card className={`bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 overflow-hidden shadow-sm flex flex-col h-full ${className}`}>
-            <CardHeader className="py-4 border-b border-slate-100 dark:border-white/5 bg-white/30 dark:bg-white/5 flex flex-row items-center gap-3">
-                {Icon && (
-                    <div className="p-2 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">
-                        <Icon size={18} />
-                    </div>
-                )}
-                <div>
-                    <CardTitle className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 font-bold">
-                        {title}
-                    </CardTitle>
-                </div>
-            </CardHeader>
-            <CardContent className="p-6 flex-1 flex flex-col justify-between">
-                <div className="space-y-4">
-                    {data.map((item: any, idx: number) => {
-                        const percentage = (item[dataKey] / maxValue) * 100;
-                        return (
-                            <div key={idx} className="group">
-                                <div className="flex justify-between items-center mb-1.5">
-                                    <span className="text-[11px] font-bold text-slate-600 dark:text-slate-200 uppercase tracking-tight truncate max-w-[70%]">
-                                        {item.name}
-                                    </span>
-                                    <span className="text-[11px] font-mono font-bold text-slate-900 dark:text-white">
-                                        {formatCurrency(item[dataKey])}
-                                    </span>
-                                </div>
-                                <div className="h-1.5 w-full bg-slate-100/50 dark:bg-slate-800/50 rounded-full overflow-hidden">
-                                    <motion.div
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${percentage}% ` }}
-                                        transition={{ duration: 1, delay: idx * 0.1 }}
-                                        className="h-full rounded-full transition-all group-hover:brightness-110 shadow-[0_0_8px_rgba(0,0,0,0.05)]"
-                                        style={{ backgroundColor: color }}
-                                    />
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-
-                {insight && (
-                    <div className="mt-6 p-3 rounded-xl bg-gradient-to-tr from-indigo-500/5 to-white/5 dark:from-indigo-500/10 dark:to-transparent border border-indigo-500/10 flex gap-2.5 items-start">
-                        <Info size={14} className="text-indigo-500 mt-0.5 shrink-0" />
-                        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed italic">
-                            {insight}
-                        </p>
-                    </div>
-                )}
-            </CardContent>
-        </Card>
-    );
-};
 
 const StatCard = ({ label, value, subtitle, colorClass }: { label: string; value: string; subtitle?: string; colorClass: string }) => (
     <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 p-5 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm h-full min-h-[100px]">
@@ -163,6 +109,9 @@ export function QuotesDashboard() {
     const [dateFilter, setDateFilter] = useState('all');
     const [customRange, setCustomRange] = useState<{ start: Date | null, end: Date | null }>({ start: null, end: null });
     const [showDatePicker, setShowDatePicker] = useState(false);
+
+    // Chart Drilldown State
+    const [selectedTopCustomer, setSelectedTopCustomer] = useState<string | null>(null);
 
     // Advanced Filtering & Sorting State
     const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
@@ -276,13 +225,22 @@ export function QuotesDashboard() {
         return baseQuotes.filter(q => q.status === columnFilters.status);
     }, [baseQuotes, columnFilters.status]);
 
+    // 3. Final Quotes (Base Filtered + Chart Drilldowns) - Used for Cards & Table
+    const finalQuotes = useMemo(() => {
+        let result = filteredQuotes;
+        if (selectedTopCustomer) {
+            result = result.filter(q => q.customerName === selectedTopCustomer);
+        }
+        return result;
+    }, [filteredQuotes, selectedTopCustomer]);
+
     // Metrics Calculation
     const metrics = useMemo(() => {
-        const totalCount = filteredQuotes.length;
-        const totalValue = filteredQuotes.reduce((s, q) => s + q.amount, 0);
-        const wonQuotes = filteredQuotes.filter(q => ['Accepted', 'Approved'].includes(q.status));
-        const lostQuotes = filteredQuotes.filter(q => ['Rejected', 'Denied'].includes(q.status));
-        const openQuotes = filteredQuotes.filter(q => !['Accepted', 'Approved', 'Rejected', 'Denied'].includes(q.status));
+        const totalCount = finalQuotes.length;
+        const totalValue = finalQuotes.reduce((s, q) => s + q.amount, 0);
+        const wonQuotes = finalQuotes.filter(q => ['Accepted', 'Approved'].includes(q.status));
+        const lostQuotes = finalQuotes.filter(q => ['Rejected', 'Denied'].includes(q.status));
+        const openQuotes = finalQuotes.filter(q => !['Accepted', 'Approved', 'Rejected', 'Denied'].includes(q.status));
         const wonValue = wonQuotes.reduce((s, q) => s + q.amount, 0);
         const lostValue = lostQuotes.reduce((s, q) => s + q.amount, 0);
         const openValue = openQuotes.reduce((s, q) => s + q.amount, 0);
@@ -293,7 +251,7 @@ export function QuotesDashboard() {
             lostCount: lostQuotes.length,
             openCount: openQuotes.length,
         };
-    }, [filteredQuotes]);
+    }, [finalQuotes]);
 
     // Chart Data
     const charts = useMemo(() => {
@@ -307,7 +265,7 @@ export function QuotesDashboard() {
             statusCount[q.status] = (statusCount[q.status] || 0) + 1;
         });
 
-        // Calculate Customer/Other Charts using FILTERED quotes (filtered by status)
+        // Calculate Customer Charts using FILTERED quotes (filtered by status)
         filteredQuotes.forEach(q => {
             customerRev[q.customerName] = (customerRev[q.customerName] || 0) + q.amount;
         });
@@ -332,7 +290,7 @@ export function QuotesDashboard() {
     }, [quotes]);
 
     const sortedQuotes = useMemo(() => {
-        let result = [...filteredQuotes];
+        let result = [...finalQuotes];
 
         if (sortConfig) {
             result.sort((a, b) => {
@@ -356,7 +314,7 @@ export function QuotesDashboard() {
         }
 
         return result;
-    }, [filteredQuotes, sortConfig]);
+    }, [finalQuotes, sortConfig]);
 
     const paginatedQuotes = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage;
@@ -456,13 +414,19 @@ export function QuotesDashboard() {
                     <SalesRepPerformance quotes={filteredQuotes} />
                 </div>
                 <div className="xl:col-span-1 lg:col-span-2 xl:col-span-1 h-[400px]">
-                    <DashboardGridCard
+                    <HorizontalBarChart
                         title={t('quotes.charts.customerRevenue')}
-                        data={charts.customer}
-                        dataKey="revenue"
+                        data={charts.customer.map((item: any) => ({
+                            id: item.name,
+                            name: item.name,
+                            value: item.revenue,
+                            formattedValue: formatCurrency(item.revenue) + '₺'
+                        }))}
                         color="#0ea5e9"
                         icon={Users}
-                        insight={t('quotes.charts.insights.customer')}
+                        insight={t('quotes.charts.customerInsight')}
+                        activeId={selectedTopCustomer}
+                        onBarClick={(item) => setSelectedTopCustomer(prev => prev === item.id ? null : item.id)}
                         className="h-full"
                     />
                 </div>

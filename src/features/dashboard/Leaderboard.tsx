@@ -5,9 +5,9 @@ import { Badge } from '../../components/ui/Badge';
 import { UserCheck, Award } from 'lucide-react';
 import { Modal } from '../../components/ui/Modal';
 import { DealList } from './DealList';
-
-
+import { useTranslation } from 'react-i18next';
 export function Leaderboard() {
+    const { t } = useTranslation();
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const { metrics, users, deals } = useData();
 
@@ -23,7 +23,9 @@ export function Leaderboard() {
         <>
             <Card className="col-span-1 md:col-span-2 lg:col-span-2 h-full">
                 <CardHeader className="pb-4 flex flex-row items-center justify-between">
-                    <CardTitle className="text-sm text-slate-500 font-medium uppercase tracking-wide">Top Performers</CardTitle>
+                    <CardTitle className="text-sm text-slate-500 font-medium uppercase tracking-wide">
+                        {t('performance.topPerformers', 'Top Performers')}
+                    </CardTitle>
                     <Award className="text-amber-400" size={20} />
                 </CardHeader>
                 <CardContent>

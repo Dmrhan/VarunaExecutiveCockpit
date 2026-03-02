@@ -22,6 +22,7 @@ import { FunnelChart } from './FunnelChart';
 import { GamifiedLeaderboard } from './GamifiedLeaderboard';
 import { ProductPerformance } from './ProductPerformance';
 import { OpportunityForecast } from './OpportunityForecast';
+import { HorizontalBarChart } from '../../components/ui/HorizontalBarChart';
 
 import type { Deal } from '../../types/crm';
 
@@ -35,63 +36,8 @@ const formatCurrency = (value: number) => {
 
 
 
-const DashboardGridCard = ({ title, data, dataKey, color, icon: Icon, insight, className = "" }: any) => {
-    const maxValue = Math.max(...data.map((item: any) => item[dataKey]), 1);
+// Remove DashboardGridCard and its dependencies
 
-    return (
-        <Card className={`bg-white/40 dark:bg-slate-700/40 backdrop-blur-md border border-slate-200 dark:border-white/10 overflow-hidden shadow-sm flex flex-col h-full ${className}`}>
-            <CardHeader className="py-4 border-b border-slate-100 dark:border-white/5 bg-white/30 dark:bg-white/5 flex flex-row items-center gap-3">
-                {Icon && (
-                    <div className="p-2 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">
-                        <Icon size={18} />
-                    </div>
-                )}
-                <div>
-                    <CardTitle className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 font-bold">
-                        {title}
-                    </CardTitle>
-                </div>
-            </CardHeader>
-            <CardContent className="p-6 flex-1 flex flex-col justify-between">
-                <div className="space-y-4">
-                    {data.map((item: any, idx: number) => {
-                        const percentage = (item[dataKey] / maxValue) * 100;
-                        return (
-                            <div key={idx} className="group">
-                                <div className="flex justify-between items-center mb-1.5">
-                                    <span className="text-[11px] font-bold text-slate-600 dark:text-slate-200 uppercase tracking-tight truncate max-w-[70%]">
-                                        {item.name}
-                                    </span>
-                                    <span className="text-[11px] font-mono font-bold text-slate-900 dark:text-white">
-                                        {dataKey === 'revenue' ? formatCurrency(item[dataKey]) : item[dataKey]}
-                                    </span>
-                                </div>
-                                <div className="h-1.5 w-full bg-slate-100/50 dark:bg-slate-800/50 rounded-full overflow-hidden">
-                                    <motion.div
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${percentage}%` }}
-                                        transition={{ duration: 1, delay: idx * 0.1 }}
-                                        className="h-full rounded-full transition-all group-hover:brightness-110 shadow-[0_0_8px_rgba(0,0,0,0.05)]"
-                                        style={{ backgroundColor: color }}
-                                    />
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-
-                {insight && (
-                    <div className="mt-6 p-3 rounded-xl bg-gradient-to-tr from-indigo-500/5 to-white/5 dark:from-indigo-500/10 dark:to-transparent border border-indigo-500/10 flex gap-2.5 items-start">
-                        <Info size={14} className="text-indigo-500 mt-0.5 shrink-0" />
-                        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed italic">
-                            {insight}
-                        </p>
-                    </div>
-                )}
-            </CardContent>
-        </Card>
-    );
-};
 
 const StatCard = ({ label, value, colorClass }: { label: string; value: string; colorClass: string }) => (
     <div className="bg-white/60 dark:bg-slate-700/60 backdrop-blur-md border border-slate-200 dark:border-slate-600 p-5 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm h-full min-h-[100px]">
@@ -109,6 +55,10 @@ export function OpportunitiesDashboard() {
     const { t } = useTranslation();
     const { deals, users } = useData();
     const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
+
+    // Chart Drilldown State
+    const [selectedSource, setSelectedSource] = useState<string | null>(null);
+    const [selectedTopCustomer, setSelectedTopCustomer] = useState<string | null>(null);
 
     // Filter State
     const [dateFilter, setDateFilter] = useState('all');
@@ -215,7 +165,14 @@ export function OpportunitiesDashboard() {
             });
         }
 
-        // 2. Column Filters
+        // 2. Column Filters & Chart Filters
+        if (selectedSource) {
+            result = result.filter(d => d.source === selectedSource);
+        }
+        if (selectedTopCustomer) {
+            result = result.filter(d => d.customerName === selectedTopCustomer);
+        }
+
         if (columnFilters.customer) {
             const search = columnFilters.customer.toLowerCase();
             result = result.filter(d =>
@@ -474,21 +431,33 @@ export function OpportunitiesDashboard() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <DashboardGridCard
+                    <HorizontalBarChart
                         title={t('opportunities.charts.sourceTitle')}
-                        data={chartData.sourceCount}
-                        dataKey="count"
+                        data={chartData.sourceCount.map((item: any) => ({
+                            id: item.name,
+                            name: item.name,
+                            value: item.count,
+                            formattedValue: item.count.toString()
+                        }))}
                         color="#818cf8"
                         icon={Share2}
                         insight={t('opportunities.charts.sourceInsight')}
+                        activeId={selectedSource}
+                        onBarClick={(item) => setSelectedSource(prev => prev === item.id ? null : item.id)}
                     />
-                    <DashboardGridCard
+                    <HorizontalBarChart
                         title={t('opportunities.charts.customerPotentialTitle')}
-                        data={chartData.customerRev}
-                        dataKey="revenue"
+                        data={chartData.customerRev.map((item: any) => ({
+                            id: item.name,
+                            name: item.name,
+                            value: item.revenue,
+                            formattedValue: formatCurrency(item.revenue) + '₺'
+                        }))}
                         color="#0ea5e9"
                         icon={Users}
                         insight={t('opportunities.charts.customerPotentialInsight')}
+                        activeId={selectedTopCustomer}
+                        onBarClick={(item) => setSelectedTopCustomer(prev => prev === item.id ? null : item.id)}
                     />
                 </div>
             </div>
@@ -521,7 +490,7 @@ export function OpportunitiesDashboard() {
                                         >{t('opportunities.kanbanView')}</button>
                                     </div>
                                 </div>
-                                <span className="text-xs text-slate-400 font-mono font-bold uppercase">{filteredDeals.length} Kayıt</span>
+                                <span className="text-xs text-slate-400 font-mono font-bold uppercase">{t('performance.listingDetails_short', { count: filteredDeals.length, defaultValue: `${filteredDeals.length} Kayıt` })}</span>
                             </div>
                         </CardHeader>
                         <CardContent className="p-0 overflow-auto h-[600px]">
@@ -533,7 +502,7 @@ export function OpportunitiesDashboard() {
                                             { label: t('opportunities.stage'), key: 'stage' as const },
                                             { label: t('opportunities.probability'), key: 'probability' as const },
                                             { label: t('opportunities.value'), key: 'value' as const },
-                                            { label: 'Tahmini Kapanış', key: 'expectedCloseDate' as const },
+                                            { label: t('opportunities.closeDate', 'Tahmini Kapanış'), key: 'expectedCloseDate' as const },
                                             { label: t('opportunities.owner'), key: 'ownerName' as const }
                                         ].map(col => (
                                             <th
@@ -609,7 +578,7 @@ export function OpportunitiesDashboard() {
                                         <th className="p-2 border-r border-slate-100 dark:border-white/5">
                                             <input
                                                 type="text"
-                                                placeholder="Sahibi..."
+                                                placeholder={`${t('opportunities.owner', 'Sorumlu')}...`}
                                                 className="w-full bg-slate-50 dark:bg-white/5 border-none rounded-lg px-2 py-1 text-[10px] outline-none focus:ring-1 focus:ring-indigo-500/50"
                                                 value={columnFilters.owner}
                                                 onChange={e => setColumnFilters(prev => ({ ...prev, owner: e.target.value }))}
@@ -647,10 +616,10 @@ export function OpportunitiesDashboard() {
                                                 <td className="p-4">
                                                     <div className="flex flex-col">
                                                         <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                                                            {new Date(deal.expectedCloseDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                            {new Date(deal.expectedCloseDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
                                                         </span>
                                                         <span className="text-[10px] text-slate-400">
-                                                            Tahmini
+                                                            {t('opportunities.expectations', 'Tahmini')}
                                                         </span>
                                                     </div>
                                                 </td>
@@ -666,7 +635,7 @@ export function OpportunitiesDashboard() {
                                                     <button
                                                         onClick={() => handleOpenResponseModal(deal)}
                                                         className="p-1.5 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg transition-colors group/ai"
-                                                        title="AI Yanıt Oluştur"
+                                                        title={t('opportunities.aiResponse', 'AI Yanıt Oluştur')}
                                                     >
                                                         <Sparkles size={16} className="group-hover/ai:scale-110 transition-transform" />
                                                     </button>
@@ -675,17 +644,17 @@ export function OpportunitiesDashboard() {
                                                     {deal.healthScore < 50 ? (
                                                         <div className="flex items-center justify-end gap-1 text-rose-500" title="Riskli">
                                                             <AlertCircle size={14} />
-                                                            <span className="text-[10px] font-bold">RİSK</span>
+                                                            <span className="text-[10px] font-bold">{t('opportunities.riskLevels.high', 'RİSK')}</span>
                                                         </div>
                                                     ) : deal.healthScore > 80 ? (
                                                         <div className="flex items-center justify-end gap-1 text-emerald-500" title="İyi">
                                                             <CheckCircle2 size={14} />
-                                                            <span className="text-[10px] font-bold">İYİ</span>
+                                                            <span className="text-[10px] font-bold">{t('opportunities.riskLevels.good', 'İYİ')}</span>
                                                         </div>
                                                     ) : (
                                                         <div className="flex items-center justify-end gap-1 text-amber-500" title="Normal">
                                                             <Clock size={14} />
-                                                            <span className="text-[10px] font-bold">NORMAL</span>
+                                                            <span className="text-[10px] font-bold">{t('opportunities.riskLevels.normal', 'NORMAL')}</span>
                                                         </div>
                                                     )}
                                                 </td>
@@ -700,19 +669,19 @@ export function OpportunitiesDashboard() {
                     <div className="space-y-4">
                         <div className="flex justify-between items-center mb-2 px-1">
                             <div className="flex items-center gap-4">
-                                <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest">Fırsat Pano Görünümü</h3>
+                                <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest">{t('opportunities.kanbanTitle', 'Fırsat Pano Görünümü')}</h3>
                                 <div className="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-xl items-center">
                                     <button
                                         onClick={() => setViewMode('list')}
                                         className="px-3 py-1 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all text-slate-500 hover:text-slate-700"
-                                    >List</button>
+                                    >{t('opportunities.listView', 'List')}</button>
                                     <button
                                         onClick={() => setViewMode('kanban')}
                                         className="px-3 py-1 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-indigo-400"
-                                    >Pano</button>
+                                    >{t('opportunities.kanbanView', 'Pano')}</button>
                                 </div>
                             </div>
-                            <span className="text-xs text-slate-400 font-mono font-bold uppercase">{filteredDeals.length} Kayıt</span>
+                            <span className="text-xs text-slate-400 font-mono font-bold uppercase">{t('performance.listingDetails_short', { count: filteredDeals.length, defaultValue: `${filteredDeals.length} Kayıt` })}</span>
                         </div>
                         <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
                             {['Lead', 'Qualified', 'Proposal', 'Negotiation', 'Order', 'Lost'].map(stage => {
@@ -735,7 +704,7 @@ export function OpportunitiesDashboard() {
                                         <div className="space-y-3 h-[500px] overflow-y-auto pr-1">
                                             {stageDeals.length === 0 && (
                                                 <div className="h-20 border-2 border-dashed border-slate-100 dark:border-slate-600 rounded-2xl flex items-center justify-center text-slate-300 dark:text-slate-700 text-[10px] font-bold uppercase tracking-wider">
-                                                    Kayıt Yok
+                                                    {t('opportunities.noRecords', 'Kayıt Yok')}
                                                 </div>
                                             )}
                                             {stageDeals.map(deal => (
@@ -766,7 +735,7 @@ export function OpportunitiesDashboard() {
                                                             className="w-full mt-3 py-1.5 flex items-center justify-center gap-1.5 text-[10px] uppercase font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/20 dark:hover:bg-indigo-900/40 dark:text-indigo-300 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                                                         >
                                                             <Sparkles size={12} />
-                                                            AI Yanıt
+                                                            {t('opportunities.aiResponseLabel', 'AI Yanıt')}
                                                         </button>
                                                     </CardContent>
                                                 </Card>

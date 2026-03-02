@@ -9,6 +9,7 @@ import { Sparkles, Users, Info, Search, Calendar, ArrowUpRight, ArrowDownRight, 
 import { OrdersAIInsightPanel } from './OrdersAIInsightPanel';
 import { OrderPoolAnalysis } from './OrderPoolAnalysis';
 import { OrderProductPerformance } from './OrderProductPerformance';
+import { HorizontalBarChart } from '../../components/ui/HorizontalBarChart';
 import type { Order } from '../../types/crm';
 
 const formatCurrency = (value: number) => {
@@ -31,63 +32,8 @@ const StatCard = ({ label, value, colorClass }: any) => (
     </Card>
 );
 
-const DashboardGridCard = ({ title, data, dataKey, color, icon: Icon, insight, className = "" }: any) => {
-    const maxValue = Math.max(...data.map((item: any) => item[dataKey]), 1);
+// Removed DashboardGridCard
 
-    return (
-        <Card className={`bg-white/40 dark:bg-slate-700/40 backdrop-blur-md border border-slate-200 dark:border-white/10 overflow-hidden shadow-sm flex flex-col h-full ${className}`}>
-            <CardHeader className="py-4 border-b border-slate-100 dark:border-white/5 bg-white/30 dark:bg-white/5 flex flex-row items-center gap-3">
-                {Icon && (
-                    <div className="p-2 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">
-                        <Icon size={18} />
-                    </div>
-                )}
-                <div>
-                    <CardTitle className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 font-bold">
-                        {title}
-                    </CardTitle>
-                </div>
-            </CardHeader>
-            <CardContent className="p-6 flex-1 flex flex-col justify-between">
-                <div className="space-y-4">
-                    {data.map((item: any, idx: number) => {
-                        const percentage = (item[dataKey] / maxValue) * 100;
-                        return (
-                            <div key={idx} className="group">
-                                <div className="flex justify-between items-center mb-1.5">
-                                    <span className="text-[11px] font-bold text-slate-600 dark:text-slate-200 uppercase tracking-tight truncate max-w-[70%]">
-                                        {item.name}
-                                    </span>
-                                    <span className="text-[11px] font-mono font-bold text-slate-900 dark:text-white">
-                                        {dataKey === 'amount' ? formatCurrency(item[dataKey]) : item[dataKey]}
-                                    </span>
-                                </div>
-                                <div className="h-1.5 w-full bg-slate-100/50 dark:bg-slate-800/50 rounded-full overflow-hidden">
-                                    <motion.div
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${percentage}%` }}
-                                        transition={{ duration: 1, delay: idx * 0.1 }}
-                                        className="h-full rounded-full transition-all group-hover:brightness-110 shadow-[0_0_8px_rgba(0,0,0,0.05)]"
-                                        style={{ backgroundColor: color }}
-                                    />
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-
-                {insight && (
-                    <div className="mt-6 p-3 rounded-xl bg-gradient-to-tr from-indigo-500/5 to-white/5 dark:from-indigo-500/10 dark:to-transparent border border-indigo-500/10 flex gap-2.5 items-start">
-                        <Info size={14} className="text-indigo-500 mt-0.5 shrink-0" />
-                        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed italic">
-                            {insight}
-                        </p>
-                    </div>
-                )}
-            </CardContent>
-        </Card>
-    );
-};
 
 export function OrdersDashboard() {
     const { t } = useTranslation();
@@ -100,6 +46,9 @@ export function OrdersDashboard() {
 
     // View Mode State
     const [viewMode, setViewMode] = useState<'list' | 'board'>('list');
+
+    // Chart Drilldown State
+    const [selectedTopCustomer, setSelectedTopCustomer] = useState<string | null>(null);
 
     // Advanced Filtering & Sorting State
     const [sortConfig, setSortConfig] = useState<{ key: keyof Order; direction: 'asc' | 'desc' } | null>(null);
@@ -185,16 +134,25 @@ export function OrdersDashboard() {
         return baseOrders.filter(o => o.status === columnFilters.status);
     }, [baseOrders, columnFilters.status]);
 
+    // 3. Final Orders (Base Filtered + Chart Drilldowns) - Used for Cards & Table
+    const finalOrders = useMemo(() => {
+        let result = filteredOrders;
+        if (selectedTopCustomer) {
+            result = result.filter(o => o.customerName === selectedTopCustomer);
+        }
+        return result;
+    }, [filteredOrders, selectedTopCustomer]);
+
     // Metrics Calculation
     const metrics = useMemo(() => {
-        const totalCount = filteredOrders.length;
-        const totalValue = filteredOrders.reduce((s, o) => s + o.amount, 0);
-        const closedValue = filteredOrders.filter(o => o.status === 'Closed').reduce((s, o) => s + o.amount, 0);
-        const canceledValue = filteredOrders.filter(o => o.status === 'Canceled').reduce((s, o) => s + o.amount, 0);
+        const totalCount = finalOrders.length;
+        const totalValue = finalOrders.reduce((s, o) => s + o.amount, 0);
+        const closedValue = finalOrders.filter(o => o.status === 'Closed').reduce((s, o) => s + o.amount, 0);
+        const canceledValue = finalOrders.filter(o => o.status === 'Canceled').reduce((s, o) => s + o.amount, 0);
         const openValue = totalValue - closedValue - canceledValue;
 
         return { totalCount, totalValue, closedValue, canceledValue, openValue };
-    }, [filteredOrders]);
+    }, [finalOrders]);
 
     // Chart Data
     const charts = useMemo(() => {
@@ -227,7 +185,7 @@ export function OrdersDashboard() {
     }, [baseOrders, filteredOrders]);
 
     const sortedOrders = useMemo(() => {
-        let result = [...filteredOrders];
+        let result = [...finalOrders];
 
         if (sortConfig) {
             result.sort((a, b) => {
@@ -243,7 +201,7 @@ export function OrdersDashboard() {
         }
 
         return result;
-    }, [filteredOrders, sortConfig]);
+    }, [finalOrders, sortConfig]);
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10">
@@ -344,16 +302,22 @@ export function OrdersDashboard() {
                 <OrderPoolAnalysis
                     data={charts.status}
                     countData={charts.statusCount}
-                    onStatusSelect={(status) => setColumnFilters(prev => ({ ...prev, status: status || 'all' }))}
+                    onStatusSelect={(status: string | null) => setColumnFilters(prev => ({ ...prev, status: status || 'all' }))}
                     selectedStatus={columnFilters.status === 'all' ? null : columnFilters.status}
                 />
-                <DashboardGridCard
+                <HorizontalBarChart
                     title={t('orders.charts.customerVolume')}
-                    data={charts.customer}
-                    dataKey="amount"
+                    data={charts.customer.map((item: any) => ({
+                        id: item.name,
+                        name: item.name,
+                        value: item.amount,
+                        formattedValue: formatCurrency(item.amount)
+                    }))}
                     color="#0ea5e9"
                     icon={Users}
                     insight={t('orders.charts.customerInsight')}
+                    activeId={selectedTopCustomer}
+                    onBarClick={(item) => setSelectedTopCustomer(prev => prev === item.id ? null : item.id)}
                 />
             </div>
 

@@ -88,7 +88,7 @@ export function SalesRepPerformance({ quotes }: SalesRepPerformanceProps) {
             <CardContent className="p-0 flex-1 overflow-y-auto custom-scrollbar">
                 {topPerformers.length === 0 ? (
                     <div className="h-full flex items-center justify-center p-6 text-slate-400 text-sm italic">
-                        No approved quote data available
+                        {t('quotes.noApprovedData')}
                     </div>
                 ) : (
                     <div className="flex flex-col">
@@ -118,7 +118,7 @@ export function SalesRepPerformance({ quotes }: SalesRepPerformanceProps) {
                                 </div>
 
                                 <div className="text-right">
-                                    <div className="text-sm font-bold font-mono text-slate-800 dark:text-white">
+                                    <div className="text-sm font-bold text-slate-800 dark:text-white">
                                         {formatCurrency(rep.revenue)}
                                     </div>
                                     <div className="w-24 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full mt-1.5 overflow-hidden ml-auto">

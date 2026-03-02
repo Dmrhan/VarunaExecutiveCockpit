@@ -1,5 +1,5 @@
-import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
+import { useTranslation } from 'react-i18next';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 
 interface TrendItem {
@@ -11,6 +11,7 @@ interface TrendItem {
 }
 
 export const TrendMonitorCard = ({ data }: { data: TrendItem[] }) => {
+    const { t } = useTranslation();
 
     // Sort chronological: oldest to newest assuming the data passed is new-to-old.
     // Wait, the API returns it latest to oldest? No, it pushes oldest first because loop goes 5 to 0.
@@ -48,7 +49,7 @@ export const TrendMonitorCard = ({ data }: { data: TrendItem[] }) => {
         <Card className="h-full flex flex-col bg-white/40 dark:bg-slate-700/40 backdrop-blur-md overflow-hidden">
             <CardHeader className="border-b border-slate-100 dark:border-white/5 pb-4">
                 <CardTitle className="text-sm font-semibold text-slate-800 dark:text-white">
-                    Gelir & Tahsilat Trendi (Son 6 Ay)
+                    {t('scorecard.trends.title', 'Gelir & Tahsilat Trendi (Son 6 Ay)')}
                 </CardTitle>
             </CardHeader>
             <CardContent className="flex-1 p-0 pt-4 px-2 pb-2 h-64">
@@ -56,28 +57,28 @@ export const TrendMonitorCard = ({ data }: { data: TrendItem[] }) => {
                     <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
                         <defs>
                             <linearGradient id="colorContract" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
-                                <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                                <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
+                                <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
                             </linearGradient>
                             <linearGradient id="colorInvoice" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                             </linearGradient>
                             <linearGradient id="colorCollection" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                                <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                             </linearGradient>
                         </defs>
-                        <XAxis 
-                            dataKey="name" 
-                            axisLine={false} 
-                            tickLine={false} 
+                        <XAxis
+                            dataKey="name"
+                            axisLine={false}
+                            tickLine={false}
                             tick={{ fontSize: 10, fill: '#64748b' }}
                             dy={10}
                         />
-                        <YAxis 
-                            axisLine={false} 
-                            tickLine={false} 
+                        <YAxis
+                            axisLine={false}
+                            tickLine={false}
                             tick={{ fontSize: 10, fill: '#64748b' }}
                             tickFormatter={YAxisFormatter}
                             width={40}
@@ -85,32 +86,32 @@ export const TrendMonitorCard = ({ data }: { data: TrendItem[] }) => {
                         <CartesianGrid vertical={false} strokeDasharray="3 3" strokeOpacity={0.1} />
                         <Tooltip content={<CustomTooltip />} />
                         <Legend iconType="circle" wrapperStyle={{ fontSize: '11px' }} />
-                        <Area 
-                            type="monotone" 
-                            dataKey="contractRevenue" 
-                            name="Sözleşme (ARR)" 
-                            stroke="#8b5cf6" 
-                            fillOpacity={1} 
-                            fill="url(#colorContract)" 
-                            strokeWidth={3} 
+                        <Area
+                            type="monotone"
+                            dataKey="contractRevenue"
+                            name={t('scorecard.trends.contract', 'Sözleşme (ARR)')}
+                            stroke="#8b5cf6"
+                            fillOpacity={1}
+                            fill="url(#colorContract)"
+                            strokeWidth={3}
                         />
-                        <Area 
-                            type="monotone" 
-                            dataKey="invoiceRevenue" 
-                            name="Fatura" 
-                            stroke="#3b82f6" 
-                            fillOpacity={1} 
-                            fill="url(#colorInvoice)" 
-                            strokeWidth={2} 
+                        <Area
+                            type="monotone"
+                            dataKey="invoiceRevenue"
+                            name={t('scorecard.trends.invoice', 'Fatura')}
+                            stroke="#3b82f6"
+                            fillOpacity={1}
+                            fill="url(#colorInvoice)"
+                            strokeWidth={2}
                         />
-                        <Area 
-                            type="monotone" 
-                            dataKey="collectionRevenue" 
-                            name="Tahsilat" 
-                            stroke="#10b981" 
-                            fillOpacity={1} 
-                            fill="url(#colorCollection)" 
-                            strokeWidth={2} 
+                        <Area
+                            type="monotone"
+                            dataKey="collectionRevenue"
+                            name={t('scorecard.trends.collection', 'Tahsilat')}
+                            stroke="#10b981"
+                            fillOpacity={1}
+                            fill="url(#colorCollection)"
+                            strokeWidth={2}
                         />
                     </AreaChart>
                 </ResponsiveContainer>

@@ -2,9 +2,11 @@ import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Ca
 import { useData } from '../../context/DataContext';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { MetricInfo } from '../../components/ui/MetricInfo';
+import { useTranslation } from 'react-i18next';
 
 export function ConfidenceWidget() {
     const { metrics } = useData();
+    const { t } = useTranslation();
     const score = metrics.executionConfidenceScore;
 
     const data = [
@@ -17,7 +19,7 @@ export function ConfidenceWidget() {
     return (
         <Card className="h-full flex flex-col">
             <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-sm text-slate-500 font-medium uppercase tracking-wide">Execution Confidence</CardTitle>
+                <CardTitle className="text-sm text-slate-500 font-medium uppercase tracking-wide">{t('executive.confidence.title', 'Execution Confidence')}</CardTitle>
                 <MetricInfo
                     description="% of OPEN deals that have had a valid sales activity (Call/Meeting) in the last 14 days."
                     formula="(Deals with Activity < 14 Days) / (Total Open Deals)"

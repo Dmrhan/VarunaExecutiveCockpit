@@ -440,10 +440,11 @@ export function ExecutiveDashboardPageV2() {
 
     // Filters
     const [dateFilter, setDateFilter] = useState('all');
-    // New Advanced Filters (Multiple Choice)
+    // Global Filters
     const [selectedDepartment, setSelectedDepartment] = useState<string[]>(['all']);
     const [selectedOwner, setSelectedOwner] = useState<string[]>(['all']);
     const [selectedProduct, setSelectedProduct] = useState<string[]>(['all']);
+    const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null);
 
     // Date Picker State
     const [showDatePicker, setShowDatePicker] = useState(false);
@@ -553,14 +554,25 @@ export function ExecutiveDashboardPageV2() {
         }
 
         // 4. Filter by Product
+        const baseOrders = [...filteredOrders];
+
         if (!selectedProduct.includes('all') && selectedProduct.length > 0) {
             filteredDeals = filteredDeals.filter(d => selectedProduct.includes((d as any).product));
             filteredQuotes = filteredQuotes.filter(q => selectedProduct.includes((q as any).product));
             filteredOrders = filteredOrders.filter(o => selectedProduct.includes((o as any).product));
         }
 
-        return { deals: filteredDeals, quotes: filteredQuotes, orders: filteredOrders };
-    }, [deals, quotes, orders, dateFilter, customRange, selectedDepartment, selectedOwner, selectedProduct, users]);
+        const baseDeals = [...filteredDeals];
+
+        // 5. Chart Drilldown Filter (Customer)
+        if (selectedCustomer) {
+            filteredDeals = filteredDeals.filter(d => d.customerName === selectedCustomer);
+            filteredQuotes = filteredQuotes.filter(q => q.customerName === selectedCustomer);
+            filteredOrders = filteredOrders.filter(o => o.customerName === selectedCustomer);
+        }
+
+        return { deals: filteredDeals, quotes: filteredQuotes, orders: filteredOrders, baseDeals, baseOrders };
+    }, [deals, quotes, orders, dateFilter, customRange, selectedDepartment, selectedOwner, selectedProduct, selectedCustomer, users]);
 
     // Drilldown State (after filteredData to allow dependency)
     const [drilldownType, setDrilldownType] = useState<string | null>(null);
@@ -970,10 +982,18 @@ export function ExecutiveDashboardPageV2() {
                     <GamifiedLeaderboard deals={filteredData.deals} orders={filteredData.orders} />
                     <div className="flex flex-col gap-8 h-full">
                         <div className="flex-1">
-                            <ProductSalesDistribution orders={filteredData.orders} />
+                            <ProductSalesDistribution
+                                orders={filteredData.baseOrders}
+                                selectedProduct={selectedProduct.length === 1 && selectedProduct[0] !== 'all' ? selectedProduct[0] : null}
+                                onProductSelect={(prod) => setSelectedProduct(prod ? [prod] : ['all'])}
+                            />
                         </div>
                         <div className="flex-1">
-                            <CustomerPotentialChart deals={filteredData.deals} />
+                            <CustomerPotentialChart
+                                deals={filteredData.baseDeals}
+                                selectedCustomer={selectedCustomer}
+                                onCustomerSelect={setSelectedCustomer}
+                            />
                         </div>
                     </div>
                 </div>

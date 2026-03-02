@@ -78,7 +78,7 @@ export const ProductContractHealth = () => {
                                         isHighRisk ? "text-rose-500" : isMediumRisk ? "text-amber-500" : "text-emerald-500"
                                     )} title="Renewal Risk (90d)">
                                         {isHighRisk ? <AlertCircle size={12} /> : <CheckCircle size={12} />}
-                                        {Math.round(riskPercentage)}% Risk
+                                        {Math.round(riskPercentage)}% {t('common.risk', { defaultValue: 'Risk' })}
                                     </div>
                                 </div>
 
@@ -87,8 +87,8 @@ export const ProductContractHealth = () => {
                                     {formatCurrency(stat.activeValue)}
                                 </div>
                                 <div className="text-[10px] text-slate-400 mt-2 flex justify-between gap-1">
-                                    <span className="truncate">{stat.count} Aktif</span>
-                                    <span className="opacity-70 truncate">{formatCurrency(stat.riskValue)} Risk</span>
+                                    <span className="truncate">{stat.count} {t('status.Active', { defaultValue: 'Aktif' })}</span>
+                                    <span className="opacity-70 truncate">{formatCurrency(stat.riskValue)} {t('common.risk', { defaultValue: 'Risk' })}</span>
                                 </div>
                             </div>
                         );

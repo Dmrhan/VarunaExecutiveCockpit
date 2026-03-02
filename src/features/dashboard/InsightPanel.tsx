@@ -2,9 +2,11 @@ import { useMemo } from 'react';
 import { Sparkles, AlertTriangle, TrendingUp } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { useData } from '../../context/DataContext';
+import { useTranslation } from 'react-i18next';
 
 export function InsightPanel() {
     const { metrics, isLoading } = useData();
+    const { t } = useTranslation();
 
     const insight = useMemo(() => {
         if (isLoading) return "Analyzing pipeline data...";
@@ -33,7 +35,7 @@ export function InsightPanel() {
             <CardHeader className="relative z-10 pb-2">
                 <div className="flex items-center gap-2 text-indigo-100 mb-1">
                     <Sparkles size={16} className="text-yellow-300" />
-                    <span className="text-xs font-medium uppercase tracking-wider">AI Executive Brief</span>
+                    <span className="text-xs font-medium uppercase tracking-wider">{t('executive.aiBrief', 'AI Executive Brief')}</span>
                 </div>
                 <CardTitle className="text-2xl md:text-3xl text-white font-light leading-snug">
                     {isLoading ? "Generating insights..." : insight}

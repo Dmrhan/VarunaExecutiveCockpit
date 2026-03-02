@@ -57,6 +57,23 @@ export function QuotePoolAnalysis({ data, countData, onStatusSelect, selectedSta
             .sort((a, b) => b.revenue - a.revenue);
     }, [data, countData, t]);
 
+    const renderCustomBarLabel = (props: any) => {
+        const { x, y, width, index, value } = props;
+        const itemData = chartData[index];
+        if (!itemData || value === 0) return null;
+
+        return (
+            <g transform={`translate(${x + width / 2},${y - 10})`}>
+                <text x={0} y={-8} dy={0} textAnchor="middle" fill="#64748b" fontSize={10} fontWeight={700}>
+                    {formatCurrency(value)}
+                </text>
+                <text x={0} y={2} dy={0} textAnchor="middle" fill="#94a3b8" fontSize={8}>
+                    {itemData.count} adet
+                </text>
+            </g>
+        );
+    };
+
     return (
         <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-2xl p-6 shadow-sm flex flex-col h-full">
             <div className="mb-4">
@@ -74,12 +91,6 @@ export function QuotePoolAnalysis({ data, countData, onStatusSelect, selectedSta
                         data={chartData}
                         margin={{ top: 20, right: 16, left: 0, bottom: 8 }}
                         barCategoryGap="30%"
-                        onClick={(e) => {
-                            if (e?.activePayload?.[0]) {
-                                const rawName = e.activePayload[0].payload.rawName;
-                                onStatusSelect(selectedStatus === rawName ? null : rawName);
-                            }
-                        }}
                     >
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.15)" vertical={false} />
                         <XAxis
@@ -87,6 +98,10 @@ export function QuotePoolAnalysis({ data, countData, onStatusSelect, selectedSta
                             tick={{ fontSize: 10, fill: '#94a3b8' }}
                             axisLine={false}
                             tickLine={false}
+                            interval={0}
+                            angle={-25}
+                            textAnchor="end"
+                            dy={5}
                         />
                         <YAxis
                             tickFormatter={formatCurrency}
@@ -96,7 +111,17 @@ export function QuotePoolAnalysis({ data, countData, onStatusSelect, selectedSta
                             width={44}
                         />
                         <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(148,163,184,0.08)' }} />
-                        <Bar dataKey="revenue" radius={[6, 6, 0, 0]} cursor="pointer" maxBarSize={56}>
+                        <Bar
+                            dataKey="revenue"
+                            radius={[6, 6, 0, 0]}
+                            cursor="pointer"
+                            maxBarSize={56}
+                            onClick={(data: any) => {
+                                if (data?.payload?.rawName) {
+                                    onStatusSelect(selectedStatus === data.payload.rawName ? null : data.payload.rawName);
+                                }
+                            }}
+                        >
                             {chartData.map((entry) => (
                                 <Cell
                                     key={entry.rawName}
@@ -109,10 +134,8 @@ export function QuotePoolAnalysis({ data, countData, onStatusSelect, selectedSta
                                 />
                             ))}
                             <LabelList
-                                dataKey="count"
-                                position="top"
-                                formatter={(v: number) => `${v} adet`}
-                                style={{ fontSize: 9, fill: '#94a3b8' }}
+                                dataKey="revenue"
+                                content={renderCustomBarLabel}
                             />
                         </Bar>
                     </BarChart>

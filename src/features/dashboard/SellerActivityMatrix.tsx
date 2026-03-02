@@ -93,7 +93,7 @@ export function SellerActivityMatrix({ filteredActivities }: SellerActivityMatri
                                 {t('executive.list.header.salesOwner')}
                             </th>
                             <th className="p-2 text-center border-l min-w-[60px] bg-slate-100 dark:bg-slate-800 text-slate-900 font-extrabold cursor-help" title={t('activities.matrix.totalActivity')}>
-                                TOP
+                                {t('common.total_short', 'TOP')}
                             </th>
                             {ACTIVITY_TYPES.map(type => (
                                 <th key={type} className="p-2 text-center min-w-[80px] font-medium whitespace-nowrap border-r border-slate-100 dark:border-slate-700">

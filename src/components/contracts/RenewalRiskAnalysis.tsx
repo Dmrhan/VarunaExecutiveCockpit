@@ -123,10 +123,10 @@ export const RenewalRiskAnalysis = () => {
                     </h4>
                     <div className="flex-1 space-y-2 overflow-y-auto pr-1">
                         {criticalContracts.map((c) => (
-                            <div key={c.id} className="group flex items-center justify-between p-2 rounded-lg bg-white/50 dark:bg-white/5 border border-slate-100 dark:border-white/5 hover:border-rose-200 transition-colors">
+                            <div className="group flex items-center justify-between p-2 rounded-lg bg-white/50 dark:bg-white/5 border border-slate-100 dark:border-white/5 hover:border-rose-200 transition-colors">
                                 <div className="flex flex-col">
                                     <span className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-rose-600 transition-colors">{c.name}</span>
-                                    <span className="text-[10px] text-slate-400">{c.product} • {c.days} {t('contracts.risk.daysLeft', { defaultValue: 'days left' })}</span>
+                                    <span className="text-[10px] text-slate-400">{c.product} • {c.days} {t('contracts.risk.daysLeft', { defaultValue: 'gün kaldı' })}</span>
                                 </div>
                                 <div className="text-right">
                                     <span className="block text-xs font-bold text-slate-800 dark:text-slate-200">{formatCurrency(c.value)}</span>
@@ -134,7 +134,7 @@ export const RenewalRiskAnalysis = () => {
                                         "text-[9px] font-bold px-1.5 py-0.5 rounded-full inline-block mt-0.5",
                                         c.risk === 'High' ? "bg-rose-100 text-rose-600" : "bg-amber-100 text-amber-600"
                                     )}>
-                                        {c.risk.toUpperCase()}
+                                        {t(`risk.${c.risk}`, { defaultValue: c.risk.toUpperCase() })}
                                     </span>
                                 </div>
                             </div>

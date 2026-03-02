@@ -37,7 +37,7 @@ export function PerformanceCockpit() {
             setBurnupData(burnupRes.burnup);
         } catch (err: any) {
             console.error('Error fetching performance data:', err);
-            setError('Performans verileri yüklenirken bir hata oluştu.');
+            setError(t('common.errorFetching'));
         } finally {
             setLoading(false);
         }
@@ -90,7 +90,7 @@ export function PerformanceCockpit() {
                     onClick={fetchData}
                     className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
                 >
-                    Tekrar Dene
+                    {t('common.retry')}
                 </button>
             </div>
         );
@@ -139,7 +139,9 @@ export function PerformanceCockpit() {
                         <h3 className="text-[10px] font-bold capitalize tracking-wide text-slate-500 dark:text-slate-400 mb-0.5">
                             {t('performanceCockpit.ytdAchievement')}
                         </h3>
-                        <div className="text-sm font-bold text-slate-800 dark:text-slate-200">2026 Yılı Toplam</div>
+                        <div className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                            {t('performanceCockpit.yearTotal')}
+                        </div>
                     </div>
                 </div>
 
@@ -611,7 +613,7 @@ export function PerformanceCockpit() {
                                     />
                                     <RechartsTooltip
                                         formatter={(value: any) => formatCurrency(value)}
-                                        labelFormatter={(label) => `Tarih: ${label}`}
+                                        labelFormatter={(label) => `${t('common.date')}: ${label}`}
                                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                                     />
                                     <Legend wrapperStyle={{ paddingTop: '20px' }} />

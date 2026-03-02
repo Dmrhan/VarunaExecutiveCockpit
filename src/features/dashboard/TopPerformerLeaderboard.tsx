@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { useData } from '../../context/DataContext';
 import { Trophy, Medal, Flame, TrendingUp, Target, Crown, Star } from 'lucide-react';
@@ -12,6 +13,7 @@ const formatCurrency = (value: number) => {
 };
 
 export function TopPerformerLeaderboard() {
+    const { t } = useTranslation();
     const { deals, users } = useData();
 
     const leaderboardData = useMemo(() => {
@@ -25,22 +27,16 @@ export function TopPerformerLeaderboard() {
                 const totalDeals = userDeals.length; // Basic conversion rate base
                 const winRate = totalDeals > 0 ? (dealCount / totalDeals) * 100 : 0;
 
-                // Gamification Score
-                // Revenue * 0.01 + WinRate * 100 + Deals * 500
-                const score = (totalRevenue * 0.0001) + (winRate * 50) + (dealCount * 100);
-
                 return {
                     id: user.id,
                     name: user.name,
                     avatar: user.avatar,
                     revenue: totalRevenue,
                     winRate,
-                    dealCount,
-                    score,
-                    streak: Math.floor(Math.random() * 10) + 1 // Mock streak data
+                    dealCount
                 };
             })
-            .sort((a, b) => b.score - a.score)
+            .sort((a, b) => b.revenue - a.revenue)
             .slice(0, 10); // Top 10
 
         return stats;
@@ -56,12 +52,7 @@ export function TopPerformerLeaderboard() {
     };
 
     const getBadges = (performer: any, index: number) => {
-        const badges = [];
-        if (index === 0) badges.push({ icon: <Trophy size={10} />, color: 'bg-yellow-500 text-white', text: 'MVP', desc: 'En Değerli Oyuncu - Lider' });
-        if (performer.winRate > 40) badges.push({ icon: <Target size={10} />, color: 'bg-emerald-500 text-white', text: 'Sniper', desc: '>%40 Kazanma Oranı' });
-        if (performer.revenue > 5000000) badges.push({ icon: <Star size={10} />, color: 'bg-indigo-500 text-white', text: 'Rainmaker', desc: '>$5M Ciro' });
-        if (performer.streak > 5) badges.push({ icon: <Flame size={10} />, color: 'bg-orange-500 text-white', text: `${performer.streak} Streak`, desc: `${performer.streak} Ardışık Başarı` });
-        return badges;
+        return [];
     };
 
     return (
@@ -71,13 +62,13 @@ export function TopPerformerLeaderboard() {
                     <div>
                         <CardTitle className="text-xs uppercase tracking-[0.2em] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2">
                             <Trophy size={14} />
-                            Top Performers
+                            {t('gamification.title', 'Satış Yöneticisi Performans İzleme')}
                         </CardTitle>
                     </div>
                     <div className="bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
                         <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
                             <TrendingUp size={12} />
-                            Canlı Sıralama
+                            {t('gamification.liveRanking', 'Canlı Sıralama')}
                         </span>
                     </div>
                 </div>
@@ -114,17 +105,7 @@ export function TopPerformerLeaderboard() {
                                         )}>
                                             {performer.name}
                                         </span>
-                                        <div className="flex gap-1 flex-wrap">
-                                            {getBadges(performer, index).map((b, i) => (
-                                                <div
-                                                    key={i}
-                                                    title={b.desc}
-                                                    className={cn("text-[9px] px-1.5 py-0.5 rounded-full flex items-center gap-1 font-bold tracking-wide shadow-sm cursor-help transition-transform hover:scale-105", b.color)}
-                                                >
-                                                    {b.icon} {b.text}
-                                                </div>
-                                            ))}
-                                        </div>
+                                        {/* Badges removed per user request */}
                                     </div>
                                 </div>
                             </div>
@@ -138,9 +119,9 @@ export function TopPerformerLeaderboard() {
                                     {formatCurrency(performer.revenue)}
                                 </span>
                                 <div className="flex items-center gap-2 text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                                    <span>{performer.dealCount} Deal</span>
+                                    <span>{performer.dealCount} {t('dashboard.opportunityCount', 'Fırsat')}</span>
                                     <span className="text-slate-300 dark:text-slate-600">•</span>
-                                    <span className={performer.winRate > 50 ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"}>%{performer.winRate.toFixed(0)} WR</span>
+                                    <span className={performer.winRate > 50 ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"}>%{performer.winRate.toFixed(0)} {t('dashboardV2.pipeline.winRate', 'Kazanma oranı')}</span>
                                 </div>
                             </div>
                         </motion.div>

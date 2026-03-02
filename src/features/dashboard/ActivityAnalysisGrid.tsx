@@ -1,9 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { useData } from '../../context/DataContext';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell } from 'recharts';
 import { useTranslation } from 'react-i18next';
 import { TrendingUp, AlertTriangle, Users, Package, Info, Trophy, Target, ArrowUp } from 'lucide-react';
+import { HorizontalBarChart } from '../../components/ui/HorizontalBarChart';
 
 interface ActivityAnalysisGridProps {
     filteredActivities: any[];
@@ -15,6 +16,7 @@ const NEGATIVE_COLORS = ['#ef4444', '#f87171', '#fca5a5', '#94a3b8'];
 export function ActivityAnalysisGrid({ filteredActivities }: ActivityAnalysisGridProps) {
     const { t } = useTranslation();
     const { users, deals } = useData();
+    const [selectedLossReason, setSelectedLossReason] = useState<string | null>(null);
 
     // --- ANALYTICS CALCULATIONS ---
     const analytics = useMemo(() => {
@@ -75,7 +77,15 @@ export function ActivityAnalysisGrid({ filteredActivities }: ActivityAnalysisGri
                 negativeReasons[a.outcomeReason] = (negativeReasons[a.outcomeReason] || 0) + 1;
             }
         });
-        const negativeData = Object.entries(negativeReasons).map(([name, value]) => ({ name, value }));
+        const negativeData = Object.entries(negativeReasons)
+            .sort((a, b) => b[1] - a[1])
+            .map(([name, value], index) => ({
+                id: name,
+                name,
+                value,
+                formattedValue: value.toString(),
+                color: NEGATIVE_COLORS[index % NEGATIVE_COLORS.length]
+            }));
 
         // 5. Product Analysis
         const productStats: Record<string, number> = {};
@@ -254,7 +264,7 @@ export function ActivityAnalysisGrid({ filteredActivities }: ActivityAnalysisGri
                                         <div className="h-1 flex-1 bg-slate-200 dark:bg-slate-600 rounded-full overflow-hidden">
                                             <div className="h-full bg-amber-500 rounded-full" style={{ width: `${Math.min(s.count, 100)}%` }}></div>
                                         </div>
-                                        <span className="text-[9px] text-slate-500 font-medium">{s.count} Akt.</span>
+                                        <span className="text-[9px] text-slate-500 font-medium">{s.count} {t('common.activity_short', 'Akt.')}</span>
                                     </div>
                                 </div>
                                 <div className="ml-3 text-right">
@@ -313,33 +323,17 @@ export function ActivityAnalysisGrid({ filteredActivities }: ActivityAnalysisGri
             </Card>
 
             {/* 6. Negative Analysis - Modern Bars */}
-            <Card className="bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow">
-                <ModernCardHeader title={t('activities.charts_extended.lossAnalysis')} icon={AlertTriangle} colorClass="bg-red-500 text-red-600" />
-                <CardContent className="h-[340px] p-5 flex flex-col">
-                    <div className="flex-1 w-full min-h-0">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={analytics.negativeData} layout="vertical" margin={{ left: 10, right: 20 }}>
-                                <XAxis type="number" hide />
-                                <YAxis
-                                    dataKey="name"
-                                    type="category"
-                                    width={90}
-                                    tick={{ fontSize: 11, fill: '#64748b', fontWeight: 500 }}
-                                    axisLine={false}
-                                    tickLine={false}
-                                />
-                                <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
-                                <Bar dataKey="value" fill="#ef4444" radius={4} barSize={12} background={{ fill: '#f1f5f9', radius: 4 }}>
-                                    {analytics.negativeData.map((_entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={NEGATIVE_COLORS[index % NEGATIVE_COLORS.length]} />
-                                    ))}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                    <AIInsight text={t('activities.charts_extended.insights.loss')} />
-                </CardContent>
-            </Card>
+            <div className="h-[400px]">
+                <HorizontalBarChart
+                    title={t('activities.charts_extended.lossAnalysis')}
+                    data={analytics.negativeData}
+                    color="#ef4444"
+                    icon={AlertTriangle}
+                    insight={t('activities.charts_extended.insights.loss')}
+                    activeId={selectedLossReason}
+                    onBarClick={(item) => setSelectedLossReason(prev => prev === item.id ? null : item.id)}
+                />
+            </div>
 
         </div>
     );

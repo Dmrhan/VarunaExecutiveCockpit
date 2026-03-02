@@ -26,8 +26,44 @@
             "thisMonth": "THIS MONTH",
             "ytd": "YTD",
             "all": "ALL",
-            "custom": "CUSTOM"
-        }
+            "custom": "CUSTOM",
+            "active30": "Active Period (30 Days)",
+            "today": "Today",
+            "thisQuarter": "This Quarter"
+        },
+        "noData": "No data available",
+        "selectedCount": "{{count}} selected",
+        "retry": "Retry",
+        "errorFetching": "Error fetching data.",
+        "date": "Date",
+        "unit": "Unit",
+        "day_short": "d",
+        "minimize": "Minimize",
+        "fullscreen": "Full Screen",
+        "total_short": "TOT",
+        "unit_short": "Unit",
+        "activity_short": "Act.",
+        "all": "All",
+        "unassigned": "Unassigned",
+        "amount": "Amount",
+        "count": "Count",
+        "days": "Days",
+        "notFound": "Not Found",
+        "total": "Total",
+        "status": "Status",
+        "closing": "Closing",
+        "risk": "Risk"
+    },
+    "risk": {
+        "High": "High Risk",
+        "Medium": "Medium Risk",
+        "Low": "Low Risk"
+    },
+    "period": {
+        "Monthly": "Monthly",
+        "Quarterly": "Quarterly",
+        "Annual": "Annual",
+        "One-Time": "One-Time"
     },
     "sidebar": {
         "orders": "Orders",
@@ -86,19 +122,36 @@
         "createdAt": "Created Date",
         "expectedRevenue": "Expected Revenue",
         "seller": "Seller",
+        "tooltips": {
+            "totalDeals": "Total records in the opportunity pool",
+            "conversionRate": "Win rate of closed opportunities",
+            "wonDetails": "{{count}} won opportunities with value {{value}}"
+        },
         "charts": {
             "sourceTitle": "Opportunity Source",
-            "sourceInsight": "Customer references and direct sales channel constitute the largest opportunity pool with 42%.",
+            "sourceInsight": "Customer referrals and direct sales channels represent the largest opportunity pool at 42%.",
             "customerPotentialTitle": "Customer Potential",
-            "customerPotentialInsight": "The 3 largest volume customers represent 28% of total pipeline value. Portfolio diversification is recommended."
-        }
+            "customerPotentialInsight": "The top 3 high-volume customers represent 28% of total pipeline value. Portfolio diversification is recommended."
+        },
+        "forecast": {
+            "title": "Closing Forecast",
+            "subtitle": "Expected sales volume for the next 12 months"
+        },
+        "riskLevels": {
+            "high": "RISK",
+            "good": "GOOD",
+            "normal": "NORMAL"
+        },
+        "expectations": "Forecast",
+        "kanbanTitle": "Opportunity Kanban Board",
+        "noRecords": "No Records"
     },
     "performance": {
         "activeDeals": "active deals",
         "activeOrders": "active orders",
         "activeQuotes": "active quotes",
         "productDetails": "Product Details",
-        "listingDetails": "Listing {{count}} records. Use AI assistant for detailed analysis and actions.",
+        "listingDetails": "Listing {{count}} records. You can use the AI assistant for detailed analysis and actions.",
         "trendTitle": "6-Month Trend Analysis",
         "distributionTitle": "Status Distribution",
         "aiAnalysis": "AI Analysis",
@@ -106,7 +159,7 @@
         "emailDraft": "Email Draft",
         "analyzingTitle": "Anomaly & Risk Analysis",
         "emailAssistant": "Smart Email Assistant",
-        "insights": "AI-driven insights and recommendations",
+        "insights": "AI-based insights and recommendations",
         "speak": "Read Aloud",
         "analyzing": "Analyzing data...",
         "riskLevel": "Risk Level",
@@ -114,28 +167,29 @@
         "subject": "Subject",
         "send": "Send",
         "deliveryDate": "Delivery Date",
-        "validUntil": "Valid Until"
+        "validUntil": "Valid Until",
+        "topPerformers": "Top Performers"
     },
     "funnel": {
-        "title": "Sales Performance & Execution Insights",
+        "title": "Sales Performance & Execution Analysis",
         "subtitle": "Sales funnel sorted by probability. Click layers for details.",
         "totalVisibility": "Total Visibility",
-        "closeHint": "Press ESC or click outside to close"
+        "closeHint": "You can close by pressing ESC or clicking outside"
     },
     "gamification": {
-        "title": "Gamified Performance",
+        "title": "Sales Performance Tracking",
         "subtitle": "Live Performance Leaderboard",
         "score": "Score",
-        "whyScore": "Why This Score?",
-        "revenueInsight": "Total revenue <1>{{revenue}}</1> is <3>{{percentage}}%</3> above team average.",
-        "winRateInsight": "Win rate is <1>{{rate}}%</1> which is {{status}}.",
-        "trendingUp": "Performance is trending up in last 6 periods! 🚀",
-        "trendingDown": "Slight momentum loss recently, needs attention.",
+        "whyScore": "Why this score?",
+        "revenueInsight": "With <1>{{revenue}}</1> total invoiced, you are <3>%{{percentage}}</3> {{direction}} the team average.",
+        "winRateInsight": "Your win rate is <1>%{{rate}}</1>, which is {{status}}.",
+        "trendingUp": "Your performance has been trending up for the last 6 periods! 🚀",
+        "trendingDown": "There's a slight loss of momentum recently, let's keep an eye on it.",
         "revenueTrend": "Revenue Trend",
         "vsTeam": "vs Team",
-        "nextAction": "Next Action",
+        "nextAction": "Next Goal",
         "closeDeal": "Close 1 Deal",
-        "reachMaster": "to reach 'Order Master'",
+        "reachMaster": "Reach 'Order Master' level",
         "badges": {
             "mvp": {
                 "title": "MVP",
@@ -143,70 +197,36 @@
             },
             "sniper": {
                 "title": "Sniper",
-                "desc": "High precision: {{rate}}% Win Rate"
+                "desc": "High accuracy: %{{rate}} Win Rate"
             },
             "rainmaker": {
                 "title": "Rainmaker",
-                "desc": "Generated {{revenue}} revenue"
+                "desc": "{{revenue}} revenue generated"
             },
             "streak": {
                 "title": "{{count}} Streak",
                 "desc": "{{count}} deals closed in a row!"
             }
-        }
-    },
-    "executiveBrief": {
-        "title": "Executive Brief",
-        "subtitle": "Smart Summary",
-        "narrative": {
-            "part1": "Opportunity volume is <0>{{status}}</0> this period.",
-            "part2": "Won deals remain <0>{{trend}}</0>,",
-            "part3": "loss rate is <0>{{status}}</0>.",
-            "part4": "Total pipeline revenue signals <0>{{strength}}</0> potential.",
-            "part5": "Concentration observed in <0>{{product}}</0> product group.",
-            "status": {
-                "high": "high",
-                "stable": "stable",
-                "needsAttention": "needing attention",
-                "underControl": "under control"
-            },
-            "trend": {
-                "increasing": "increasing",
-                "stable": "stable",
-                "decreasing": "decreasing"
-            },
-            "strength": {
-                "strong": "strong",
-                "stable": "stable",
-                "weak": "weak"
-            }
         },
-        "kpis": {
-            "totalDeals": "Total Opportunities",
-            "conversionRate": "Conversion Rate",
-            "wonDeals": "Won Deals",
-            "lostDeals": "Lost Deals",
-            "pipelineRevenue": "Pipeline Value",
-            "totalARR": "Total ARR",
-            "renewalRisk": "Renewal Risk",
-            "avgContractValue": "Avg Contract Value",
-            "riskAnalysis": "Risk Analysis",
-            "needsAttention": "Needs Attention",
-            "acceptable": "Acceptable",
-            "tooltips": {
-                "totalDeals": "Total number of opportunities in the pipeline",
-                "conversionRate": "Target: >30%",
-                "pipelineStrength": "Active pipeline value signals strength",
-                "wonDetails": "{{count}} deals won, total value {{value}}",
-                "totalARR": "Total Annual Recurring Revenue from active contracts",
-                "renewalRisk": "Total value of contracts with High renewal risk",
-                "avgContractValue": "Average annual value per active contract"
-            }
-        }
+        "invoiced": "INVOICED",
+        "performanceSummary": "Performance Summary",
+        "revenueComparisonText": "you are",
+        "above": "above",
+        "below": "below",
+        "winRateText": "Win rate",
+        "strongPerformance": "You are showing strong performance",
+        "needsImprovement": "Needs improvement",
+        "trendingUpMessage": "Your performance is in an upward trend, keep it up!",
+        "trendingDownMessage": "There's a slight decrease compared to last month, you can recover.",
+        "teamRanking": "Team Ranking",
+        "leader": "Leader",
+        "leadingMessage": "You are leading the board!",
+        "gapToLeader": "Gap to Leader",
+        "neededForFirstPlace": "Gap required to reach first place.",
+        "liveRanking": "Live Ranking"
     },
     "recommendations": {
         "title": "Smart Recommendations",
-        "suggestionCount": "suggestions",
         "types": {
             "crossSell": "Cross-sell",
             "upsell": "Upsell",
@@ -234,7 +254,7 @@
             {
                 "id": "rec-1",
                 "title": "Revenue Opportunity in Retail Segment",
-                "description": "61% of similar customers in this sector add Quest product to their current solutions. High upsell potential in this opportunity group.",
+                "description": "61% of similar customers in this sector add the Quest product to their current solutions. Upsell potential is high in this opportunity group.",
                 "type": "Cross-sell",
                 "context": "23 active opportunities • Avg deal size: $180K",
                 "actionLabel": "View Details"
@@ -249,8 +269,8 @@
             },
             {
                 "id": "rec-3",
-                "title": "Stockbar Reactivation Opportunity",
-                "description": "12 opportunities postponed due to budget 6 months ago can be re-entered with the new \"Quick Start\" package.",
+                "title": "Stokbar Reactivation Opportunity",
+                "description": "12 opportunities postponed 6 months ago due to budget can be re-entered with the new \"Quick Start\" package.",
                 "type": "Reactivation",
                 "context": "Avg aging: 180 days",
                 "actionLabel": "Add to Offer"
@@ -258,7 +278,7 @@
             {
                 "id": "rec-4",
                 "title": "Varuna ERP Benchmark Comparison",
-                "description": "Varuna adoption is 85% in $1M+ deals in sector average. Missing in current large opportunities.",
+                "description": "Varuna adoption is 85% in $1M+ deals in industry average. Missing in existing large opportunities.",
                 "type": "Benchmark",
                 "context": "Suitable for 5 opportunities",
                 "actionLabel": "Analyze"
@@ -266,7 +286,7 @@
             {
                 "id": "rec-5",
                 "title": "ServiceCore CX Package Cross-sell",
-                "description": "68% of customers using EnRoute add ServiceCore for customer experience. Operational efficiency increase 40%.",
+                "description": "68% of EnRoute customers add ServiceCore for customer experience. Operational efficiency increase is 40%.",
                 "type": "Cross-sell",
                 "context": "15 target customers identified",
                 "actionLabel": "View List"
@@ -275,62 +295,83 @@
     },
     "opportunityModal": {
         "smartRecommendations": "Smart Recommendations",
-        "aiAssistant": "AI Brand Assistant",
-        "communicationTone": "Communication Tone",
+        "aiAssistant": "AI Assistant",
+        "communicationTone": "Tone of Voice",
         "tones": {
             "formal": "Formal & Professional",
             "persuasive": "Persuasive",
             "friendly": "Friendly & Kind",
-            "urgent": "Urgency-Focused"
+            "urgent": "Urgency Focused"
         },
-        "placeholder": "Select a tone and click \"Generate\" button.",
-        "generating": "AI is generating response...",
+        "placeholder": "Select a tone and press \"Generate\".",
+        "generating": "AI is thinking of a response...",
         "generateResponse": "Generate Response"
     },
     "activities": {
         "title": "Activities",
-        "subtitle": "Action and impact focused management center.",
-        "aiBriefTitle": "AI Activity Executive Brief",
+        "subtitle": "Action and impact oriented management center.",
+        "aiBriefTitle": "AI Activity Brief Report",
         "kpis": {
             "total": "Total Touchpoints",
-            "openTodos": "Open Pending To-Do",
+            "openTodos": "Open Pending To-Dos",
             "overdue": "Overdue Actions",
-            "winRate": "Touchpoint > Win Rate",
-            "followUpTime": "Avg. Follow-up Time"
+            "winRate": "Touchpoint > Win",
+            "followUpTime": "Avg Follow-up Time"
         },
         "sections": {
             "actionList": "Priority Action List (To-Do)",
-            "impactAnalysis": "Impact & Result Analysis",
+            "impactAnalysis": "Impact & Outcome Analysis",
             "teamDiscipline": "Team Effort & Result Matrix",
-            "aiSuggestions": "Executive Action Suggestions"
+            "aiSuggestions": "Manager Action Suggestions"
         },
         "charts": {
             "type": "Activity Type",
             "detail": "Activity Detail",
-            "platform": "Activity Platform",
+            "platform": "Activity Environment",
             "customer": "Customer Distribution",
             "heatmap": "Activity Heatmap",
-            "radar": "Team Proficiency",
+            "radar": "Team Capability Distribution",
             "timeline": "All Activities",
             "winRateByType": "Win Rate (By Type)",
-            "touchpoints": "Touchpoint Impact"
+            "touchpoints": "Touchpoint Count Impact"
         },
         "types": {
-            "call": "Call",
-            "email": "Email",
+            "outbound_call": "Outbound Call",
+            "outbound_email": "Outbound Email",
             "meeting": "Meeting",
+            "inbound_call": "Inbound Call",
+            "sales": "Sales",
+            "inbound_email": "Inbound Email",
+            "account_mgmt": "Account Management",
+            "other": "Other",
+            "contract": "Contract Follow-up",
+            "proposal": "Proposal",
+            "support": "Support",
+            "renewal": "Renewal",
+            "proposal_followup": "Proposal Follow-up",
+            "vacancy": "Vacancy",
+            "training": "Training",
+            "linkedin": "LinkedIn",
             "demo": "Demo",
-            "task": "Task",
-            "lunch": "Lunch",
-            "other": "Other"
+            "satisfaction": "Satisfaction",
+            "field_sales": "Field Sales",
+            "proposal_verbal": "Verbal Proposal",
+            "retention": "Retention"
+        },
+        "outcomeReasons": {
+            "price": "Pricing",
+            "product_gap": "Product Gap",
+            "timing": "Timing / Budget",
+            "competitor": "Competitor Choice",
+            "other": "Other Reasons"
         },
         "columns": {
             "rep": "Representative",
             "count": "Count",
-            "customer": "Customer / Deal",
+            "customer": "Customer / Opportunity",
             "subject": "Note / Subject",
             "type": "Type",
-            "date": "Date / Due Date",
+            "date": "Date / Due",
             "detail": "Detail",
             "status": "Status",
             "priority": "Priority",
@@ -349,26 +390,26 @@
             "touchpointToWin": "Touchpoint > Win"
         },
         "aiSection": {
-            "title": "AI Activity Executive Brief",
+            "title": "AI Activity Brief Report",
             "strategicTitle": "Strategic Activity Analysis & Insights",
             "momentum": "Momentum",
             "risk": "Risk",
             "delays": "Delays",
             "high": "High",
-            "summaryHTML": "Activity volume is <1>trending up</1>. 45 calls on Monday created <3>3 new opportunities</3>. However, <5>{{count}} overdue actions</5> pose a risk."
+            "summaryHTML": "Team activity intensity is in an <1>upward trend</1> this week. Especially the 45 calls made on Monday created <3>3 new opportunities</3>. However, <5>{{count}} overdue actions</5> pose a risk."
         },
         "grid": {
             "title": "Activity Records",
-            "subtitle": "All touchpoint history and details",
+            "subtitle": "All contact history and details",
             "placeholders": {
-                "search": "Global Search...",
+                "search": "General Search...",
                 "filter": "Filter...",
                 "type": "Type...",
-                "rep": "Rep..."
+                "rep": "Representative..."
             },
             "actions": {
                 "lossAnalysis": "Loss Analysis",
-                "shareNotes": "Share Notes",
+                "shareNotes": "Share Minutes",
                 "followUp": "Follow Up",
                 "requestDecision": "Request Decision",
                 "checkResponse": "Check Response",
@@ -376,14 +417,14 @@
                 "plan": "Plan"
             },
             "empty": "No activities found matching your criteria.",
-            "footer": "Showing total {{count}} records"
+            "footer": "Total {{count}} records listed"
         },
         "matrix": {
             "title": "Team Effort & Result Matrix (Detailed)",
             "heatmap": "Heatmap",
             "intensity": "Intensity",
             "totalActivity": "Total Activity",
-            "scrollHint": "← Scroll table sideways to view all activity types →"
+            "scrollHint": "← Scroll table sideways to see all activity types →"
         },
         "charts_extended": {
             "newCustomerInteraction": "New Customer Interaction",
@@ -391,7 +432,7 @@
             "conversion": "Conversion",
             "recentInteractions": "Recent Interactions",
             "more": "more",
-            "customerLeaders": "Customer Communication Leaders",
+            "customerLeaders": "Customer Contact Leaders",
             "activity": "Activity",
             "teamPerformance": "Team Performance",
             "sellerLeaderboard": "Seller Leaderboard",
@@ -399,30 +440,30 @@
             "productInterest": "Product Interest Distribution",
             "lossAnalysis": "Loss Reason Analysis",
             "insights": {
-                "newCustomers": "{{count}} unique customers touched this period. %{{rate}} conversion achieved under Sales team leadership.",
-                "topCustomer": "Heavy technical meeting traffic with {{name}}. Opportunity closing probability at 80%.",
-                "team": "Partners team has high activity volume, but trails Sales team by 15% in conversion.",
-                "seller": "{{leader}} is volume leader but {{runnerUp}} is working more efficiently.",
-                "product": "48% of interest is concentrated on Stockbar product. Hosting product group activities are trending down 20% this month.",
-                "loss": "37% of negative results are Price related. 'Product Scope' objections are increasing in Enterprise segment."
+                "newCustomers": "During this period, {{count}} different customers were contacted. A win success rate of %{{rate}} was achieved under the leadership of the sales team.",
+                "topCustomer": "There is a heavy technical meeting traffic with {{name}}. Opportunity closing probability is at 80% level.",
+                "team": "Partners team activity volume is high, but they are 15% behind the Sales team in conversion.",
+                "seller": "{{leader}} is the volume leader but {{runnerUp}} works more efficiently.",
+                "product": "48% of interest is concentrated on Stokbar. Hosting product group activities are in a 20% downward trend this month.",
+                "loss": "37% of negative results are Pricing related. Especially in the Enterprise segment, 'Product Gap' objections are on the rise."
             }
         }
     },
     "executive": {
-        "title": "Management Intelligence",
-        "subtitle": "Strategic insights and executive reporting.",
+        "title": "Executive Intelligence",
+        "subtitle": "Strategic insights and management report.",
         "kpis": {
             "totalRevenue": "Total Revenue",
-            "revenueIncrease": "Increase vs last month",
+            "revenueIncrease": "vs last month",
             "pipelineValue": "Pipeline Value",
             "totalOpportunities": "Total Opportunities",
             "activeDeals": "Active Deals",
             "stalledDeals": "Stalled Deals",
             "winRate": "Win Rate",
-            "aboveIndustryAvg": "Above Industry Avg"
+            "aboveIndustryAvg": "above industry avg"
         },
         "sections": {
-            "salesPerformance": "Commercial Performance",
+            "salesPerformance": "Sales Performance",
             "revenueAssurance": "Revenue Assurance"
         },
         "charts": {
@@ -434,23 +475,23 @@
             "velocity": {
                 "title": "Sales Velocity Score",
                 "score": "Velocity Score",
-                "description": "Average cycle time is <1>{{value}}</1> faster than target."
+                "description": "Avg closing time with <1>{{value}}</1> is above target."
             }
         },
         "risk": {
-            "title": "Risk & Warning Intelligence",
-            "stagnant": "%{{percent}} of pipeline has not changed stage for {{days}} days. This increased by %{{change}} vs last month.",
-            "pastDue": "{{count}} deals are past expected close date. Total value: {{value}}.",
-            "winRateDrop": "Win rate dropped by %{{change}} in the last quarter.",
+            "title": "Risk and Alert Analysis",
+            "stagnant": "%{{percent}} of pipeline has not changed stage for {{days}} days. This rate increased by %{{change}} compared to last month.",
+            "pastDue": "There are {{count}} opportunities past their estimated closing date. Total value: {{value}}.",
+            "winRateDrop": "Win rate showed a %{{change}} decrease in the last quarter.",
             "highConcentration": "Risk: %{{percent}} of revenue depends on a single customer."
         },
         "performance": {
             "title": "Performance Distribution",
-            "concentration": "%{{percent}} of total revenue is generated by %{{agentCount}} of the sales team."
+            "concentration": "%{{percent}} of total revenue is produced by %{{agentCount}} of the sales team."
         },
         "forecast": {
-            "title": "Forecast & Confidence",
-            "highConfidence": "%{{percent}} of target is achievable with high confidence based on current velocity. Risk scenarios may lower this.",
+            "title": "Forecast and Confidence",
+            "highConfidence": "Based on current closing speed, %{{percent}} of the target can be reached with high confidence. This rate may decrease in risky scenarios.",
             "confidenceScore": "Confidence Score",
             "bestCase": "Best Case",
             "worstCase": "Worst Case",
@@ -458,23 +499,62 @@
         },
         "rootCause": {
             "title": "Loss Analysis (Why are we losing?)",
-            "chartTitle": "Loss Reason Distribution",
+            "chartTitle": "Loss Reasons Distribution",
             "impact": "Impact",
             "reasons": {
-                "price": "Pricing",
+                "price": "Price",
                 "decision_time": "Decision Time",
                 "product_gap": "Product Gap",
                 "competitor": "Competitor"
             }
         },
         "actions": {
-            "title": "Suggested Actions",
+            "title": "Recommended Actions",
             "pricing_title": "Pricing Revision",
-            "pricing_desc": "Package revision recommended due to increasing price-related losses in {{segment}} segment.",
+            "pricing_desc": "Package revision is recommended in the {{segment}} segment as price-related losses increased.",
             "load_balance_title": "Load Balancing",
-            "load_balance_desc": "%{{percent}} of pipeline is concentrated on a single rep, indicating load balance risk.",
+            "load_balance_desc": "%{{percent}} of pipeline is concentrated in one salesperson, there is a load balance risk.",
             "training_title": "Negotiation Training",
-            "training_desc": "Advanced negotiation training recommended for the team due to losses at proposal stage."
+            "training_desc": "Advanced negotiation training should be planned for the team for losses at the proposal stage."
+        },
+        "confidence": {
+            "title": "Execution Confidence"
+        },
+        "aiBrief": "AI Executive Brief"
+    },
+    "executiveBrief": {
+        "title": "Executive Summary",
+        "subtitle": "Smart Summary",
+        "kpis": {
+            "totalARR": "TOTAL ARR",
+            "renewalRisk": "RENEWAL RISK",
+            "avgContractValue": "Avg Contract Value",
+            "acceptable": "Acceptable",
+            "needsAttention": "Needs Attention",
+            "riskAnalysis": "Risk Analysis"
+        },
+        "narrative": {
+            "part1": "Opportunity volume is <0>{{status}}</0> during this period.",
+            "part2": "Won opportunities <0>{{trend}}</0>,",
+            "part3": "loss rate is <0>{{status}}</0>.",
+            "part4": "Total revenue potential in pipeline signaling <0>{{strength}}</0>.",
+            "part5": "Concentration is observed in <0>{{product}}</0> product group.",
+            "status": {
+                "high": "high",
+                "stable": "stable",
+                "needsAttention": "needs attention",
+                "underControl": "under control"
+            },
+            "trend": {
+                "increasing": "increasing",
+                "stable": "stable",
+                "decreasing": "decreasing"
+            },
+            "strength": {
+                "strong": "strong",
+                "stable": "stable",
+                "weak": "weak"
+            }
         }
     },
     "quotes": {
@@ -498,8 +578,8 @@
             "title": "Quote List",
             "customerSearch": "Search customer...",
             "allStatuses": "All Statuses",
-            "listView": "List",
-            "boardView": "Board",
+            "listView": "List View",
+            "boardView": "Board View",
             "showing": "Showing"
         },
         "table": {
@@ -507,15 +587,17 @@
             "customer": "Customer",
             "status": "Status",
             "amount": "Amount",
-            "actions": "Actions"
+            "actions": "Actions",
+            "product": "Product"
         },
         "charts": {
             "statusRevenue": "Quote Status / Expected Revenue",
             "customerRevenue": "Customer / Expected Revenue",
             "insights": {
-                "status": "Approved and Pending quotes make up 68% of total pipeline volume.",
-                "customer": "Top 5 customers hold 45% of total quoted amount. Portfolio balance is healthy."
-            }
+                "status": "Approved and Pending quotes represent 68% of total pipeline volume.",
+                "customer": "Top 5 customers represent 45% of total quoted amount. Portfolio balance is in good shape."
+            },
+            "customerInsight": "Customer distribution statistics"
         },
         "kpis": {
             "totalCount": "TOTAL QUOTES",
@@ -523,7 +605,11 @@
             "won": "WON",
             "open": "OPEN PENDING",
             "totalPotential": "TOTAL POTENTIAL"
-        }
+        },
+        "units": {
+            "approved": "Approved Quote"
+        },
+        "noApprovedData": "No approved quote data available."
     },
     "orders": {
         "title": "Orders",
@@ -569,7 +655,7 @@
             "topBuyer": "\"{{name}}\" is the top buyer.",
             "canceledCount": "{{count}} orders canceled."
         },
-        "productPerformance": "Product Group Performance"
+        "productPerformance": "Product Performance"
     },
     "status": {
         "Open": "Open",
@@ -579,7 +665,10 @@
         "Negotiation": "Negotiation",
         "Draft": "Draft",
         "Archived": "Archived",
-        "Terminated": "Terminated"
+        "Terminated": "Terminated",
+        "Collected": "Collected",
+        "Overdue": "Overdue",
+        "Pending": "Pending"
     },
     "contracts": {
         "title": "Revenue Assurance & Contracts",
@@ -596,32 +685,6 @@
                 "onTrack": "Billing & Milestones on track"
             }
         },
-        "charts": {
-            "radarTitle": "Renewal Risk Radar",
-            "radarSubtitle": "Bubble size = Contract Value • Color = Risk Level",
-            "revenueProjection": "Revenue Projection",
-            "portfolioOwnership": "Portfolio Ownership",
-            "daysToRenewal": "Days to Renewal",
-            "contractValue": "Contract Value (k)",
-            "projectedRev": "Projected Rev",
-            "expectedBilling": "Expected Billing",
-            "statusDistribution": "Contract Status Distribution"
-        },
-        "list": {
-            "header": {
-                "customerTitle": "Customer / Title",
-                "product": "Product",
-                "status": "Status",
-                "value": "Value (TL)",
-                "renewalIn": "Renewal In",
-                "risk": "Risk",
-                "salesOwner": "Sales Owner"
-            },
-            "filters": {
-                "allStatuses": "All Statuses",
-                "searchPlaceholder": "Search customer, contract..."
-            }
-        },
         "risk": {
             "title": "Renewal Risk Analysis",
             "totalValue": "Total Value",
@@ -629,8 +692,24 @@
             "daysLeft": "days left",
             "noCritical": "No critical risks detected"
         },
-        "productHealth": {
-            "title": "Product Contract Performance"
+        "enrichment": {
+            "renewalHistory": "Renewal History",
+            "paymentDiscipline": "Payment Discipline",
+            "noRenewalHistory": "No previous renewal records found.",
+            "priceChange": "Price",
+            "avgDelay": "Avg Delay",
+            "consistency": "Consistency",
+            "trend": "Trend",
+            "aiInsight": "Customer typically pays on time...",
+            "trends": {
+                "Improving": "Improving",
+                "Stable": "Stable",
+                "Declining": "Declining"
+            }
+        },
+        "ownership": {
+            "title": "Contract Ownership & Risk",
+            "subtitle": "Accountability for upcoming renewals"
         },
         "calendar": {
             "title": "Monthly Renewal Targets",
@@ -660,6 +739,21 @@
             "title": "View Contract Details",
             "desc": "Select a customer from the left list to view details and collection analysis."
         },
+        "list": {
+            "header": {
+                "customerTitle": "Customer / Title",
+                "product": "Product",
+                "status": "Status",
+                "value": "Value (TL)",
+                "renewalIn": "Renewal In",
+                "risk": "Risk",
+                "salesOwner": "Sales Owner"
+            },
+            "filters": {
+                "allStatuses": "All Statuses",
+                "searchPlaceholder": "Search customer, contract..."
+            }
+        },
         "details": {
             "termsTitle": "Contract Terms",
             "totalValue": "Total Value",
@@ -684,20 +778,38 @@
             "status": "Status",
             "invoice": "Invoice No"
         },
-        "enrichment": {
-            "renewalHistory": "Renewal History",
-            "paymentDiscipline": "Payment Discipline",
-            "noRenewalHistory": "No previous renewal records found.",
-            "priceChange": "Price",
-            "avgDelay": "Avg Delay",
-            "consistency": "Consistency",
-            "trend": "Trend",
-            "aiInsight": "Customer typically pays on time...",
-            "trends": {
-                "Improving": "Improving",
-                "Stable": "Stable",
-                "Declining": "Declining"
-            }
+        "charts": {
+            "statusDistribution": "Contract Status Distribution"
+        },
+        "productHealth": {
+            "title": "Product Contract Performance",
+            "subtitle": "Active portfolio and renewal risk by product"
+        },
+        "filters": {
+            "salesOwner": "Sales Owner",
+            "customer": "Customer",
+            "status": "Contract Status",
+            "searchPlaceholder": "Search customer, contract..."
+        },
+        "statusDate": "Status Date",
+        "status": {
+            "univeraSigned": "Signed by Univera",
+            "customerSigned": "Signed by Customer",
+            "completed": "Completed",
+            "noMaintenance": "No Maintenance Turnover",
+            "archived": "Archived",
+            "cancelled": "Cancelled",
+            "renewedExpired": "Renewed / Expired",
+            "rejected": "Rejected",
+            "pendingApproval": "Pending Approval",
+            "approved": "Approved",
+            "Active": "Active",
+            "Negotiation": "Negotiation",
+            "Draft": "Draft",
+            "Expired": "Expired",
+            "Archived": "Archived",
+            "Terminated": "Terminated",
+            "Renewed": "Renewed"
         }
     },
     "dashboardV2": {
@@ -741,9 +853,9 @@
             "oppUnit": "OPP",
             "quotesSent": "Quotes sent",
             "quoteUnit": "QUOTE",
-            "conversionRate": "Conversion rate",
-            "revenueBased": "Revenue-Based",
-            "countConversion": "Count conversion",
+            "conversionRate": "Quote Conv. Rate",
+            "revenueBased": "Rev. Based",
+            "countConversion": "Count Conv.",
             "acceptedQuotes": "Accepted quotes",
             "winRate": "Win rate",
             "openOrders": "Open orders",
@@ -754,7 +866,7 @@
             "title": "Order Velocity Blockers",
             "impact": "Impact",
             "orders": "Orders",
-            "viewDetailed": "View Detailed Barrier Analysis"
+            "viewDetailed": "View Detailed Blocker Analysis"
         },
         "collections": {
             "title": "Critical Collection Risks",
@@ -776,8 +888,8 @@
         "drilldown": {
             "details": "Details",
             "showingRecords": "Showing {{count}} records affecting this metric",
-            "searchPlaceholder": "Search by name, customer, owner or status...",
-            "noResults": "No records found matching your search criteria.",
+            "searchPlaceholder": "Search by record name, customer, owner or status...",
+            "noResults": "No records found matching search criteria.",
             "records": "records listed",
             "estimated": "Estimated",
             "lowRisk": "LOW RISK",
@@ -789,31 +901,15 @@
                 "owner": "Owner",
                 "dateStatus": "Date/Status",
                 "value": "Value",
-                "customerAndDeals": "Customer / Opportunities",
+                "customerAndDeals": "Customer / Deals",
                 "stage": "Stage",
                 "probability": "Probability",
-                "estimatedClose": "Est. Close",
-                "quoteName": "Quote Name",
-                "customer": "Customer",
-                "product": "Product",
-                "status": "Status",
-                "amount": "Amount",
-                "risk": "Risk",
-                "orderName": "Order Name",
-                "condition": "Status"
+                "estimatedClose": "Estimated Close"
             }
         },
-        "productBalance": {
-            "title": "PRODUCT BALANCE",
-            "subtitle": "Revenue by product from closed orders",
-            "revenue": "Revenue",
-            "orderCount": "Order Count",
-            "unit": "Units",
-            "empty": "No closed orders found matching the current filter."
-        },
         "closeForecast": {
-            "title": "NEXT 12 MONTHS - CLOSE FORECAST",
-            "subtitle": "Active opportunities by expected close date",
+            "title": "NEXT 12 MONTHS - CLOSING FORECAST",
+            "subtitle": "Active opportunities based on estimated close date",
             "deals": "Deals",
             "potential": "Potential"
         },
@@ -825,26 +921,28 @@
         }
     },
     "performanceCockpit": {
-        "subtitle": "Contract, Invoice, and Collection Consolidated View",
+        "subtitle": "Consolidated View of Contracts, Invoices and Collections",
         "asOfDate": "As-Of Date:",
         "sinceYesterday": "since yesterday",
+        "yearTotal": "Total Year 2026",
+        "month": "Month",
         "contract": "Contract",
         "invoicedLastWeek": "Invoiced Last Week",
         "contractWeeklyActuals": "Weekly Actuals (This Week)",
         "contractMonthlyActuals": "Monthly Actuals (This Month)",
         "contractCount": "Contract Count",
         "amountValue": "Amount Value (TL)",
-        "monthlyCurrentStatus": "Monthly Current Status (In Hand)",
+        "monthlyCurrentStatus": "Monthly Current Status",
         "monthlyContractCount": "Monthly Contract Count",
-        "revenueImpactWhenClosed": "Revenue Impact:",
+        "revenueImpactWhenClosed": "Revenue Impact When Closed:",
         "potentialValue": "Potential TL",
         "monthlyAchievementRates": "Monthly Achievement Rates",
         "monthlyTarget": "Monthly Target",
-        "amountAchievementRate": "Amount Achievement (%)",
+        "amountAchievementRate": "Amount Achievement Rate (%)",
         "invoice": "Invoice (Sales)",
         "invoicedToday": "Invoiced Today",
-        "invoiceWeeklyActuals": "Invoiced This Week",
-        "invoiceMonthlyActuals": "Invoiced This Month",
+        "invoiceWeeklyActuals": "Weekly Invoiced",
+        "invoiceMonthlyActuals": "Monthly Invoiced",
         "invoiceMonthlyTarget": "Monthly Invoice Target",
         "invoiceCount": "Invoice Count",
         "totalInvoiced": "Total Invoiced",
@@ -852,11 +950,11 @@
         "monthlySalesTarget": "Monthly Sales Target",
         "yearlySalesTarget": "Yearly Sales Target",
         "yearlyAchievementCurrentYear": "2026 Yearly Achievement",
-        "yearlyAchievementRate": "Yearly Achievement (%)",
+        "yearlyAchievementRate": "Yearly Achievement Rate (%)",
         "revenueGap": "Revenue Gap",
         "gapToYearlyTarget": "Gap to Yearly Target",
         "collection": "Collection",
-        "accountingDaily": "Accounting and Finance (Daily)",
+        "accountingDaily": "Accounting & Finance (Daily)",
         "dueReceivables": "Due Receivables",
         "riskSinceYesterday": "Risk since yesterday",
         "collectedReceivables": "Collected Receivables",
@@ -869,7 +967,72 @@
         "cumulativeInvoice": "Cumulative Invoice",
         "cumulativeContract": "Cumulative Contract",
         "trendAnalysisTitle": "Monthly Consolidated Trend Analysis (Current Year)",
-        "periodMonth": "Period (Month)",
-        "noTrendData": "Monthly trend data cannot be displayed."
+        "periodMonth": "Period (Month)"
+    },
+    "scorecard": {
+        "title": "Sales Scorecard",
+        "pageTitle": "Persona Based Sales Operations Scorecard",
+        "subtitle": "Track the entire sales journey of the selected sales representative from Opportunity to Collection with as-of date (snapshot) logic.",
+        "personSelector": "Sales Representative",
+        "termSelector": "Period",
+        "asOfDate": "As-Of",
+        "selectDate": "Select Date",
+        "teamRanking": {
+            "title": "Team Ranking",
+            "subtitle": "Within Team (Among {{count}} Persons)",
+            "gapToLeader": "Gap to Leader",
+            "leader": "Leader",
+            "basedOn": "Based on"
+        },
+        "kpis": {
+            "openOpportunity": "Open Opportunity",
+            "quoteSent": "Quote Sent",
+            "quoteWon": "Quote Won",
+            "conversionRate": "Quote Conversion Rate",
+            "conversionSubtitle": "Ratio of Won to Sent Amount",
+            "openOrders": "Converted Orders",
+            "contracts": "Linked Contracts",
+            "invoiced": "Invoiced",
+            "collected": "Collected",
+            "balance": "Balance",
+            "totalInvoice": "Total Invoice",
+            "unit": "Unit",
+            "orderUnit": "Order"
+        },
+        "funnel": {
+            "title": "Operational Conversion Funnel",
+            "amount": "Amount",
+            "count": "Count"
+        },
+        "tables": {
+            "topContracts": "Top 10 Contracts (by Customer)",
+            "contractStages": "Contract Stages",
+            "customer": "Customer",
+            "contractCount": "Contract Count",
+            "contractValue": "Value",
+            "noResults": "No results found",
+            "records": "records listed"
+        },
+        "expectations": {
+            "title": "Opportunity Close Expectations by Month (TL)",
+            "noData": "No open opportunity data with estimated close date found.",
+            "opportunities": "Opportunities",
+            "opportunityUnit": "Opportunity",
+            "allOpportunities": "All Open Opportunities",
+            "periodOpportunities": "{{period}} Opportunities",
+            "revenue": "Revenue"
+        },
+        "interactions": {
+            "title": "Last Interactions (Top 10)",
+            "noLog": "No activity log found.",
+            "unknownCustomer": "Unknown Customer",
+            "noDetail": "Planned without detail"
+        },
+        "trends": {
+            "title": "Revenue & Collection Trend (Last 6 Months)",
+            "contract": "Contract (ARR)",
+            "invoice": "Invoiced",
+            "collection": "Collection"
+        }
     }
 }

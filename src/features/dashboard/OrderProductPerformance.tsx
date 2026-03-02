@@ -298,7 +298,7 @@ export function OrderProductPerformance({ orders: propOrders }: OrderProductPerf
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); setIsFullScreen(!isFullScreen); }}
                                                 className="p-2.5 bg-white dark:bg-white/5 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 transition-all border border-slate-200 dark:border-white/10"
-                                                title={isFullScreen ? "Küçült" : "Tam Ekran"}
+                                                title={isFullScreen ? t('common.minimize') : t('common.fullscreen')}
                                             >
                                                 {isFullScreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
                                             </button>
@@ -354,7 +354,7 @@ export function OrderProductPerformance({ orders: propOrders }: OrderProductPerf
                                             <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">{t('performance.distributionTitle')}</h3>
                                             {selectedStatus && (
                                                 <span className="text-[10px] text-slate-400 ml-auto">
-                                                    Filter: <span className="font-bold text-indigo-500">{selectedStatus}</span>
+                                                    {t('common.filter')}: <span className="font-bold text-indigo-500">{selectedStatus}</span>
                                                 </span>
                                             )}
                                         </div>
@@ -383,7 +383,7 @@ export function OrderProductPerformance({ orders: propOrders }: OrderProductPerf
                                                     </Pie>
                                                     <Tooltip
                                                         formatter={(value: any, name: any, props: any) => [
-                                                            `$${value?.toLocaleString() ?? 0} (${props.payload.count} adet)`,
+                                                            `$${value?.toLocaleString() ?? 0} (${props.payload.count} ${t('common.unit')})`,
                                                             name
                                                         ]}
                                                     />

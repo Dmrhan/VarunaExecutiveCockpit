@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import {
     BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-    Legend
+    Legend, LabelList
 } from 'recharts';
 import { formatCurrency } from '../../utils/formatters';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
@@ -90,6 +90,19 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
     const getDelta = (current: number, previous: number) => {
         if (!previous || previous === 0) return 0; // Avoid division by zero
         return ((current - previous) / previous) * 100;
+    };
+
+    const renderCustomBarLabel = (props: any) => {
+        const { x, y, width, value } = props;
+        if (!value) return null;
+
+        return (
+            <g transform={`translate(${x + width / 2},${y - 10})`}>
+                <text x={0} y={0} dy={0} textAnchor="middle" fill="#64748b" fontSize={9} fontWeight={700}>
+                    {trendMetric === 'amount' ? formatCurrency(value) : value}
+                </text>
+            </g>
+        );
     };
 
     // Helper component for KPI cards with delta
@@ -177,7 +190,7 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
                 <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-slate-200 dark:border-slate-700 shadow-sm">
                     <CardContent className="p-4 flex flex-wrap items-center gap-4">
                         <div className="flex flex-col gap-1">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase">Durum Tarihi</label>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase">{t('contracts.statusDate', 'Durum Tarihi')}</label>
                             <input
                                 type="date"
                                 className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500 outline-none"
@@ -186,13 +199,13 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
                             />
                         </div>
                         <div className="flex flex-col gap-1">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase">Satış Temsilcisi</label>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase">{t('contracts.filters.salesOwner', 'Satış Temsilcisi')}</label>
                             <select
                                 className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500 outline-none min-w-[150px]"
                                 value={filters.salesRepId}
                                 onChange={(e) => setFilters({ ...filters, salesRepId: e.target.value })}
                             >
-                                <option value="">Tümü</option>
+                                <option value="">{t('common.all', 'Tümü')}</option>
                                 {/* We would ideally fetch these from a user list, but for now we'll use active selection */}
                                 {repBreakdown?.map((rep: any) => (
                                     <option key={rep.repId} value={rep.repId}>{rep.repName}</option>
@@ -200,37 +213,36 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
                             </select>
                         </div>
                         <div className="flex flex-col gap-1">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase">Müşteri</label>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase">{t('contracts.filters.customer', 'Müşteri')}</label>
                             <select
                                 className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500 outline-none min-w-[150px]"
                                 value={filters.accountId}
                                 onChange={(e) => setFilters({ ...filters, accountId: e.target.value })}
                             >
-                                <option value="">Tümü</option>
+                                <option value="">{t('common.all', 'Tümü')}</option>
                                 {accountBreakdown?.map((acc: any) => (
                                     <option key={acc.accountId} value={acc.accountId}>{acc.accountName}</option>
                                 ))}
                             </select>
                         </div>
                         <div className="flex flex-col gap-1">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase">Sözleşme Durumu</label>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase">{t('contracts.filters.status', 'Sözleşme Durumu')}</label>
                             <select
                                 className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500 outline-none min-w-[150px]"
                                 value={filters.status}
                                 onChange={(e) => setFilters({ ...filters, status: e.target.value })}
                             >
-                                <option value="All">Tümü</option>
-                                <option value="0">Hazırlık Aşamasında</option>
-                                <option value="1">Satışta - Bilgi Bekliyor</option>
-                                <option value="2">Fiyat Müzakerede</option>
-                                <option value="3">Metin Müzakerede</option>
-                                <option value="4">Univera İmzasında</option>
-                                <option value="5">Müşteri İmzasında</option>
-                                <option value="6">Süresi Dolmadı</option>
-                                <option value="7">Bakıma Devir Olmadı</option>
-                                <option value="8">Arşivlendi</option>
-                                <option value="9">Fesih / İptal</option>
-                                <option value="10">Yenilendi / Süresi Doldu</option>
+                                <option value="all">{t('common.all', 'Tümü')}</option>
+                                <option value="1">{t('contracts.status.rejected', 'Reddedildi')}</option>
+                                <option value="2">{t('contracts.status.pendingApproval', 'Onay Bekliyor')}</option>
+                                <option value="3">{t('contracts.status.approved', 'Onaylandı')}</option>
+                                <option value="4">{t('contracts.status.univeraSigned', 'Univera İmzasında')}</option>
+                                <option value="5">{t('contracts.status.customerSigned', 'Müşteri İmzasında')}</option>
+                                <option value="6">{t('contracts.status.completed', 'Tamamlandı')}</option>
+                                <option value="7">{t('contracts.status.noMaintenance', 'Bakıma Devir Olmadı')}</option>
+                                <option value="8">{t('contracts.status.archived', 'Arşivlendi')}</option>
+                                <option value="9">{t('contracts.status.cancelled', 'Fesih / İptal')}</option>
+                                <option value="10">{t('contracts.status.renewedExpired', 'Yenilendi / Süresi Doldu')}</option>
                             </select>
                         </div>
                         <button
@@ -246,46 +258,46 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
             {/* KPI Cards - Grid 3x2 for GM balance */}
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
                 <StatCard
-                    label="Toplam Sözleşme"
+                    label={t('contracts.kpis.totalContracts', 'Toplam Sözleşme')}
                     value={kpis?.totalCount?.toString() || '0'}
                     delta={getDelta(kpis?.totalCount, deltaKpis?.totalCount)}
                     colorClass="text-slate-900 dark:text-white"
                     subtext={formatCurrency(kpis?.totalAmount || 0)}
                 />
                 <StatCard
-                    label="Aktif Portföy"
+                    label={t('contracts.kpis.activePortfolio', 'Aktif Portföy')}
                     value={kpis?.activeCount?.toString() || '0'}
                     delta={getDelta(kpis?.activeCount, deltaKpis?.activeCount)}
                     colorClass="text-emerald-600 dark:text-emerald-400"
                     subtext={formatCurrency(kpis?.activeAmount || 0)}
                 />
                 <StatCard
-                    label="Riskli / Müzakere"
+                    label={t('contracts.kpis.riskNegotiation', 'Riskli / Müzakere')}
                     value={kpis?.riskCount?.toString() || '0'}
                     delta={getDelta(kpis?.riskCount, deltaKpis?.riskCount)}
                     colorClass="text-amber-600 dark:text-amber-400"
                     subtext={formatCurrency(kpis?.riskAmount || 0)}
                 />
                 <StatCard
-                    label="Arşivlendi / İptal"
+                    label={t('contracts.kpis.archivedCancelled', 'Arşivlendi / İptal')}
                     value={kpis?.archiveCount?.toString() || '0'}
                     delta={getDelta(kpis?.archiveCount, deltaKpis?.archiveCount)}
                     colorClass="text-slate-500"
                     subtext={formatCurrency(kpis?.archiveAmount || 0)}
                 />
                 <StatCard
-                    label="Süresi Dolan"
+                    label={t('contracts.kpis.expired', 'Süresi Dolan')}
                     value={kpis?.expiredCount?.toString() || '0'}
                     delta={getDelta(kpis?.expiredCount, deltaKpis?.expiredCount)}
                     colorClass="text-red-500"
                     subtext={formatCurrency(kpis?.expiredAmount || 0)}
                 />
                 <StatCard
-                    label="Toplam Bedel (TL)"
+                    label={t('contracts.kpis.totalValue', 'Toplam Bedel (TL)')}
                     value={formatCurrency(kpis?.totalAmount || 0)}
                     delta={0}
                     colorClass="text-indigo-600 dark:text-indigo-400"
-                    subtext="Tüm sözleşmeler"
+                    subtext={t('contracts.kpis.allContracts', 'Tüm sözleşmeler')}
                 />
             </div>
 
@@ -295,7 +307,7 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
                 <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 h-full flex flex-col">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                            <BarChartIcon size={14} /> Durum Dağılımı
+                            <BarChartIcon size={14} /> {t('contracts.charts.statusDistribution', 'Durum Dağılımı')}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-0">
@@ -304,7 +316,7 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
                                 <div key={item.statusLabel} className="px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
                                     <div className="flex flex-col">
                                         <span className="text-xs font-medium text-slate-700 dark:text-slate-200">{item.statusLabel}</span>
-                                        <span className="text-[10px] text-slate-400">{item.count} Adet</span>
+                                        <span className="text-[10px] text-slate-400">{item.count} {t('common.unit', { defaultValue: 'Adet' })}</span>
                                     </div>
                                     <span className="text-xs font-mono font-bold text-slate-600 dark:text-slate-400">
                                         {formatCurrency(item.amount)}
@@ -319,7 +331,7 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
                 <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 h-full flex flex-col">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                            <Users size={14} /> En Büyük 10 Müşteri
+                            <Users size={14} /> {t('contracts.charts.top10Customers', 'En Büyük 10 Müşteri')}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-0">
@@ -328,7 +340,7 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
                                 <div key={item.accountId} className="px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
                                     <div className="flex flex-col">
                                         <span className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate max-w-[150px]">{item.accountName}</span>
-                                        <span className="text-[10px] text-slate-400">{item.count} Sözleşme / {item.activeCount} Aktif</span>
+                                        <span className="text-[10px] text-slate-400">{item.count} {t('navigation.contracts')} / {item.activeCount} {t('status.Active')}</span>
                                     </div>
                                     <span className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400">
                                         {formatCurrency(item.amount)}
@@ -343,7 +355,7 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
                 <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 h-full flex flex-col">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                            <Search size={14} /> Satış Temsilcisi Performansı
+                            <Search size={14} /> {t('gamification.title', 'Satış Temsilcisi Performansı')}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-0">
@@ -352,7 +364,7 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
                                 <div key={item.repId} className="px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
                                     <div className="flex flex-col">
                                         <span className="text-xs font-medium text-slate-700 dark:text-slate-200">{item.repName}</span>
-                                        <span className="text-[10px] text-slate-400">{item.count} Portföy / {item.riskCount} Risk</span>
+                                        <span className="text-[10px] text-slate-400">{item.count} {t('activities.charts_extended.activity')} / {item.riskCount} {t('common.risk')}</span>
                                     </div>
                                     <div className="text-right">
                                         <div className="text-xs font-mono font-bold text-slate-600 dark:text-slate-400">
@@ -382,32 +394,35 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
                     <Card className="bg-white/40 dark:bg-slate-700/40 backdrop-blur-md border border-slate-200 dark:border-white/10 shadow-sm h-full flex flex-col">
                         <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-white/5 bg-white/5">
                             <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                                Sözleşme Trendi (Son 12 Ay)
+                                {t('contracts.charts.trendTitle', 'Sözleşme Trendi (Son 12 Ay)')}
                             </CardTitle>
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => setTrendMetric('amount')}
                                     className={`px-2 py-1 rounded text-[10px] font-bold transition-colors ${trendMetric === 'amount' ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' : 'text-slate-400 hover:text-slate-600'}`}
                                 >
-                                    TUTAR
+                                    {t('common.amount', 'TUTAR')}
                                 </button>
                                 <button
                                     onClick={() => setTrendMetric('count')}
                                     className={`px-2 py-1 rounded text-[10px] font-bold transition-colors ${trendMetric === 'count' ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' : 'text-slate-400 hover:text-slate-600'}`}
                                 >
-                                    ADET
+                                    {t('common.count', 'ADET')}
                                 </button>
                             </div>
                         </CardHeader>
                         <CardContent className="pt-6 h-[300px]">
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={trendData}>
+                                <BarChart data={trendData} margin={{ top: 25, right: 10, left: 10, bottom: 20 }}>
                                     <XAxis
                                         dataKey="name"
                                         axisLine={false}
                                         tickLine={false}
                                         tick={{ fill: '#94a3b8', fontSize: 10 }}
                                         dy={10}
+                                        interval={0}
+                                        angle={-25}
+                                        textAnchor="end"
                                     />
                                     <YAxis
                                         hide
@@ -427,8 +442,10 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
                                         dataKey={trendMetric}
                                         fill={trendMetric === 'amount' ? '#6366f1' : '#10b981'}
                                         radius={[4, 4, 0, 0]}
-                                        barSize={40}
-                                    />
+                                        maxBarSize={40}
+                                    >
+                                        <LabelList dataKey={trendMetric} content={renderCustomBarLabel} />
+                                    </Bar>
                                 </BarChart>
                             </ResponsiveContainer>
                         </CardContent>
@@ -522,7 +539,7 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
                                             <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-[9px] font-bold text-slate-500 border border-slate-200">
                                                 {contract.ownerName ? contract.ownerName.charAt(0) : '?'}
                                             </div>
-                                            <span className="text-slate-600 dark:text-slate-400 font-medium">{contract.ownerName || 'Unassigned'}</span>
+                                            <span className="text-slate-600 dark:text-slate-400 font-medium">{contract.ownerName || t('common.unassigned', 'Atanmamış')}</span>
                                         </div>
                                     </td>
                                     <td className="px-4 py-3 text-right font-mono font-medium text-slate-700 dark:text-slate-300">

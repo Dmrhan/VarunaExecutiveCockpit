@@ -58,7 +58,7 @@ export const ContractOwnershipPanel = () => {
                                 </div>
                                 <div>
                                     <p className="text-xs font-bold text-slate-700 dark:text-slate-200">{owner.name}</p>
-                                    <p className="text-[10px] text-slate-500">{owner.count} {t('contracts.calendar.contracts', { defaultValue: 'Contracts' })}</p>
+                                    <p className="text-[10px] text-slate-500">{owner.count} {t('contracts.calendar.contracts', { defaultValue: 'Sözleşme' })}</p>
                                 </div>
                             </div>
 

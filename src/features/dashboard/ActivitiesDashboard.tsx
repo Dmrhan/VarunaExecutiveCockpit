@@ -162,7 +162,7 @@ export function ActivitiesDashboard() {
                 { label: t('activities.stats.touchpointToWin'), value: `%${curr.winRate}`, trend: calcTrend(curr.winRate, prev.winRate), icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
             ]
         };
-    }, [filteredActivities, activities, deals, dateFilter]);
+    }, [filteredActivities, activities, deals, dateFilter, t, i18n.language]);
 
     return (
         <div className="space-y-6 animate-in fade-in duration-700 pb-10">

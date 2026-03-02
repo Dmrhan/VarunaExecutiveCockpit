@@ -322,7 +322,7 @@ CREATE INDEX IF NOT EXISTS idx_account_lasttouch ON Account(LastTouchDate);
 -- DETAIL TABLES
 -- ============================================================
 CREATE TABLE IF NOT EXISTS Addresses (
-    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+    Id CHAR(36) PRIMARY KEY,
     AccountId TEXT,
     AddressType INTEGER,
     AccountLocation TEXT,

@@ -305,7 +305,7 @@ GO
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Addresses]') AND type in (N'U'))
 BEGIN
 CREATE TABLE [dbo].[Addresses] (
-    Id INT IDENTITY(1,1) PRIMARY KEY,
+    Id CHAR(36) PRIMARY KEY,
     AccountId NVARCHAR(450),
     AddressType INT,
     AccountLocation NVARCHAR(MAX),

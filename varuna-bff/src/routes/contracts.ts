@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { getDb } from '../db/database';
+import { normalizeCurrency } from '../lib/currency';
 
 const router = Router();
 
@@ -49,7 +50,7 @@ router.get('/', (req: Request, res: Response) => {
         type: row.ContractType === 1 ? 'Initialization' : 'Renewal',
         status: mapStatus(row.ContractStatus),
         totalValue: row.TotalAmountLocalCurrency_Amount || 0,
-        currency: row.TotalAmountLocalCurrency_Currency || 'TRY',
+        currency: normalizeCurrency(row.TotalAmountLocalCurrency_Currency),
         totalValueTL: row.TotalAmountLocalCurrency_Amount || 0,
         startDate: row.StartDate,
         endDate: row.FinishDate,
@@ -110,7 +111,7 @@ router.get('/:id', (req: Request, res: Response) => {
             type: contract.ContractType === 1 ? 'Initialization' : 'Renewal',
             status: mapStatus(contract.ContractStatus),
             totalValue: contract.TotalAmountLocalCurrency_Amount || 0,
-            currency: contract.TotalAmountLocalCurrency_Currency || 'TRY',
+            currency: normalizeCurrency(contract.TotalAmountLocalCurrency_Currency),
             totalValueTL: contract.TotalAmountLocalCurrency_Amount || 0,
             startDate: contract.StartDate,
             endDate: contract.FinishDate,
@@ -128,7 +129,7 @@ router.get('/:id', (req: Request, res: Response) => {
                 id: pp.Id,
                 date: pp.PaymentDate,
                 amount: pp.Price_Amount || 0,
-                currency: pp.Price_Currency || 'TRY',
+                currency: normalizeCurrency(pp.Price_Currency),
                 status: pp.HasBeenCollected === 1 ? 'Collected' : (new Date(pp.PaymentDate) < new Date() ? 'Overdue' : 'Pending'),
                 invoiceNumber: pp.Name || ''
             }))

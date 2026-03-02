@@ -10,11 +10,11 @@ const router = Router();
 router.get('/', (_req: Request, res: Response) => {
     try {
         const db = getDb();
-        const rows = db.prepare(`
+        const rows = db.query(`
             SELECT Id, PersonNameSurname as Name, Email, RoleId, CompanyId
             FROM Person
             WHERE Status = 1
-        `).all() as Record<string, any>[];
+        `) as Record<string, any>[];
 
         const mapped = rows.map(row => ({
             id: row.Id,

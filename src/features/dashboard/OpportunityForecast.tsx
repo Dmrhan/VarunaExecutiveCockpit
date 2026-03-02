@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { ArrowRight, AlertTriangle, TrendingUp, Calendar, AlertCircle } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from 'recharts';
 import type { Deal } from '../../types/crm';
 import { cn } from '../../lib/utils'; // Assuming cn exists, based on other files
 
@@ -102,14 +103,47 @@ export function OpportunityForecast({ deals, onMonthClick, activeFilterMonth }: 
         return months;
     }, [deals, t]);
 
-    const maxTotalValue = Math.max(...forecastData.map(d => d.totalValue), 1);
+    const formatCurrency = (val: number) => {
+        if (val >= 1000000) return `₺${(val / 1000000).toFixed(1)}M`;
+        if (val >= 1000) return `₺${(val / 1000).toFixed(0)}k`;
+        return `₺${val.toFixed(0)}`;
+    };
+
+    const CustomTooltip = ({ active, payload, label }: any) => {
+        if (active && payload && payload.length) {
+            const data = payload[0].payload as MonthlyData;
+            return (
+                <div className="bg-white dark:bg-slate-800 p-3 rounded-lg shadow-lg border border-slate-100 dark:border-slate-700 z-50">
+                    <p className="font-semibold text-slate-800 dark:text-white mb-2 flex items-center justify-between gap-4">
+                        {label}
+                        {data.overdueCount > 0 && (
+                            <span className="flex items-center gap-1 text-[9px] font-bold text-rose-500 bg-rose-50 dark:bg-rose-900/20 px-1.5 py-0.5 rounded-full border border-rose-100 dark:border-rose-900/30">
+                                <AlertCircle size={10} />
+                                {data.overdueCount} Geciken
+                            </span>
+                        )}
+                    </p>
+                    <p className="text-sm text-slate-600 dark:text-slate-300">
+                        Toplam Tutar: <span className="font-bold text-orange-600 dark:text-orange-400">{formatCurrency(data.totalValue)}</span>
+                    </p>
+                    <p className="text-sm text-slate-600 dark:text-slate-300">
+                        Ağırlıklı Tutar: <span className="font-bold">{formatCurrency(data.weightedValue)}</span>
+                    </p>
+                    <p className="text-sm text-slate-600 dark:text-slate-300">
+                        Açık Fırsat: <span className="font-bold">{data.count}</span>
+                    </p>
+                </div>
+            );
+        }
+        return null;
+    };
 
     return (
         <Card className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden mt-8">
             <CardHeader className="py-4 border-b border-slate-100 dark:border-slate-700/50">
                 <div className="flex justify-between items-center">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                        <div className="p-2 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400">
                             <TrendingUp size={20} />
                         </div>
                         <div>
@@ -123,63 +157,57 @@ export function OpportunityForecast({ deals, onMonthClick, activeFilterMonth }: 
                     </div>
                 </div>
             </CardHeader>
-            <CardContent className="p-6 overflow-x-auto">
-                <div className="flex gap-4 min-w-[800px] pb-4">
-                    {forecastData.map((month, idx) => {
-                        const isSelected = activeFilterMonth &&
-                            activeFilterMonth.getMonth() === month.date.getMonth() &&
-                            activeFilterMonth.getFullYear() === month.date.getFullYear();
+            <CardContent className="p-6 h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                        data={forecastData}
+                        margin={{ top: 20, right: 30, left: 10, bottom: 5 }}
+                        onClick={(data: any) => {
+                            if (data && data.activePayload) {
+                                onMonthClick(data.activePayload[0].payload.date);
+                            }
+                        }}
+                    >
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" strokeOpacity={0.5} />
+                        <XAxis
+                            dataKey="label"
+                            axisLine={false}
+                            tickLine={false}
+                            tick={{ fill: '#64748b', fontSize: 11 }}
+                            dy={10}
+                        />
+                        <YAxis
+                            tickFormatter={formatCurrency}
+                            axisLine={false}
+                            tickLine={false}
+                            tick={{ fill: '#64748b', fontSize: 11 }}
+                            dx={-10}
+                        />
+                        <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
+                        <Bar
+                            dataKey="totalValue"
+                            radius={[4, 4, 0, 0]}
+                            maxBarSize={50}
+                        >
+                            {forecastData.map((entry, index) => {
+                                const isSelected = activeFilterMonth &&
+                                    activeFilterMonth.getMonth() === entry.date.getMonth() &&
+                                    activeFilterMonth.getFullYear() === entry.date.getFullYear();
 
-                        return (
-                            <motion.div
-                                key={month.label}
-                                className={cn(
-                                    "relative flex flex-col justify-end w-full min-w-[80px] h-[220px] rounded-xl p-3 cursor-pointer transition-all border",
-                                    isSelected
-                                        ? "bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-500/30 ring-1 ring-indigo-500/20"
-                                        : "bg-transparent border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:border-slate-200 dark:hover:border-slate-700"
-                                )}
-                                onClick={() => onMonthClick(month.date)}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.05 }}
-                            >
-                                {/* Overdue Badge */}
-                                {month.overdueCount > 0 && (
-                                    <div className="absolute top-2 right-2 flex items-center gap-1 text-[9px] font-bold text-rose-500 bg-rose-50 dark:bg-rose-900/20 px-1.5 py-0.5 rounded-full border border-rose-100 dark:border-rose-900/30">
-                                        <AlertCircle size={10} />
-                                        {month.overdueCount}
-                                    </div>
-                                )}
-
-                                {/* Single Bar (Total Value) */}
-                                <div className="flex items-end justify-center h-full mb-3 px-3 w-full">
-                                    <div className="w-full max-w-[24px] bg-slate-100 dark:bg-slate-700 rounded-t-lg h-full relative overflow-hidden">
-                                        <motion.div
-                                            className="absolute bottom-0 w-full bg-gradient-to-t from-indigo-600 to-indigo-400 rounded-t-lg"
-                                            initial={{ height: 0 }}
-                                            animate={{ height: `${(month.totalValue / maxTotalValue) * 100}%` }}
-                                            transition={{ duration: 1, ease: "easeOut" }}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Labels */}
-                                <div className="text-center">
-                                    <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">
-                                        {month.label}
-                                    </div>
-                                    <div className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                                        {(month.totalValue / 1000000).toLocaleString('tr-TR', { maximumFractionDigits: 1 })} Mn ₺
-                                    </div>
-                                    <div className="text-[9px] text-slate-400 dark:text-slate-500 font-mono mt-0.5">
-                                        {month.count} Fırsat
-                                    </div>
-                                </div>
-                            </motion.div>
-                        );
-                    })}
-                </div>
+                                return (
+                                    <Cell
+                                        key={`cell-${index}`}
+                                        fill={isSelected ? '#ea580c' : '#f97316'}
+                                        opacity={isSelected ? 1 : 0.85}
+                                        style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
+                                        stroke={isSelected ? '#9a3412' : 'transparent'}
+                                        strokeWidth={isSelected ? 2 : 0}
+                                    />
+                                );
+                            })}
+                        </Bar>
+                    </BarChart>
+                </ResponsiveContainer>
             </CardContent>
         </Card>
     );

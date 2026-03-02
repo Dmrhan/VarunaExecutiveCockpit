@@ -240,7 +240,7 @@ router.post('/dashboard', (req: Request, res: Response) => {
             GROUP BY c.AccountId, a.Name
             ORDER BY amount DESC
             ${db.driver === 'mssql' ? 'OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY' : 'LIMIT 10'}
-        `).all(asOfDate, asOfDate, asOfDate, asOfDate, ...params);
+        `, [asOfDate, asOfDate, asOfDate, asOfDate, ...params]);
 
         // 5. Satıcı Breakdown
         const repBreakdown = db.query(`
@@ -270,7 +270,7 @@ router.post('/dashboard', (req: Request, res: Response) => {
             const startOfMonth = new Date(year, date.getMonth(), 1).toISOString().split('T')[0];
             const endOfMonth = new Date(year, date.getMonth() + 1, 0).toISOString().split('T')[0];
 
-            const monthlyKpis = db.queryOne<{ count: number, amount: number }>(`
+            const monthlyKpis = db.queryOne(`
                 SELECT
                     COUNT(*) as count,
                     COALESCE(SUM(TotalAmountLocalCurrency_Amount), 0) as amount

@@ -42,6 +42,15 @@ router.get('/', (req: Request, res: Response) => {
     const top = parseInt(req.query.$top as string) || 500;
     const skip = parseInt(req.query.$skip as string) || 0;
 
+    // Subqueries: SQLite uses GROUP_CONCAT and LIMIT, MSSQL uses STRING_AGG and TOP
+    const productNamesSub = db.driver === 'mssql'
+        ? `(SELECT STRING_AGG(Name, ', ') FROM (SELECT TOP 3 s.Name FROM CrmOrderProducts cop2 LEFT JOIN Stock s ON cop2.StockId = s.Id WHERE cop2.CrmOrderId = o.Id) AS sub)`
+        : `(SELECT GROUP_CONCAT(s.Name, ', ') FROM CrmOrderProducts cop2 LEFT JOIN Stock s ON cop2.StockId = s.Id WHERE cop2.CrmOrderId = o.Id LIMIT 3)`;
+
+    const primaryStockSub = db.driver === 'mssql'
+        ? `(SELECT TOP 1 cop2.StockId FROM CrmOrderProducts cop2 WHERE cop2.CrmOrderId = o.Id)`
+        : `(SELECT cop2.StockId FROM CrmOrderProducts cop2 WHERE cop2.CrmOrderId = o.Id LIMIT 1)`;
+
     // Join Account by AccountId (not CompanyId), Person for owner
     let querySql = `
         SELECT
@@ -49,19 +58,8 @@ router.get('/', (req: Request, res: Response) => {
             a.Name              AS AccountName,
             p.PersonNameSurname AS OwnerName,
             op.ProductGroupId   AS OppProductGroupId,
-            (
-                SELECT GROUP_CONCAT(s.Name, ', ')
-                FROM CrmOrderProducts cop2
-                LEFT JOIN Stock s ON cop2.StockId = s.Id
-                WHERE cop2.CrmOrderId = o.Id
-                LIMIT 3
-            ) AS ProductNames,
-            (
-                SELECT cop2.StockId
-                FROM CrmOrderProducts cop2
-                WHERE cop2.CrmOrderId = o.Id
-                LIMIT 1
-            ) AS PrimaryStockId
+            ${productNamesSub} AS ProductNames,
+            ${primaryStockSub} AS PrimaryStockId
         FROM CrmOrder o
         LEFT JOIN Account     a  ON o.AccountId      = a.Id
         LEFT JOIN Person      p  ON o.ProposalOwnerId = p.Id
@@ -70,13 +68,16 @@ router.get('/', (req: Request, res: Response) => {
         ORDER BY o.CreateOrderDate DESC
     `;
 
+    const queryParams: any = { limit: top, offset: skip };
     if (db.driver === 'mssql') {
-        querySql += ` OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY`;
+        // MSSQL can be picky about parameters in OFFSET/FETCH.
+        // Since we parsed them as Int, we can safely inject them to avoid RequestError.
+        querySql += ` OFFSET ${skip} ROWS FETCH NEXT ${top} ROWS ONLY`;
     } else {
         querySql += ` LIMIT @limit OFFSET @offset`;
     }
 
-    const rows = db.query(querySql, { limit: top, offset: skip }) as Record<string, any>[];
+    const rows = db.query(querySql, queryParams) as Record<string, any>[];
 
     const mapped = rows.map(row => {
         const statusCode: number = row.Status ?? 0;

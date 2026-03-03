@@ -18,7 +18,7 @@ const router = Router();
 router.get('/', (req: Request, res: Response) => {
     const db = getDb();
 
-    const top = parseInt(req.query.$top as string) || 100;
+    const top = parseInt(req.query.$top as string) || 1000;
     const skip = parseInt(req.query.$skip as string) || 0;
     const filter = req.query.$filter as string | undefined;
     const count = req.query.$count === 'true';
@@ -129,6 +129,64 @@ router.get('/', (req: Request, res: Response) => {
     }
 
     return res.json(response);
+});
+
+router.get('/stats', (req: Request, res: Response) => {
+    try {
+        const db = getDb();
+
+        // 1. Basic Metrics
+        const metrics = db.queryOne(`
+            SELECT 
+                COUNT(*) as count,
+                COALESCE(SUM(CASE WHEN OpportunityStageNameTr IN ('Kazanıldı', 'Order') THEN Amount_Value ELSE 0 END), 0) as won,
+                COALESCE(SUM(CASE WHEN OpportunityStageNameTr IN ('Kaybedildi', 'Lost') THEN Amount_Value ELSE 0 END), 0) as lost,
+                COALESCE(SUM(CASE WHEN OpportunityStageNameTr NOT IN ('Kazanıldı', 'Order', 'Kaybedildi', 'Lost') THEN Amount_Value ELSE 0 END), 0) as open,
+                COALESCE(SUM(Amount_Value), 0) as total
+            FROM Opportunity
+        `) as any;
+
+        // 2. Revenue by Source (Top 8)
+        const sourceRev = db.query(`
+            SELECT Source as name, SUM(Amount_Value) as revenue
+            FROM Opportunity
+            WHERE Source IS NOT NULL
+            GROUP BY Source
+            ORDER BY revenue DESC
+            ${db.driver === 'mssql' ? 'OFFSET 0 ROWS FETCH NEXT 8 ROWS ONLY' : 'LIMIT 8'}
+        `);
+
+        // 3. Revenue by Customer (Top 8)
+        const customerRev = db.query(`
+            SELECT COALESCE(a.Name, o.AccountId) as name, SUM(o.Amount_Value) as revenue
+            FROM Opportunity o
+            LEFT JOIN Account a ON o.AccountId = a.Id
+            GROUP BY COALESCE(a.Name, o.AccountId)
+            ORDER BY revenue DESC
+            ${db.driver === 'mssql' ? 'OFFSET 0 ROWS FETCH NEXT 8 ROWS ONLY' : 'LIMIT 8'}
+        `);
+
+        // 4. Count by Source (Top 8)
+        const sourceCount = db.query(`
+            SELECT Source as name, COUNT(*) as count
+            FROM Opportunity
+            WHERE Source IS NOT NULL
+            GROUP BY Source
+            ORDER BY count DESC
+            ${db.driver === 'mssql' ? 'OFFSET 0 ROWS FETCH NEXT 8 ROWS ONLY' : 'LIMIT 8'}
+        `);
+
+        res.json({
+            metrics,
+            charts: {
+                sourceRev,
+                customerRev,
+                sourceCount
+            }
+        });
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
 router.get('/:id', (req: Request, res: Response) => {

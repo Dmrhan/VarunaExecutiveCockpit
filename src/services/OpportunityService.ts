@@ -84,7 +84,7 @@ export const OpportunityService = {
 
     getAll: async (): Promise<Deal[]> => {
         // Legacy support - fetch simplified list
-        return OpportunityService.getList({ $top: 100, $orderby: 'created_at desc' }).then(res => res.value);
+        return OpportunityService.getList({ $top: 5000, $orderby: 'created_at desc' }).then(res => res.value);
     },
 
     getList: async (params: ODataParams): Promise<ODataResponse<Deal>> => {
@@ -229,5 +229,11 @@ export const OpportunityService = {
         });
 
         if (!response.ok) throw new Error('Failed to delete opportunity');
+    },
+
+    getStats: async (): Promise<any> => {
+        const response = await fetch(`${getOpportunityUrl()}/stats`);
+        if (!response.ok) throw new Error('Failed to fetch opportunity stats');
+        return await response.json();
     }
 };

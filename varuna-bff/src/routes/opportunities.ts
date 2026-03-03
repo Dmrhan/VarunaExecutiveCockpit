@@ -134,47 +134,68 @@ router.get('/', (req: Request, res: Response) => {
 router.get('/stats', (req: Request, res: Response) => {
     try {
         const db = getDb();
+        const startDate = req.query.startDate as string;
+        const endDate = req.query.endDate as string;
 
-        // 1. Basic Metrics
-        const metrics = db.queryOne(`
+        let dateFilter = '';
+        const params: any = {};
+
+        if (startDate && endDate) {
+            dateFilter = `WHERE o.FirstCreatedDate BETWEEN @startDate AND @endDate`;
+            params.startDate = startDate;
+            params.endDate = endDate;
+        } else if (startDate) {
+            dateFilter = `WHERE o.FirstCreatedDate >= @startDate`;
+            params.startDate = startDate;
+        } else if (endDate) {
+            dateFilter = `WHERE o.FirstCreatedDate <= @endDate`;
+            params.endDate = endDate;
+        }
+
+        const metricsQuery = `
             SELECT 
                 COUNT(*) as count,
-                COALESCE(SUM(CASE WHEN OpportunityStageNameTr IN ('Kazanıldı', 'Order') THEN Amount_Value ELSE 0 END), 0) as won,
-                COALESCE(SUM(CASE WHEN OpportunityStageNameTr IN ('Kaybedildi', 'Lost') THEN Amount_Value ELSE 0 END), 0) as lost,
-                COALESCE(SUM(CASE WHEN OpportunityStageNameTr NOT IN ('Kazanıldı', 'Order', 'Kaybedildi', 'Lost') THEN Amount_Value ELSE 0 END), 0) as open,
-                COALESCE(SUM(Amount_Value), 0) as total
-            FROM Opportunity
-        `) as any;
+                COALESCE(SUM(CASE WHEN o.OpportunityStageNameTr IN ('Kazanıldı', 'Order') THEN o.Amount_Value ELSE 0 END), 0) as won,
+                COALESCE(SUM(CASE WHEN o.OpportunityStageNameTr IN ('Kaybedildi', 'Lost') THEN o.Amount_Value ELSE 0 END), 0) as lost,
+                COALESCE(SUM(CASE WHEN o.OpportunityStageNameTr NOT IN ('Kazanıldı', 'Order', 'Kaybedildi', 'Lost') THEN o.Amount_Value ELSE 0 END), 0) as open,
+                COALESCE(SUM(o.Amount_Value), 0) as total
+            FROM Opportunity o
+            ${dateFilter}
+        `;
+
+        // 1. Basic Metrics
+        const metrics = db.queryOne(metricsQuery, params) as any;
 
         // 2. Revenue by Source (Top 8)
         const sourceRev = db.query(`
-            SELECT Source as name, SUM(Amount_Value) as revenue
-            FROM Opportunity
-            WHERE Source IS NOT NULL
-            GROUP BY Source
+            SELECT o.Source as name, SUM(o.Amount_Value) as revenue
+            FROM Opportunity o
+            ${dateFilter} ${dateFilter ? 'AND' : 'WHERE'} o.Source IS NOT NULL
+            GROUP BY o.Source
             ORDER BY revenue DESC
             ${db.driver === 'mssql' ? 'OFFSET 0 ROWS FETCH NEXT 8 ROWS ONLY' : 'LIMIT 8'}
-        `);
+        `, params);
 
         // 3. Revenue by Customer (Top 8)
         const customerRev = db.query(`
             SELECT COALESCE(a.Name, o.AccountId) as name, SUM(o.Amount_Value) as revenue
             FROM Opportunity o
             LEFT JOIN Account a ON o.AccountId = a.Id
+            ${dateFilter}
             GROUP BY COALESCE(a.Name, o.AccountId)
             ORDER BY revenue DESC
             ${db.driver === 'mssql' ? 'OFFSET 0 ROWS FETCH NEXT 8 ROWS ONLY' : 'LIMIT 8'}
-        `);
+        `, params);
 
         // 4. Count by Source (Top 8)
         const sourceCount = db.query(`
-            SELECT Source as name, COUNT(*) as count
-            FROM Opportunity
-            WHERE Source IS NOT NULL
-            GROUP BY Source
+            SELECT o.Source as name, COUNT(*) as count
+            FROM Opportunity o
+            ${dateFilter} ${dateFilter ? 'AND' : 'WHERE'} o.Source IS NOT NULL
+            GROUP BY o.Source
             ORDER BY count DESC
             ${db.driver === 'mssql' ? 'OFFSET 0 ROWS FETCH NEXT 8 ROWS ONLY' : 'LIMIT 8'}
-        `);
+        `, params);
 
         res.json({
             metrics,

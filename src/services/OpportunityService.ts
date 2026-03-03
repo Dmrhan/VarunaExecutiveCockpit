@@ -231,8 +231,12 @@ export const OpportunityService = {
         if (!response.ok) throw new Error('Failed to delete opportunity');
     },
 
-    getStats: async (): Promise<any> => {
-        const response = await fetch(`${getOpportunityUrl()}/stats`);
+    getStats: async (startDate?: string, endDate?: string): Promise<any> => {
+        const params = new URLSearchParams();
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+
+        const response = await fetch(`${getOpportunityUrl()}/stats?${params.toString()}`);
         if (!response.ok) throw new Error('Failed to fetch opportunity stats');
         return await response.json();
     }

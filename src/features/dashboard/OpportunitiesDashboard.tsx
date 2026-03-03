@@ -252,8 +252,64 @@ export function OpportunitiesDashboard() {
     const [backendStats, setBackendStats] = useState<any>(null);
 
     useEffect(() => {
-        OpportunityService.getStats().then(setBackendStats).catch(console.error);
-    }, []);
+        let startDate: string | undefined;
+        let endDate: string | undefined;
+
+        if (dateFilter !== 'all') {
+            const now = new Date();
+            const todayAtMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+            let start = new Date(todayAtMidnight);
+            let end = new Date(now);
+
+            switch (dateFilter) {
+                case 'today':
+                    startDate = start.toISOString();
+                    break;
+                case 'yesterday':
+                    start.setDate(start.getDate() - 1);
+                    end = new Date(todayAtMidnight);
+                    end.setMilliseconds(-1);
+                    startDate = start.toISOString();
+                    endDate = end.toISOString();
+                    break;
+                case 'this_week': {
+                    const day = now.getDay() || 7;
+                    start.setDate(start.getDate() - (day - 1));
+                    startDate = start.toISOString();
+                    break;
+                }
+                case 'last_week': {
+                    const day = now.getDay() || 7;
+                    start.setDate(start.getDate() - (day - 1) - 7);
+                    end = new Date(start);
+                    end.setDate(end.getDate() + 6);
+                    end.setHours(23, 59, 59, 999);
+                    startDate = start.toISOString();
+                    endDate = end.toISOString();
+                    break;
+                }
+                case 'this_month':
+                    start.setDate(1);
+                    startDate = start.toISOString();
+                    break;
+                case 'this_year':
+                    start.setMonth(0, 1);
+                    startDate = start.toISOString();
+                    break;
+                case 'custom':
+                    if (customRange.start) startDate = customRange.start.toISOString();
+                    if (customRange.end) {
+                        const customEnd = new Date(customRange.end);
+                        customEnd.setHours(23, 59, 59, 999);
+                        endDate = customEnd.toISOString();
+                    }
+                    break;
+            }
+        }
+
+        OpportunityService.getStats(startDate, endDate).then(setBackendStats).catch(console.error);
+    }, [dateFilter, customRange]);
 
     const metrics = useMemo(() => {
         if (backendStats) return backendStats.metrics;

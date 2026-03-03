@@ -157,7 +157,7 @@ router.get('/stats', (req: Request, res: Response) => {
                 COUNT(*) as count,
                 COALESCE(SUM(CASE WHEN o.OpportunityStageNameTr IN ('Kazanıldı', 'Order') THEN o.Amount_Value ELSE 0 END), 0) as won,
                 COALESCE(SUM(CASE WHEN o.OpportunityStageNameTr IN ('Kaybedildi', 'Lost') THEN o.Amount_Value ELSE 0 END), 0) as lost,
-                COALESCE(SUM(CASE WHEN o.OpportunityStageNameTr NOT IN ('Kazanıldı', 'Order', 'Kaybedildi', 'Lost') THEN o.Amount_Value ELSE 0 END), 0) as open,
+                COALESCE(SUM(CASE WHEN o.OpportunityStageNameTr NOT IN ('Kazanıldı', 'Order', 'Kaybedildi', 'Lost') THEN o.Amount_Value ELSE 0 END), 0) as [open],
                 COALESCE(SUM(o.Amount_Value), 0) as total
             FROM Opportunity o
             ${dateFilter}

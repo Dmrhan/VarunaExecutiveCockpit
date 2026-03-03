@@ -434,9 +434,9 @@ export function OpportunitiesDashboard() {
                     <div className="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-xl items-center gap-1 overflow-x-auto scrollbar-hide">
                         {[
                             { label: t('dateFilters.today'), value: 'today' },
-                            { label: t('dateFilters.thisWeek'), value: 'week' },
-                            { label: t('dateFilters.thisMonth'), value: 'month' },
-                            { label: t('dateFilters.thisQuarter'), value: 'quarter' },
+                            { label: t('dateFilters.thisWeek'), value: 'this_week' },
+                            { label: t('dateFilters.thisMonth'), value: 'this_month' },
+                            { label: t('dateFilters.thisQuarter'), value: 'this_quarter' },
                             { label: t('dateFilters.ytd'), value: 'ytd' },
                             { label: t('dateFilters.mtd'), value: 'mtd' },
                             { label: t('dateFilters.all'), value: 'all' }

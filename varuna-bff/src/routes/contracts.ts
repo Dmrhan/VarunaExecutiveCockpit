@@ -7,7 +7,7 @@ const router = Router();
 router.get('/', (req: Request, res: Response) => {
     const db = getDb();
 
-    const top = parseInt(req.query.$top as string) || 100;
+    const top = parseInt(req.query.$top as string) || 1000;
     const skip = parseInt(req.query.$skip as string) || 0;
 
     let querySql = `

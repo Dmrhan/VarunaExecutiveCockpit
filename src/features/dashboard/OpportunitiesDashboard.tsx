@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
@@ -18,6 +18,7 @@ const STAGE_COLORS: Record<string, string> = {
 import { DateRangePicker } from '../../components/ui/DateRangePicker';
 import { PipelineAIInsightPanel } from './PipelineAIInsightPanel';
 import { OpportunityDetailModal } from './OpportunityDetailModal';
+import { OpportunityService } from '../../services/OpportunityService';
 import { FunnelChart } from './FunnelChart';
 import { GamifiedLeaderboard } from './GamifiedLeaderboard';
 import { ProductPerformance } from './ProductPerformance';
@@ -248,7 +249,15 @@ export function OpportunitiesDashboard() {
         return result;
     }, [deals, columnFilters, users]);
 
+    const [backendStats, setBackendStats] = useState<any>(null);
+
+    useEffect(() => {
+        OpportunityService.getStats().then(setBackendStats).catch(console.error);
+    }, []);
+
     const metrics = useMemo(() => {
+        if (backendStats) return backendStats.metrics;
+
         const count = filteredDeals.length;
         const lost = filteredDeals.filter(d => ['Kaybedildi', 'Lost'].includes(d.stage)).reduce((s, d) => s + d.value, 0);
         const won = filteredDeals.filter(d => ['Kazanıldı', 'Order'].includes(d.stage)).reduce((s, d) => s + d.value, 0);
@@ -256,9 +265,20 @@ export function OpportunitiesDashboard() {
         const total = won + open + lost;
 
         return { count, lost, won, open, total };
-    }, [filteredDeals]);
+    }, [filteredDeals, backendStats]);
 
     const chartData = useMemo(() => {
+        if (backendStats?.charts) {
+            return {
+                sourceCount: backendStats.charts.sourceCount,
+                sourceRev: backendStats.charts.sourceRev,
+                customerRev: backendStats.charts.customerRev,
+                // Fallback for types not yet in backend
+                ownerRev: [],
+                topicRev: [],
+                statusRev: []
+            };
+        }
         const dataMaps: Record<string, Record<string, number>> = {
             sourceCount: {}, sourceRev: {}, customerRev: {}, ownerRev: {}, topicRev: {}, statusRev: {}
         };

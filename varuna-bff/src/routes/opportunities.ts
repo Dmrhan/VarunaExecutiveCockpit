@@ -65,7 +65,7 @@ router.get('/', (req: Request, res: Response) => {
 
     // ── Paginated fetch ───────────────────────────────────────────────────────
     let querySql = `
-        SELECT o.*, a.Name as AccountName, p.PersonNameSurname as OwnerName
+        SELECT o.*, a.Name as AccountName, a.Title as AccountTitle, p.PersonNameSurname as OwnerName
         FROM Opportunity o
         LEFT JOIN Account a ON o.AccountId = a.Id
         LEFT JOIN Person p ON o.OwnerId = p.Id
@@ -95,8 +95,8 @@ router.get('/', (req: Request, res: Response) => {
     const mapped = rows.map(row => ({
         id: row.Id,
         title: row.Name || '',
-        customer_name: row.AccountName || row.AccountId || 'Bilinmiyor',
-        customerName: row.AccountName || row.AccountId || 'Bilinmiyor',
+        customer_name: row.AccountTitle || row.AccountName || row.AccountId || 'Bilinmiyor',
+        customerName: row.AccountTitle || row.AccountName || row.AccountId || 'Bilinmiyor',
         product: PRODUCT_GROUP_NAMES[row.ProductGroupId] || row.ProductGroupId || 'EnRoute',
         productGroupId: row.ProductGroupId || '',
         value: row.Amount_Value || 0,
@@ -178,11 +178,11 @@ router.get('/stats', (req: Request, res: Response) => {
 
         // 3. Revenue by Customer (Top 8)
         const customerRev = db.query(`
-            SELECT COALESCE(a.Name, o.AccountId) as name, SUM(o.Amount_Value) as revenue
+            SELECT COALESCE(a.Title, a.Name, o.AccountId) as name, SUM(o.Amount_Value) as revenue
             FROM Opportunity o
             LEFT JOIN Account a ON o.AccountId = a.Id
             ${dateFilter}
-            GROUP BY COALESCE(a.Name, o.AccountId)
+            GROUP BY COALESCE(a.Title, a.Name, o.AccountId)
             ORDER BY revenue DESC
             ${db.driver === 'mssql' ? 'OFFSET 0 ROWS FETCH NEXT 8 ROWS ONLY' : 'LIMIT 8'}
         `, params);
@@ -213,7 +213,7 @@ router.get('/stats', (req: Request, res: Response) => {
 router.get('/:id', (req: Request, res: Response) => {
     const db = getDb();
     const row = db.queryOne(`
-        SELECT o.*, a.Name as AccountName, p.PersonNameSurname as OwnerName
+        SELECT o.*, a.Name as AccountName, a.Title as AccountTitle, p.PersonNameSurname as OwnerName
         FROM Opportunity o 
         LEFT JOIN Account a ON o.AccountId = a.Id 
         LEFT JOIN Person p ON o.OwnerId = p.Id
@@ -227,7 +227,7 @@ router.get('/:id', (req: Request, res: Response) => {
     return res.json({
         id: row.Id,
         title: row.Name || '',
-        customer_name: row.AccountName || row.AccountId || 'Bilinmiyor',
+        customer_name: row.AccountTitle || row.AccountName || row.AccountId || 'Bilinmiyor',
         product: row.ProductGroupId || 'EnRoute',
         value: row.Amount_Value || 0,
         stage: row.OpportunityStageNameTr || 'Lead',

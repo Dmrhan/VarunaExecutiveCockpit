@@ -23,6 +23,8 @@ import { FunnelChart } from './FunnelChart';
 import { GamifiedLeaderboard } from './GamifiedLeaderboard';
 import { ProductPerformance } from './ProductPerformance';
 import { OpportunityForecast } from './OpportunityForecast';
+import { ProductGroupService } from '../../services/ProductGroupService';
+import type { IProductGroup } from '../../types/crm';
 import { HorizontalBarChart } from '../../components/ui/HorizontalBarChart';
 
 import type { Deal } from '../../types/crm';
@@ -56,6 +58,11 @@ export function OpportunitiesDashboard() {
     const { t } = useTranslation();
     const { deals, users } = useData();
     const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
+    const [productGroups, setProductGroups] = useState<IProductGroup[]>([]);
+
+    useEffect(() => {
+        ProductGroupService.getAll().then(setProductGroups).catch(console.error);
+    }, []);
 
     // Chart Drilldown State
     const [selectedSource, setSelectedSource] = useState<string | null>(null);

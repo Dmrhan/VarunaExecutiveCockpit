@@ -65,10 +65,11 @@ router.get('/', (req: Request, res: Response) => {
 
     // ── Paginated fetch ───────────────────────────────────────────────────────
     let querySql = `
-        SELECT o.*, a.Name as AccountName, a.Title as AccountTitle, p.PersonNameSurname as OwnerName
+        SELECT o.*, a.Name as AccountName, a.Title as AccountTitle, p.PersonNameSurname as OwnerName, pg.Name as ProductGroupName
         FROM Opportunity o
         LEFT JOIN Account a ON o.AccountId = a.Id
         LEFT JOIN Person p ON o.OwnerId = p.Id
+        LEFT JOIN ProductGroup pg ON o.ProductGroupId = pg.Id
         ${filterSql}
         ${orderSql}
     `;
@@ -82,22 +83,12 @@ router.get('/', (req: Request, res: Response) => {
     const rows = db.query(querySql, { ...filterParams, limit: top, offset: skip }) as Record<string, any>[];
 
     // ── Map rows → frontend Deal shape ──
-    const PRODUCT_GROUP_NAMES: Record<string, string> = {
-        'PG-ENR': 'EnRoute',
-        'PG-QST': 'Quest',
-        'PG-STB': 'Stokbar',
-        'PG-SVC': 'ServiceCore',
-        'PG-VRN': 'Varuna',
-        'PG-HST': 'Hosting',
-        'PG-UDX': 'Unidox',
-    };
-
     const mapped = rows.map(row => ({
         id: row.Id,
         title: row.Name || '',
         customer_name: row.AccountTitle || row.AccountName || row.AccountId || 'Bilinmiyor',
         customerName: row.AccountTitle || row.AccountName || row.AccountId || 'Bilinmiyor',
-        product: PRODUCT_GROUP_NAMES[row.ProductGroupId] || row.ProductGroupId || 'EnRoute',
+        product: row.ProductGroupName || row.ProductGroupId || 'EnRoute',
         productGroupId: row.ProductGroupId || '',
         value: row.Amount_Value || 0,
         stage: row.OpportunityStageNameTr || row.OpportunityStageName?.toString() || 'Lead',
@@ -213,10 +204,11 @@ router.get('/stats', (req: Request, res: Response) => {
 router.get('/:id', (req: Request, res: Response) => {
     const db = getDb();
     const row = db.queryOne(`
-        SELECT o.*, a.Name as AccountName, a.Title as AccountTitle, p.PersonNameSurname as OwnerName
+        SELECT o.*, a.Name as AccountName, a.Title as AccountTitle, p.PersonNameSurname as OwnerName, pg.Name as ProductGroupName
         FROM Opportunity o 
         LEFT JOIN Account a ON o.AccountId = a.Id 
         LEFT JOIN Person p ON o.OwnerId = p.Id
+        LEFT JOIN ProductGroup pg ON o.ProductGroupId = pg.Id
         WHERE o.Id = ?
     `, [req.params.id]) as Record<string, any> | undefined;
 
@@ -228,7 +220,7 @@ router.get('/:id', (req: Request, res: Response) => {
         id: row.Id,
         title: row.Name || '',
         customer_name: row.AccountTitle || row.AccountName || row.AccountId || 'Bilinmiyor',
-        product: row.ProductGroupId || 'EnRoute',
+        product: row.ProductGroupName || row.ProductGroupId || 'EnRoute',
         value: row.Amount_Value || 0,
         stage: row.OpportunityStageNameTr || 'Lead',
         probability: row.Probability || 0,

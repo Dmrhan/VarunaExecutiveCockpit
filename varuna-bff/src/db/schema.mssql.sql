@@ -99,6 +99,28 @@ END
 GO
 
 -- ============================================================
+-- TABLE: ProductGroup
+-- ============================================================
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ProductGroup]') AND type in (N'U'))
+BEGIN
+CREATE TABLE [dbo].[ProductGroup] (
+    Id              NVARCHAR(450) PRIMARY KEY,
+    Code            NVARCHAR(50) NOT NULL UNIQUE,
+    Name            NVARCHAR(200) NOT NULL,
+    ShortName       NVARCHAR(100),
+    [Status]        INT DEFAULT 1,
+    ParentGroupId   NVARCHAR(450),
+    [Level]         INT NOT NULL DEFAULT 0,
+    _SyncedAt       DATETIME DEFAULT GETUTCDATE()
+);
+END
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'idx_productgroup_parent' AND object_id = OBJECT_ID('ProductGroup'))
+CREATE INDEX idx_productgroup_parent ON ProductGroup(ParentGroupId);
+GO
+
+-- ============================================================
 -- TABLE: Person
 -- ============================================================
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Person]') AND type in (N'U'))

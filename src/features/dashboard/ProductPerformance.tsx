@@ -7,7 +7,8 @@ import { useData } from '../../context/DataContext';
 import { ArrowUpRight, ArrowDownRight, Package, X, Minimize2, Maximize2, FileSpreadsheet, FileText, Search, Mail, Volume2, Square, Loader2, AlertCircle, Sparkles, Send, PieChart as PieChartIcon, TrendingUp } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { cn } from '../../lib/utils';
-import type { ProductGroup, Deal } from '../../types/crm';
+import { ProductGroupService } from '../../services/ProductGroupService';
+import type { IProductGroup, ProductGroup, Deal } from '../../types/crm';
 import { PRODUCT_COLORS } from '../../data/mockData';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -26,6 +27,11 @@ export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps
     const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
     const [selectedStage, setSelectedStage] = useState<string | null>(null);
     const [isFullScreen, setIsFullScreen] = useState(false);
+    const [productGroups, setProductGroups] = useState<IProductGroup[]>([]);
+
+    useEffect(() => {
+        ProductGroupService.getAll().then(setProductGroups).catch(console.error);
+    }, []);
 
     // AI State
     const [aiState, setAiState] = useState<{
@@ -111,16 +117,14 @@ export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps
             stats[deal.product].count += 1;
         });
 
-        // Ensure we always have the 6 main products even if no deals (optional, but good for UI consistency)
-        const products: ProductGroup[] = ['EnRoute', 'Stokbar', 'Hosting', 'ServiceCore', 'Quest', 'Varuna'];
-        products.forEach(p => {
-            if (!stats[p]) stats[p] = { revenue: 0, count: 0, growth: 0 };
+        // Ensure we always have the main products even if no deals
+        productGroups.forEach(p => {
+            if (!stats[p.name]) stats[p.name] = { revenue: 0, count: 0, growth: 0 };
         });
 
         return Object.entries(stats)
-            .filter(([name]) => products.includes(name as ProductGroup)) // Filter to known products
             .sort((a, b) => b[1].revenue - a[1].revenue);
-    }, [deals]);
+    }, [deals, productGroups]);
 
     // All deals for the selected product (used for charts)
     const productDeals = useMemo(() => {

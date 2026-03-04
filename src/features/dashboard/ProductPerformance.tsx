@@ -109,20 +109,33 @@ export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps
     const productStats = useMemo(() => {
         const stats: Record<string, { revenue: number, count: number, growth: number }> = {};
 
+        // Only include products that are Level 2
+        const level2ProductNames = new Set(
+            productGroups
+                .filter(p => p.level === 2)
+                .map(p => p.name)
+        );
+
         deals.forEach(deal => {
-            if (!stats[deal.product]) {
-                stats[deal.product] = { revenue: 0, count: 0, growth: Math.floor(Math.random() * 40) - 10 }; // mocked growth
+            // Only count deals for Level 2 products
+            if (level2ProductNames.has(deal.product)) {
+                if (!stats[deal.product]) {
+                    stats[deal.product] = { revenue: 0, count: 0, growth: Math.floor(Math.random() * 40) - 10 }; // mocked growth
+                }
+                stats[deal.product].revenue += deal.value;
+                stats[deal.product].count += 1;
             }
-            stats[deal.product].revenue += deal.value;
-            stats[deal.product].count += 1;
         });
 
-        // Ensure we always have the main products even if no deals
+        // Ensure we include Level 2 products even if no deals
         productGroups.forEach(p => {
-            if (!stats[p.name]) stats[p.name] = { revenue: 0, count: 0, growth: 0 };
+            if (p.level === 2 && !stats[p.name]) {
+                stats[p.name] = { revenue: 0, count: 0, growth: 0 };
+            }
         });
 
         return Object.entries(stats)
+            .filter(([_, stat]) => stat.revenue > 0) // Hide groups with 0 revenue
             .sort((a, b) => b[1].revenue - a[1].revenue);
     }, [deals, productGroups]);
 

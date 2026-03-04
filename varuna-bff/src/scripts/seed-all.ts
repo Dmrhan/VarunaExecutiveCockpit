@@ -73,13 +73,18 @@ const ACCOUNT_NAMES = [
 
 // 7 ürün — görsel isimleriyle
 const PRODUCTS = [
-    { id: 'STK-ENROUTE', code: 'ENR', name: 'EnRoute', shortName: 'ENR', groupId: 'PG-ENR' },
-    { id: 'STK-QUEST', code: 'QST', name: 'Quest', shortName: 'QST', groupId: 'PG-QST' },
-    { id: 'STK-STOKBAR', code: 'STB', name: 'Stokbar', shortName: 'STB', groupId: 'PG-STB' },
-    { id: 'STK-SVCCORE', code: 'SVC', name: 'ServiceCore', shortName: 'SVC', groupId: 'PG-SVC' },
-    { id: 'STK-VARUNA', code: 'VRN', name: 'Varuna', shortName: 'VRN', groupId: 'PG-VRN' },
-    { id: 'STK-HOSTING', code: 'HST', name: 'Hosting', shortName: 'HST', groupId: 'PG-HST' },
-    { id: 'STK-UNIDOX', code: 'UDX', name: 'Unidox', shortName: 'UDX', groupId: 'PG-UDX' },
+    { id: 'STK-ENROUTE', code: 'ENR', name: 'EnRoute', shortName: 'ENR', groupId: 'PG-ENR', parentGroupId: 'PG-CAT-SOFT' },
+    { id: 'STK-QUEST', code: 'QST', name: 'Quest', shortName: 'QST', groupId: 'PG-QST', parentGroupId: 'PG-CAT-SOFT' },
+    { id: 'STK-STOKBAR', code: 'STB', name: 'Stokbar', shortName: 'STB', groupId: 'PG-STB', parentGroupId: 'PG-CAT-SOFT' },
+    { id: 'STK-SVCCORE', code: 'SVC', name: 'ServiceCore', shortName: 'SVC', groupId: 'PG-SVC', parentGroupId: 'PG-CAT-SOFT' },
+    { id: 'STK-VARUNA', code: 'VRN', name: 'Varuna', shortName: 'VRN', groupId: 'PG-VRN', parentGroupId: 'PG-CAT-SOFT' },
+    { id: 'STK-HOSTING', code: 'HST', name: 'Hosting', shortName: 'HST', groupId: 'PG-HOST', parentGroupId: 'PG-CAT-SRV' },
+    { id: 'STK-UNIDOX', code: 'UDX', name: 'Unidox', shortName: 'UDX', groupId: 'PG-UDX', parentGroupId: 'PG-CAT-SOFT' },
+];
+
+const CATEGORIES = [
+    { id: 'PG-CAT-SOFT', code: 'CAT-SOFT', name: 'Yazılım', shortName: 'SW', level: 1 },
+    { id: 'PG-CAT-SRV', code: 'CAT-SRV', name: 'Hizmet/Bulut', shortName: 'SRV', level: 1 },
 ];
 // Ürün ağırlıkları: EnRoute en büyük payda, Unidox en küçük
 const PRODUCT_WEIGHTS = [30, 20, 15, 12, 10, 8, 5];
@@ -202,12 +207,19 @@ async function main() {
         // 4. PRODUCT GROUP + STOCK (7 ürün)
         // ──────────────────────────────────────────────────────────────────────
         const stmtPG = db.prepare(`
-            INSERT INTO ProductGroup (Id, Code, Name, ShortName, Status, Level)
-            VALUES (?, ?, ?, ?, ?, ?)
-            ON CONFLICT(Id) DO UPDATE SET Level = excluded.Level
+            INSERT INTO ProductGroup (Id, Code, Name, ShortName, Status, ParentGroupId, Level)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(Id) DO UPDATE SET Level = excluded.Level, ParentGroupId = excluded.ParentGroupId
         `);
+
+        // Insert Categories (Level 1)
+        for (const cat of CATEGORIES) {
+            stmtPG.run(cat.id, cat.code, cat.name, cat.shortName, 1, null, cat.level);
+        }
+
+        // Insert Products (Level 2)
         for (const p of PRODUCTS) {
-            stmtPG.run(p.groupId, p.code, p.name, p.shortName, 1, 2);
+            stmtPG.run(p.groupId, p.code, p.name, p.shortName, 1, p.parentGroupId, 2);
         }
 
         const stmtStock = db.prepare(`INSERT INTO Stock(Id,Code,Name,ShortName,BaseUnitType,SalesVatValue,PurchaseVatValue,State,ProductGroupId,CompanyId) VALUES(?,?,?,?,?,?,?,?,?,?)`);

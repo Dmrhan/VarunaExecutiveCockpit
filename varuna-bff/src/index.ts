@@ -37,6 +37,7 @@ import contractsRouter from './routes/contracts';
 import quotesRouter from './routes/quotes';
 import ordersRouter from './routes/orders';
 import usersRouter from './routes/users';
+import productGroupsRouter from './routes/product-groups';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -82,6 +83,7 @@ app.use('/api/contracts', contractsRouter);
 app.use('/api/quotes', quotesRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/users', usersRouter);
+app.use('/api/product-groups', productGroupsRouter);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {

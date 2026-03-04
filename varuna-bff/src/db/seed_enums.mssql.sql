@@ -1195,3 +1195,18 @@ INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES 
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EWageStatus_3', 'EWageStatus', 3, 'Public', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EWonLostType_1', 'EWonLostType', 1, 'Churn', NULL);
 INSERT INTO SystemEnums (Id, EnumType, EnumValue, EnumName, DisplayName) VALUES ('EWonLostType_2', 'EWonLostType', 2, 'TurnoverGrowth', NULL);
+
+-- ============================================================
+-- SEED DATA: ProductGroup
+-- ============================================================
+DELETE FROM ProductGroup;
+GO
+INSERT INTO ProductGroup (Id, Code, Name, ShortName, [Status], ParentGroupId, [Level]) VALUES
+('PG-ENR', 'PG-ENR', 'EnRoute', 'EnRoute', 1, NULL, 0),
+('PG-QST', 'PG-QST', 'Quest', 'Quest', 1, NULL, 0),
+('PG-STB', 'PG-STB', 'Stokbar', 'Stokbar', 1, NULL, 0),
+('PG-SVC', 'PG-SVC', 'ServiceCore', 'ServiceCore', 1, NULL, 0),
+('PG-VRN', 'PG-VRN', 'Varuna', 'Varuna', 1, NULL, 0),
+('PG-HST', 'PG-HST', 'Hosting', 'Hosting', 1, NULL, 0),
+('PG-UDX', 'PG-UDX', 'Unidox', 'Unidox', 1, NULL, 0);
+GO

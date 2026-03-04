@@ -1,4 +1,14 @@
-export type ProductGroup = 'EnRoute' | 'Quest' | 'Stokbar' | 'ServiceCore' | 'Varuna' | 'Hosting' | 'Unidox';
+export type ProductGroup = string;
+
+export interface IProductGroup {
+    id: string;
+    code: string;
+    name: string;
+    shortName: string;
+    status: number;
+    parentGroupId?: string;
+    level: number;
+}
 
 export type DealStage = 'Lead' | 'Qualified' | 'Proposal' | 'Negotiation' | 'Order' | 'Lost' |
     'Teklif' | 'Sözleşme' | 'Konumlama' | 'Demo' | 'Kazanıldı' | 'Kaybedildi';

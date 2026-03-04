@@ -115,6 +115,32 @@ CREATE TABLE IF NOT EXISTS ProductGroups (
 CREATE INDEX IF NOT EXISTS idx_pg_oppid ON ProductGroups(OpportunityId);
 
 -- ============================================================
+-- MAIN TABLE: ProductGroup
+-- ============================================================
+CREATE TABLE IF NOT EXISTS ProductGroup (
+    Id              TEXT PRIMARY KEY,
+    Code            TEXT NOT NULL UNIQUE,
+    Name            TEXT NOT NULL,
+    ShortName       TEXT,
+    Status          INTEGER DEFAULT 1, -- EState.Active
+    ParentGroupId   TEXT,
+    Level           INTEGER NOT NULL DEFAULT 0,
+    _SyncedAt       DATETIME DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_productgroup_parent ON ProductGroup(ParentGroupId);
+
+DELETE FROM ProductGroup;
+INSERT INTO ProductGroup (Id, Code, Name, ShortName, Status, ParentGroupId, Level) VALUES
+('PG-ENR', 'PG-ENR', 'EnRoute', 'EnRoute', 1, NULL, 0),
+('PG-QST', 'PG-QST', 'Quest', 'Quest', 1, NULL, 0),
+('PG-STB', 'PG-STB', 'Stokbar', 'Stokbar', 1, NULL, 0),
+('PG-SVC', 'PG-SVC', 'ServiceCore', 'ServiceCore', 1, NULL, 0),
+('PG-VRN', 'PG-VRN', 'Varuna', 'Varuna', 1, NULL, 0),
+('PG-HST', 'PG-HST', 'Hosting', 'Hosting', 1, NULL, 0),
+('PG-UDX', 'PG-UDX', 'Unidox', 'Unidox', 1, NULL, 0);
+
+-- ============================================================
 -- MAIN TABLE: Person
 -- ============================================================
 CREATE TABLE IF NOT EXISTS Person (

@@ -102,17 +102,6 @@ CREATE TABLE IF NOT EXISTS OpportunityContacts (
 
 CREATE INDEX IF NOT EXISTS idx_contacts_oppid ON OpportunityContacts(OpportunityId);
 
--- ============================================================
--- DETAIL TABLE: ProductGroups
--- ============================================================
-CREATE TABLE IF NOT EXISTS ProductGroups (
-    Id             INTEGER PRIMARY KEY AUTOINCREMENT,
-    OpportunityId  TEXT NOT NULL,
-    ProductGroupId TEXT,
-    FOREIGN KEY (OpportunityId) REFERENCES Opportunity(Id) ON DELETE CASCADE
-);
-
-CREATE INDEX IF NOT EXISTS idx_pg_oppid ON ProductGroups(OpportunityId);
 
 -- ============================================================
 -- MAIN TABLE: ProductGroup

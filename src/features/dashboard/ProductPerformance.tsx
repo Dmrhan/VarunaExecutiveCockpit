@@ -107,37 +107,36 @@ export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps
     };
 
     const productStats = useMemo(() => {
-        const stats: Record<string, { revenue: number, count: number, growth: number }> = {};
-
-        // Only include products that are Level 2
-        const level2ProductNames = new Set(
-            productGroups
-                .filter(p => p.level === 2)
-                .map(p => p.name)
-        );
+        const stats: Record<string, {
+            revenue: number,
+            count: number,
+            growth: number,
+            parentName: string,
+            productName: string
+        }> = {};
 
         deals.forEach(deal => {
-            // Only count deals for Level 2 products
-            if (level2ProductNames.has(deal.product)) {
-                if (!stats[deal.product]) {
-                    stats[deal.product] = { revenue: 0, count: 0, growth: Math.floor(Math.random() * 40) - 10 }; // mocked growth
+            // Only count deals for Level 2 products based on the new backend-provided level
+            if (deal.productLevel === 2) {
+                const key = `${deal.parentGroupName || 'Diğer'} - ${deal.product}`;
+                if (!stats[key]) {
+                    stats[key] = {
+                        revenue: 0,
+                        count: 0,
+                        growth: Math.floor(Math.random() * 40) - 10,
+                        parentName: deal.parentGroupName || '',
+                        productName: deal.product
+                    };
                 }
-                stats[deal.product].revenue += deal.value;
-                stats[deal.product].count += 1;
-            }
-        });
-
-        // Ensure we include Level 2 products even if no deals
-        productGroups.forEach(p => {
-            if (p.level === 2 && !stats[p.name]) {
-                stats[p.name] = { revenue: 0, count: 0, growth: 0 };
+                stats[key].revenue += deal.value;
+                stats[key].count += 1;
             }
         });
 
         return Object.entries(stats)
             .filter(([_, stat]) => stat.revenue > 0) // Hide groups with 0 revenue
             .sort((a, b) => b[1].revenue - a[1].revenue);
-    }, [deals, productGroups]);
+    }, [deals]);
 
     // All deals for the selected product (used for charts)
     const productDeals = useMemo(() => {
@@ -278,7 +277,14 @@ export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps
                                     </div>
                                 </div>
 
-                                <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{product}</h3>
+                                <div className="mb-1">
+                                    <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold truncate leading-tight">
+                                        {stat.parentName}
+                                    </p>
+                                    <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                                        {stat.productName}
+                                    </h3>
+                                </div>
                                 <div className="text-lg font-bold text-slate-900 dark:text-slate-100">
                                     ${(stat.revenue / 1000000).toFixed(1)}M
                                 </div>

@@ -119,15 +119,6 @@ CREATE TABLE IF NOT EXISTS ProductGroup (
 
 CREATE INDEX IF NOT EXISTS idx_productgroup_parent ON ProductGroup(ParentGroupId);
 
-DELETE FROM ProductGroup;
-INSERT INTO ProductGroup (Id, Code, Name, ShortName, Status, ParentGroupId, Level) VALUES
-('PG-ENR', 'PG-ENR', 'EnRoute', 'EnRoute', 1, NULL, 2),
-('PG-QST', 'PG-QST', 'Quest', 'Quest', 1, NULL, 2),
-('PG-STB', 'PG-STB', 'Stokbar', 'Stokbar', 1, NULL, 2),
-('PG-SVC', 'PG-SVC', 'ServiceCore', 'ServiceCore', 1, NULL, 2),
-('PG-VRN', 'PG-VRN', 'Varuna', 'Varuna', 1, NULL, 2),
-('PG-HST', 'PG-HST', 'Hosting', 'Hosting', 1, NULL, 2),
-('PG-UDX', 'PG-UDX', 'Unidox', 'Unidox', 1, NULL, 2);
 
 -- ============================================================
 -- MAIN TABLE: Person

@@ -199,8 +199,17 @@ async function main() {
         }
 
         // ──────────────────────────────────────────────────────────────────────
-        // 4. STOCK (7 ürün)
+        // 4. PRODUCT GROUP + STOCK (7 ürün)
         // ──────────────────────────────────────────────────────────────────────
+        const stmtPG = db.prepare(`
+            INSERT INTO ProductGroup (Id, Code, Name, ShortName, Status, Level)
+            VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT(Id) DO UPDATE SET Level = excluded.Level
+        `);
+        for (const p of PRODUCTS) {
+            stmtPG.run(p.groupId, p.code, p.name, p.shortName, 1, 2);
+        }
+
         const stmtStock = db.prepare(`INSERT INTO Stock(Id,Code,Name,ShortName,BaseUnitType,SalesVatValue,PurchaseVatValue,State,ProductGroupId,CompanyId) VALUES(?,?,?,?,?,?,?,?,?,?)`);
         for (const p of PRODUCTS) {
             stmtStock.run(p.id, p.code, p.name, p.shortName, 'Adet', 20, 20, 1, p.groupId, COMPANY_ID);

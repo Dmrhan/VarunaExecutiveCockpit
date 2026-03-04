@@ -65,11 +65,13 @@ router.get('/', (req: Request, res: Response) => {
 
     // ── Paginated fetch ───────────────────────────────────────────────────────
     let querySql = `
-        SELECT o.*, a.Name as AccountName, a.Title as AccountTitle, p.PersonNameSurname as OwnerName, pg.Name as ProductGroupName
+        SELECT o.*, a.Name as AccountName, a.Title as AccountTitle, p.PersonNameSurname as OwnerName, 
+               pg.Name as ProductGroupName, pg.Level as ProductLevel, ppg.Name as ParentGroupName
         FROM Opportunity o
         LEFT JOIN Account a ON o.AccountId = a.Id
         LEFT JOIN Person p ON o.OwnerId = p.Id
         LEFT JOIN ProductGroup pg ON o.ProductGroupId = pg.Id
+        LEFT JOIN ProductGroup ppg ON pg.ParentGroupId = ppg.Id
         ${filterSql}
         ${orderSql}
     `;
@@ -112,6 +114,8 @@ router.get('/', (req: Request, res: Response) => {
         aging: 0,
         velocity: 0,
         health_score: row.IsThereDelay ? 30 : 80,
+        parentGroupName: row.ParentGroupName,
+        productLevel: row.ProductLevel,
     }));
 
     const response: Record<string, any> = { value: mapped };
@@ -204,11 +208,13 @@ router.get('/stats', (req: Request, res: Response) => {
 router.get('/:id', (req: Request, res: Response) => {
     const db = getDb();
     const row = db.queryOne(`
-        SELECT o.*, a.Name as AccountName, a.Title as AccountTitle, p.PersonNameSurname as OwnerName, pg.Name as ProductGroupName
+        SELECT o.*, a.Name as AccountName, a.Title as AccountTitle, p.PersonNameSurname as OwnerName, 
+               pg.Name as ProductGroupName, pg.Level as ProductLevel, ppg.Name as ParentGroupName
         FROM Opportunity o 
         LEFT JOIN Account a ON o.AccountId = a.Id 
         LEFT JOIN Person p ON o.OwnerId = p.Id
         LEFT JOIN ProductGroup pg ON o.ProductGroupId = pg.Id
+        LEFT JOIN ProductGroup ppg ON pg.ParentGroupId = ppg.Id
         WHERE o.Id = ?
     `, [req.params.id]) as Record<string, any> | undefined;
 
@@ -237,6 +243,8 @@ router.get('/:id', (req: Request, res: Response) => {
         aging: 0,
         velocity: 0,
         health_score: row.IsThereDelay ? 30 : 80,
+        parentGroupName: row.ParentGroupName,
+        productLevel: row.ProductLevel,
     });
 });
 

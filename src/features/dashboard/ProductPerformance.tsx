@@ -116,21 +116,20 @@ export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps
         }> = {};
 
         deals.forEach(deal => {
-            // Only count deals for Level 2 products based on the new backend-provided level
-            if (deal.productLevel === 2) {
-                const key = `${deal.parentGroupName || 'Diğer'} - ${deal.product}`;
-                if (!stats[key]) {
-                    stats[key] = {
-                        revenue: 0,
-                        count: 0,
-                        growth: Math.floor(Math.random() * 40) - 10,
-                        parentName: deal.parentGroupName || '',
-                        productName: deal.product
-                    };
-                }
-                stats[key].revenue += deal.value;
-                stats[key].count += 1;
+            // Group by Parent Category name if available, otherwise fallback to product name
+            const groupName = deal.parentGroupName || deal.product || 'Diğer';
+
+            if (!stats[groupName]) {
+                stats[groupName] = {
+                    revenue: 0,
+                    count: 0,
+                    growth: Math.floor(Math.random() * 40) - 10,
+                    parentName: '',
+                    productName: groupName
+                };
             }
+            stats[groupName].revenue += deal.value;
+            stats[groupName].count += 1;
         });
 
         return Object.entries(stats)
@@ -141,7 +140,11 @@ export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps
     // All deals for the selected product (used for charts)
     const productDeals = useMemo(() => {
         if (!selectedProduct) return [];
-        return deals.filter(d => d.product === selectedProduct);
+        return deals.filter(d =>
+            d.parentGroupName === selectedProduct ||
+            (d.product === selectedProduct && !d.parentGroupName) ||
+            (selectedProduct === 'Diğer' && !d.parentGroupName && !d.product)
+        );
     }, [deals, selectedProduct]);
 
     // Deals filtered by stage (used for table view)

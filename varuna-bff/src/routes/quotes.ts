@@ -36,16 +36,6 @@ const Q_STATUS_TR: Record<number, string> = {
     9: 'Kısmen Siparişleşti',
 };
 
-// Product group → display name
-const PRODUCT_GROUP_NAMES: Record<string, string> = {
-    'PG-ENR': 'EnRoute',
-    'PG-QST': 'Quest',
-    'PG-STB': 'Stokbar',
-    'PG-SVC': 'ServiceCore',
-    'PG-VRN': 'Varuna',
-    'PG-HST': 'Hosting',
-    'PG-UDX': 'Unidox',
-};
 
 router.get('/', (req: Request, res: Response) => {
     const db = getDb();
@@ -58,11 +48,13 @@ router.get('/', (req: Request, res: Response) => {
             q.*,
             a.Name              AS AccountName,
             p.PersonNameSurname AS OwnerName,
-            o.ProductGroupId    AS OppProductGroupId
+            o.ProductGroupId    AS OppProductGroupId,
+            pg.Name             AS ProductGroupName
         FROM Quote q
-        LEFT JOIN Account     a ON q.AccountId       = a.Id
+        LEFT JOIN Account      a ON q.AccountId       = a.Id
         LEFT JOIN Person      p ON q.ProposalOwnerId  = p.Id
         LEFT JOIN Opportunity o ON q.OpportunityId    = o.Id
+        LEFT JOIN ProductGroup pg ON o.ProductGroupId = pg.Id
         ORDER BY q.FirstCreatedDate DESC
     `;
 
@@ -77,7 +69,7 @@ router.get('/', (req: Request, res: Response) => {
     const mapped = rows.map(row => {
         const statusCode: number = row.Status ?? 0;
         const productGroupId: string = row.OppProductGroupId || '';
-        const productName = PRODUCT_GROUP_NAMES[productGroupId] || productGroupId || 'EnRoute';
+        const productName = row.ProductGroupName || productGroupId || 'EnRoute';
         // Amount: use VAT-included figure (same as what was seeded)
         const amount = row.TotalAmountWithTaxLocalCurrency_Amount || row.TotalNetAmountLocalCurrency_Amount || 0;
 

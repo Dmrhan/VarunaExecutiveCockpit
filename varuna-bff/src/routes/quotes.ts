@@ -49,12 +49,15 @@ router.get('/', (req: Request, res: Response) => {
             a.Name              AS AccountName,
             p.PersonNameSurname AS OwnerName,
             o.ProductGroupId    AS OppProductGroupId,
-            pg.Name             AS ProductGroupName
+            pg.Name             AS ProductGroupName,
+            pg.Level            AS ProductLevel,
+            ppg.Name            AS ParentGroupName
         FROM Quote q
         LEFT JOIN Account      a ON q.AccountId       = a.Id
         LEFT JOIN Person      p ON q.ProposalOwnerId  = p.Id
         LEFT JOIN Opportunity o ON q.OpportunityId    = o.Id
         LEFT JOIN ProductGroup pg ON o.ProductGroupId = pg.Id
+        LEFT JOIN ProductGroup ppg ON pg.ParentGroupId = ppg.Id
         ORDER BY q.FirstCreatedDate DESC
     `;
 
@@ -94,6 +97,8 @@ router.get('/', (req: Request, res: Response) => {
             serviceStart: row.ServiceStartDate || '',
             serviceEnd: row.ServiceFinishDate || '',
             discount: row.SubTotalDiscount || 0,
+            parentGroupName: row.ParentGroupName,
+            productLevel: row.ProductLevel,
             items: [],
         };
     });

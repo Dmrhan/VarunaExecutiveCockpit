@@ -68,6 +68,8 @@ export type Deal = {
     aging: number; // days in current stage
     velocity: number; // average days per stage
     healthScore: number; // 0-100
+    parentGroupName?: string;
+    productLevel?: number;
 }
 
 export interface Contact {

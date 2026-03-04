@@ -87,15 +87,6 @@ GO
 -- ============================================================
 -- TABLE: ProductGroups
 -- ============================================================
-IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ProductGroups]') AND type in (N'U'))
-BEGIN
-CREATE TABLE [dbo].[ProductGroups] (
-    Id             INT IDENTITY(1,1) PRIMARY KEY,
-    OpportunityId  NVARCHAR(450) NOT NULL,
-    ProductGroupId NVARCHAR(MAX),
-    CONSTRAINT FK_PG_Opportunity FOREIGN KEY (OpportunityId) REFERENCES Opportunity(Id) ON DELETE CASCADE
-);
-END
 GO
 
 -- ============================================================

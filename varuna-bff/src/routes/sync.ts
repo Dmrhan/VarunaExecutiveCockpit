@@ -188,7 +188,6 @@ router.post('/sync', (req: Request, res: Response) => {
             // Detail tables: delete-then-insert
             db.execute('DELETE FROM OpportunityNotes    WHERE OpportunityId = ?', [opportunity.Id]);
             db.execute('DELETE FROM OpportunityContacts WHERE OpportunityId = ?', [opportunity.Id]);
-            db.execute('DELETE FROM ProductGroups       WHERE OpportunityId = ?', [opportunity.Id]);
 
             for (const note of notes) {
                 db.execute(`
@@ -217,15 +216,6 @@ router.post('/sync', (req: Request, res: Response) => {
                     CellPhone: contact.CellPhone ?? null,
                     Website: contact.Website ?? null,
                     DefaultContact: contact.DefaultContact ?? null,
-                });
-            }
-            for (const pg of productGroups) {
-                db.execute(`
-                    INSERT INTO ProductGroups (OpportunityId, ProductGroupId)
-                    VALUES (:OpportunityId, :ProductGroupId)
-                `, {
-                    OpportunityId: opportunity.Id,
-                    ProductGroupId: pg.ProductGroupId ?? null,
                 });
             }
         });

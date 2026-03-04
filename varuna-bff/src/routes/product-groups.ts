@@ -18,7 +18,7 @@ router.get('/', (_req: Request, res: Response) => {
         `);
         res.json(rows);
     } catch (e: any) {
-        console.error('[API:ProductGroups] Error fetching product groups:', e);
+        console.error('[API:ProductGroup] Error fetching product groups:', e);
         res.status(500).json({ status: 'error', message: e.message });
     }
 });

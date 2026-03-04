@@ -156,7 +156,7 @@ async function main() {
         'CalenderEventParticipantContacts', 'CalenderEventParticipantLeads',
         'CalenderEventParticipantPeople', 'CalenderEventDaysForRepeatOnWeekly', 'CalenderEvent',
         'InventoryAccountProduct',
-        'ProductGroups', 'OpportunityContacts', 'OpportunityNotes', 'Opportunity',
+        'OpportunityContacts', 'OpportunityNotes', 'Opportunity',
         'AccountNotes', 'AccountRepresentatives', 'AccountCompanies', 'Addresses', 'Account',
         'Companies', 'PersonFile', 'Education', 'Person',
         'StockUnitTypes', 'AdditionalTaxes', 'StockFiles', 'Companies_Stock', 'Stock',

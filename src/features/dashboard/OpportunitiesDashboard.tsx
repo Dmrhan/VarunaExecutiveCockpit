@@ -129,48 +129,79 @@ export function OpportunitiesDashboard() {
     // --- Data processing ---
 
     const filteredDeals = useMemo(() => {
-        let result = deals;
+        let result = [...deals];
+
+        // Helper to format local date as YYYY-MM-DD
+        const formatLocalDate = (d: Date) => {
+            return new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().substring(0, 10);
+        };
 
         // 1. Date Filter
         if (dateFilter !== 'all') {
             const now = new Date();
-            const todayAtMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+            const todayStr = formatLocalDate(now);
 
-            result = result.filter(deal => {
-                const dealDate = new Date(deal.createdAt).getTime();
-                switch (dateFilter) {
-                    case 'today': return dealDate >= todayAtMidnight;
-                    case 'yesterday': return dealDate >= (todayAtMidnight - 86400000) && dealDate < todayAtMidnight;
-                    case 'this_week': {
-                        const day = now.getDay() || 7;
-                        const monday = new Date(now);
-                        monday.setHours(-24 * (day - 1), 0, 0, 0);
-                        return dealDate >= monday.getTime();
-                    }
-                    case 'last_week': {
-                        const day = now.getDay() || 7;
-                        const lastMonday = new Date(now);
-                        lastMonday.setDate(now.getDate() - day - 6);
-                        lastMonday.setHours(0, 0, 0, 0);
-                        const lastSunday = new Date(now);
-                        lastSunday.setDate(now.getDate() - day);
-                        lastSunday.setHours(23, 59, 59, 999);
-                        return dealDate >= lastMonday.getTime() && dealDate <= lastSunday.getTime();
-                    }
-                    case 'this_month':
-                        return new Date(deal.createdAt).getMonth() === new Date().getMonth() && new Date(deal.createdAt).getFullYear() === new Date().getFullYear();
-                    case 'this_year':
-                        return new Date(deal.createdAt).getFullYear() === new Date().getFullYear();
-                    case 'custom':
-                        if (!customRange.start || !customRange.end) return true;
-                        const start = new Date(customRange.start);
-                        start.setHours(0, 0, 0, 0);
-                        const end = new Date(customRange.end);
-                        end.setHours(23, 59, 59, 999);
-                        return dealDate >= start.getTime() && dealDate <= end.getTime();
-                    default: return true;
+            let startStr = '';
+            let endStr = todayStr;
+
+            switch (dateFilter) {
+                case 'today':
+                    startStr = todayStr;
+                    break;
+                case 'yesterday': {
+                    const yesterday = new Date(now);
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    startStr = formatLocalDate(yesterday);
+                    endStr = startStr;
+                    break;
                 }
-            });
+                case 'this_week': {
+                    const day = now.getDay() || 7;
+                    const monday = new Date(now);
+                    monday.setDate(monday.getDate() - (day - 1));
+                    startStr = formatLocalDate(monday);
+                    break;
+                }
+                case 'last_week': {
+                    const day = now.getDay() || 7;
+                    const prevMonday = new Date(now);
+                    prevMonday.setDate(prevMonday.getDate() - (day - 1) - 7);
+                    const prevSunday = new Date(prevMonday);
+                    prevSunday.setDate(prevSunday.getDate() + 6);
+                    startStr = formatLocalDate(prevMonday);
+                    endStr = formatLocalDate(prevSunday);
+                    break;
+                }
+                case 'this_month': {
+                    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                    startStr = formatLocalDate(firstDayOfMonth);
+                    break;
+                }
+                case 'this_year': {
+                    const firstDayOfYear = new Date(now.getFullYear(), 0, 1);
+                    startStr = formatLocalDate(firstDayOfYear);
+                    break;
+                }
+                case 'custom':
+                    if (customRange.start) startStr = formatLocalDate(customRange.start);
+                    if (customRange.end) endStr = formatLocalDate(customRange.end);
+                    break;
+            }
+
+            if (startStr) {
+                result = result.filter(deal => {
+                    const dealDateStr = deal.createdAt ? deal.createdAt.substring(0, 10) : '';
+                    if (!dealDateStr) return false;
+
+                    if (dateFilter === 'custom' && !customRange.end) {
+                        return dealDateStr >= startStr;
+                    }
+                    if (dateFilter === 'custom' && !customRange.start) {
+                        return dealDateStr <= endStr;
+                    }
+                    return dealDateStr >= startStr && dealDateStr <= endStr;
+                });
+            }
         }
 
         // 2. Column Filters & Chart Filters
@@ -262,6 +293,10 @@ export function OpportunitiesDashboard() {
         let startDate: string | undefined;
         let endDate: string | undefined;
 
+        const formatLocalDate = (d: Date) => {
+            return new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().substring(0, 10);
+        };
+
         if (dateFilter !== 'all') {
             const now = new Date();
             const todayAtMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -271,19 +306,19 @@ export function OpportunitiesDashboard() {
 
             switch (dateFilter) {
                 case 'today':
-                    startDate = start.toISOString();
+                    startDate = formatLocalDate(start);
                     break;
                 case 'yesterday':
                     start.setDate(start.getDate() - 1);
                     end = new Date(todayAtMidnight);
                     end.setMilliseconds(-1);
-                    startDate = start.toISOString();
-                    endDate = end.toISOString();
+                    startDate = formatLocalDate(start);
+                    endDate = formatLocalDate(end);
                     break;
                 case 'this_week': {
                     const day = now.getDay() || 7;
                     start.setDate(start.getDate() - (day - 1));
-                    startDate = start.toISOString();
+                    startDate = formatLocalDate(start);
                     break;
                 }
                 case 'last_week': {
@@ -291,26 +326,21 @@ export function OpportunitiesDashboard() {
                     start.setDate(start.getDate() - (day - 1) - 7);
                     end = new Date(start);
                     end.setDate(end.getDate() + 6);
-                    end.setHours(23, 59, 59, 999);
-                    startDate = start.toISOString();
-                    endDate = end.toISOString();
+                    startDate = formatLocalDate(start);
+                    endDate = formatLocalDate(end);
                     break;
                 }
                 case 'this_month':
                     start.setDate(1);
-                    startDate = start.toISOString();
+                    startDate = formatLocalDate(start);
                     break;
                 case 'this_year':
                     start.setMonth(0, 1);
-                    startDate = start.toISOString();
+                    startDate = formatLocalDate(start);
                     break;
                 case 'custom':
-                    if (customRange.start) startDate = customRange.start.toISOString();
-                    if (customRange.end) {
-                        const customEnd = new Date(customRange.end);
-                        customEnd.setHours(23, 59, 59, 999);
-                        endDate = customEnd.toISOString();
-                    }
+                    if (customRange.start) startDate = formatLocalDate(customRange.start);
+                    if (customRange.end) endDate = formatLocalDate(customRange.end);
                     break;
             }
         }

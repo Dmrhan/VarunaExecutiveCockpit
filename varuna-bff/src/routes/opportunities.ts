@@ -129,8 +129,15 @@ router.get('/', (req: Request, res: Response) => {
 router.get('/stats', (req: Request, res: Response) => {
     try {
         const db = getDb();
-        const startDate = req.query.startDate as string;
-        const endDate = req.query.endDate as string;
+
+        // The frontend sends ISO strings (e.g., '2026-03-05T00:00:00.000Z').
+        // The database stores FirstCreatedDate as a 'YYYY-MM-DD' string (e.g., '2026-03-05').
+        // We truncate the incoming ISO strings to 10 characters to perform correct string comparisons in SQL.
+        const reqStartDate = req.query.startDate as string;
+        const reqEndDate = req.query.endDate as string;
+
+        const startDate = reqStartDate ? reqStartDate.substring(0, 10) : undefined;
+        const endDate = reqEndDate ? reqEndDate.substring(0, 10) : undefined;
 
         let dateFilter = '';
         const params: any = {};

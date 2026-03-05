@@ -176,7 +176,7 @@ router.get('/', (req: Request, res: Response) => {
             WHERE c.SalesRepresentativeId = ? ${companyFilterSql} ${contractDates.sql}
             GROUP BY c.AccountId, a.Name
             ORDER BY contractAmount DESC
-            LIMIT 10
+            ${db.driver === 'mssql' ? 'OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY' : 'LIMIT 10'}
                 `, [personId, ...companyPrm, ...contractDates.prm]);
 
         const statusCase = `
@@ -192,7 +192,7 @@ router.get('/', (req: Request, res: Response) => {
                 WHEN 8 THEN 'Arşivlendi'
                 WHEN 9 THEN 'Fesih / İptal'
                 WHEN 10 THEN 'Yenilendi / Süresi Doldu'
-                ELSE 'Bilinmeyen (' || CAST(c.ContractStatus AS VARCHAR) || ')'
+                ELSE 'Bilinmeyen (' ${db.driver === 'mssql' ? '+' : '||'} CAST(c.ContractStatus AS VARCHAR) ${db.driver === 'mssql' ? '+' : '||'} ')'
             END
                     `;
 
@@ -220,7 +220,7 @@ router.get('/', (req: Request, res: Response) => {
             LEFT JOIN Account a ON c.AccountId = a.Id
             WHERE c.OwnerId = ? ${calDates.sql}
             ORDER BY c.StartDate DESC
-            LIMIT 10
+            ${db.driver === 'mssql' ? 'OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY' : 'LIMIT 10'}
                 `, [personId, ...calDates.prm]);
 
         // 5. Team Rank calculation
@@ -254,12 +254,12 @@ router.get('/', (req: Request, res: Response) => {
         // 6. Opportunities by expected close month
         const opportunitiesByCloseMonth = db.query(`
             SELECT 
-                strftime('%Y-%m', o.CloseDate) as monthKey,
+                ${db.driver === 'mssql' ? "FORMAT(o.CloseDate, 'yyyy-MM')" : "strftime('%Y-%m', o.CloseDate)"} as monthKey,
                 COALESCE(SUM(o.ExpectedRevenue_Value), 0) as expectedRevenue,
                 COUNT(o.Id) as count
             FROM Opportunity o
             WHERE o.OwnerId = ? AND (o.DealStatus IS NULL OR o.DealStatus NOT IN (2,3)) AND o.CloseDate IS NOT NULL ${companyFilterSql.replace('CompanyId', 'o.CompanyId')} ${oppDates.sql.replace('FirstCreatedDate', 'o.FirstCreatedDate')}
-            GROUP BY strftime('%Y-%m', o.CloseDate)
+            GROUP BY ${db.driver === 'mssql' ? "FORMAT(o.CloseDate, 'yyyy-MM')" : "strftime('%Y-%m', o.CloseDate)"}
             ORDER BY monthKey ASC
         `, [personId, ...companyPrm, ...oppDates.prm]);
 
@@ -284,7 +284,7 @@ router.get('/', (req: Request, res: Response) => {
                 o.Name as name,
                 a.Name as accountName,
                 COALESCE(o.ExpectedRevenue_Value, 0) as expectedRevenue,
-                strftime('%Y-%m', o.CloseDate) as monthKey,
+                ${db.driver === 'mssql' ? "FORMAT(o.CloseDate, 'yyyy-MM')" : "strftime('%Y-%m', o.CloseDate)"} as monthKey,
                 o.CloseDate as expectedCloseDate,
                 o.DealStatus as dealStatus,
                 o.OpportunityStageNameTr as stageName

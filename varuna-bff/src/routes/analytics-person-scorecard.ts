@@ -165,19 +165,20 @@ router.get('/', (req: Request, res: Response) => {
         }
 
         // 3. Contract Workload (Account & Status)
+        // 4. Contracts by Account
         const contractsByAccount = db.query(`
             SELECT 
-                a.Name as accountName,
-                c.AccountId as accountId,
-                COUNT(c.Id) as contractCount,
+                c.AccountId, 
+                COALESCE(a.Title, a.Name, c.AccountId) as accountName,
+                COUNT(c.Id) as contractCount, 
                 COALESCE(SUM(c.TotalAmountLocalCurrency_Amount), 0) as contractAmount
             FROM Contract c
             LEFT JOIN Account a ON c.AccountId = a.Id
             WHERE c.SalesRepresentativeId = ? ${companyFilterSql} ${contractDates.sql}
-            GROUP BY c.AccountId, a.Name
+            GROUP BY c.AccountId, a.Title, a.Name
             ORDER BY contractAmount DESC
             ${db.driver === 'mssql' ? 'OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY' : 'LIMIT 10'}
-                `, [personId, ...companyPrm, ...contractDates.prm]);
+        `, [personId, ...companyPrm, ...contractDates.prm]);
 
         const statusCase = `
             CASE c.ContractStatus

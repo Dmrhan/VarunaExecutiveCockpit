@@ -172,12 +172,20 @@ export function OpportunitiesDashboard() {
                     endStr = formatLocalDate(prevSunday);
                     break;
                 }
-                case 'this_month': {
+                case 'this_month':
+                case 'mtd': {
                     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
                     startStr = formatLocalDate(firstDayOfMonth);
                     break;
                 }
-                case 'this_year': {
+                case 'this_quarter': {
+                    const quarter = Math.floor(now.getMonth() / 3);
+                    const firstDayOfQuarter = new Date(now.getFullYear(), quarter * 3, 1);
+                    startStr = formatLocalDate(firstDayOfQuarter);
+                    break;
+                }
+                case 'this_year':
+                case 'ytd': {
                     const firstDayOfYear = new Date(now.getFullYear(), 0, 1);
                     startStr = formatLocalDate(firstDayOfYear);
                     break;
@@ -331,10 +339,18 @@ export function OpportunitiesDashboard() {
                     break;
                 }
                 case 'this_month':
+                case 'mtd':
                     start.setDate(1);
                     startDate = formatLocalDate(start);
                     break;
+                case 'this_quarter': {
+                    const quarter = Math.floor(now.getMonth() / 3);
+                    start.setMonth(quarter * 3, 1);
+                    startDate = formatLocalDate(start);
+                    break;
+                }
                 case 'this_year':
+                case 'ytd':
                     start.setMonth(0, 1);
                     startDate = formatLocalDate(start);
                     break;

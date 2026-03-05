@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
 import type { Deal, Activity, User, DashboardMetrics, DealStage, Quote, Order, Contract } from '../types/crm';
-import { generateMockData, generateActivitiesForDeals, generateAuxiliaryDataForDeals, USERS } from '../data/mockData';
 import { OpportunityService } from '../services/OpportunityService';
 import { UserService } from '../services/UserService';
 import { ContractService, QuoteService, OrderService } from '../services/ListingServices';
+import { ActivityService } from '../services/ActivityService';
 
 interface DataContextType {
     deals: Deal[];
@@ -25,19 +25,20 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [quotes, setQuotes] = useState<Quote[]>([]);
     const [orders, setOrders] = useState<Order[]>([]);
     const [contracts, setContracts] = useState<Contract[]>([]);
-    const [users, setUsers] = useState<User[]>(USERS);
+    const [users, setUsers] = useState<User[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const refreshData = async () => {
         setIsLoading(true);
         try {
             // Fetch persistent data from Services
-            const [fetchedDeals, fetchedContracts, fetchedQuotes, fetchedOrders, fetchedUsers] = await Promise.all([
+            const [fetchedDeals, fetchedContracts, fetchedQuotes, fetchedOrders, fetchedUsers, fetchedActivities] = await Promise.all([
                 OpportunityService.getAll(),
                 ContractService.getAll(),
                 QuoteService.getAll(),
                 OrderService.getAll(),
-                UserService.getAll()
+                UserService.getAll(),
+                ActivityService.getAll()
             ]);
 
             setDeals(fetchedDeals);
@@ -45,20 +46,17 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setQuotes(fetchedQuotes);
             setOrders(fetchedOrders);
             setUsers(fetchedUsers);
-
-            // Generate activities linked to fetched deals
-            const newActivities = generateActivitiesForDeals(fetchedDeals);
-            setActivities(newActivities);
+            setActivities(fetchedActivities);
 
         } catch (error) {
-            console.error("Failed to fetch data, falling back to mock data", error);
-            const mock = generateMockData(850);
-            const auxData = generateAuxiliaryDataForDeals(mock.deals);
-            setDeals(mock.deals);
-            setActivities(mock.activities);
-            setQuotes(auxData.quotes);
-            setOrders(auxData.orders);
-            setContracts(mock.contracts);
+            console.error("Failed to fetch data", error);
+            // Fallback to empty instead of mock strings/items
+            setDeals([]);
+            setActivities([]);
+            setQuotes([]);
+            setOrders([]);
+            setContracts([]);
+            setUsers([]);
         } finally {
             setIsLoading(false);
         }
@@ -96,7 +94,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             ? Math.round((dealsWithRecentActivity.length / openDeals.length) * 100)
             : 0;
 
-        const topPerformers = USERS.map(u => ({ userId: u.id, score: Math.round(Math.random() * 100) })).sort((a, b) => b.score - a.score);
+        const topPerformers = users.map(u => ({ userId: u.id, score: 0 })).slice(0, 5);
 
         return {
             totalPipelineValue,

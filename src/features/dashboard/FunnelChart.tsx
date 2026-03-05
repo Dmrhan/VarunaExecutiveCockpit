@@ -13,10 +13,10 @@ import 'jspdf-autotable';
 import type { Deal } from '../../types/crm';
 
 const STAGE_CONFIG: { stage: DealStage | string; matchStages: string[]; color: string; probability: number }[] = [
-    { stage: 'Lead', matchStages: ['Lead', 'Aday'], color: '#4f46e5', probability: 10 },   // indigo-600
-    { stage: 'Qualified', matchStages: ['Qualified', 'Nitelikli'], color: '#2563eb', probability: 30 },   // blue-600
+    { stage: 'Lead', matchStages: ['Lead', 'Aday', 'İlk Temas'], color: '#4f46e5', probability: 10 },   // indigo-600
+    { stage: 'Qualified', matchStages: ['Qualified', 'Nitelikli', 'Demo'], color: '#2563eb', probability: 30 },   // blue-600
     { stage: 'Proposal', matchStages: ['Proposal', 'Teklif'], color: '#0284c7', probability: 60 },   // sky-600
-    { stage: 'Negotiation', matchStages: ['Negotiation', 'Müzakere'], color: '#0891b2', probability: 80 },   // cyan-600
+    { stage: 'Negotiation', matchStages: ['Negotiation', 'Müzakere', 'Sözleşme Bekleniyor'], color: '#0891b2', probability: 80 },   // cyan-600
     { stage: 'Order', matchStages: ['Order', 'Kazanıldı', 'Onaylandı'], color: '#0d9488', probability: 100 },   // teal-600
 ];
 

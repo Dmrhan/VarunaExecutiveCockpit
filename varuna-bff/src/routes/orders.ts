@@ -39,7 +39,7 @@ const STOCK_ID_TO_NAME: Record<string, string> = {
 router.get('/', (req: Request, res: Response) => {
     const db = getDb();
 
-    const top = parseInt(req.query.$top as string) || 500;
+    const top = parseInt(req.query.$top as string) || 5000;
     const skip = parseInt(req.query.$skip as string) || 0;
 
     // Subqueries: SQLite uses GROUP_CONCAT and LIMIT, MSSQL uses STRING_AGG and TOP

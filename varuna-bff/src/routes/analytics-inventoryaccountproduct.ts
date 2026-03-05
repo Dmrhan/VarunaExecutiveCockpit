@@ -20,7 +20,17 @@ router.get('/', (_req: Request, res: Response) => {
         const installedBaseByProduct = db.query(`SELECT StockId, COUNT(*) as Count FROM InventoryAccountProduct WHERE ${activeCond} GROUP BY StockId ORDER BY Count DESC`);
 
         // 3. Installed Base by Customer
-        const installedBaseByCustomer = db.query(`SELECT AccountId, COUNT(*) as Count FROM InventoryAccountProduct WHERE ${activeCond} GROUP BY AccountId ORDER BY Count DESC`);
+        const installedBaseByCustomer = db.query(`
+            SELECT 
+                i.AccountId, 
+                COALESCE(a.Title, a.Name, i.AccountId) as AccountName,
+                COUNT(*) as Count 
+            FROM InventoryAccountProduct i
+            LEFT JOIN Account a ON i.AccountId = a.Id
+            WHERE i.${activeCond} 
+            GROUP BY i.AccountId, a.Title, a.Name 
+            ORDER BY Count DESC
+        `);
 
         // 4. Active PF Coverage Rate
         let pfCoverageRate = 0;
@@ -38,17 +48,23 @@ router.get('/', (_req: Request, res: Response) => {
         // 7. Renewal Candidates (FinishDate <= CURRENT_DATE + 90 days)
         const dateLimit = db.driver === 'mssql' ? 'DATEADD(day, 90, GETUTCDATE())' : "date('now', '+90 days')";
         const renewalCandidates = db.query(`
-            SELECT Id, AccountId, StockId, FinishDate, TotalPackagePrice_Amount, TotalPackagePrice_Currency 
-            FROM InventoryAccountProduct 
-            WHERE ${activeCond} AND FinishDate IS NOT NULL AND FinishDate <= ${dateLimit} 
-            ORDER BY FinishDate ASC
+            SELECT 
+                i.Id, i.AccountId, COALESCE(a.Title, a.Name, i.AccountId) as AccountName,
+                i.StockId, i.FinishDate, i.TotalPackagePrice_Amount, i.TotalPackagePrice_Currency 
+            FROM InventoryAccountProduct i
+            LEFT JOIN Account a ON i.AccountId = a.Id
+            WHERE i.${activeCond} AND i.FinishDate IS NOT NULL AND i.FinishDate <= ${dateLimit} 
+            ORDER BY i.FinishDate ASC
         `);
 
         // 8. Out of Warehouse Risk
         const outOfWarehouseRisk = db.query(`
-            SELECT Id, AccountId, StockId, InvPurchaseDate 
-            FROM InventoryAccountProduct 
-            WHERE ${activeCond} AND InvOutOfWarehouseSerial = 1
+            SELECT 
+                i.Id, i.AccountId, COALESCE(a.Title, a.Name, i.AccountId) as AccountName,
+                i.StockId, i.InvPurchaseDate 
+            FROM InventoryAccountProduct i
+            LEFT JOIN Account a ON i.AccountId = a.Id
+            WHERE i.${activeCond} AND i.InvOutOfWarehouseSerial = 1
         `);
 
         // 9. Installed by Domain

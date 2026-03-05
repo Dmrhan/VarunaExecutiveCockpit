@@ -11,7 +11,7 @@ router.get('/', (req: Request, res: Response) => {
     const skip = parseInt(req.query.$skip as string) || 0;
 
     let querySql = `
-        SELECT c.*, a.Name as AccountName, p.PersonNameSurname as OwnerName,
+        SELECT c.*, a.Name as AccountName, a.Title as AccountTitle, p.PersonNameSurname as OwnerName,
                ${db.driver === 'mssql'
             ? 'DATEDIFF(day, GETUTCDATE(), c.FinishDate)'
             : 'CAST(julianday(c.FinishDate) - julianday(\'now\') AS INTEGER)'} as DaysToRenewal
@@ -43,7 +43,7 @@ router.get('/', (req: Request, res: Response) => {
     const mapped = rows.map(row => ({
         id: row.Id,
         title: row.ContractName || row.ContractNo || 'Sözleşme',
-        customerName: row.AccountName || row.AccountId || '',
+        customerName: row.AccountTitle || row.AccountName || row.AccountId || '',
         salesOwnerId: row.SalesRepresentativeId,
         ownerName: row.OwnerName || row.SalesRepresentativeId || 'Unknown',
         productGroup: row.ProductId || 'EnRoute',
@@ -73,7 +73,7 @@ router.get('/:id', (req: Request, res: Response) => {
     try {
         const db = getDb();
         const contractSql = `
-            SELECT c.*, a.Name as AccountName, p.PersonNameSurname as OwnerName,
+            SELECT c.*, a.Name as AccountName, a.Title as AccountTitle, p.PersonNameSurname as OwnerName,
                    ${db.driver === 'mssql'
                 ? 'DATEDIFF(day, GETUTCDATE(), c.FinishDate)'
                 : 'CAST(julianday(c.FinishDate) - julianday(\'now\') AS INTEGER)'} as DaysToRenewal
@@ -104,7 +104,7 @@ router.get('/:id', (req: Request, res: Response) => {
         const mapped = {
             id: contract.Id,
             title: contract.ContractName || contract.ContractNo || 'Sözleşme',
-            customerName: contract.AccountName || contract.AccountId || '',
+            customerName: contract.AccountTitle || contract.AccountName || contract.AccountId || '',
             salesOwnerId: contract.SalesRepresentativeId,
             ownerName: contract.OwnerName || contract.SalesRepresentativeId || 'Unknown',
             productGroup: contract.ProductId || 'EnRoute',

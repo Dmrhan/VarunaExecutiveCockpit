@@ -23,7 +23,16 @@ router.get('/', (_req: Request, res: Response) => {
         const revenueByInvoiceMonth = db.query(`SELECT ${invMonthExpr} as InvoiceMonth, SUM(TotalNetAmountLocalCurrency_Amount) as Revenue FROM CrmOrder WHERE ${activeOrderCond} AND InvoiceDate IS NOT NULL GROUP BY ${invMonthExpr} ORDER BY InvoiceMonth ASC`);
 
         // 4. Revenue by Account
-        const revenueByAccount = db.query(`SELECT AccountId, SUM(TotalNetAmountLocalCurrency_Amount) as Revenue FROM CrmOrder WHERE ${activeOrderCond} AND AccountId IS NOT NULL GROUP BY AccountId`);
+        const revenueByAccount = db.query(`
+            SELECT 
+                o.AccountId, 
+                COALESCE(a.Title, a.Name, o.AccountId) as AccountName, 
+                SUM(o.TotalNetAmountLocalCurrency_Amount) as Revenue 
+            FROM CrmOrder o
+            LEFT JOIN Account a ON o.AccountId = a.Id
+            WHERE o.${activeOrderCond} AND o.AccountId IS NOT NULL 
+            GROUP BY o.AccountId, a.Title, a.Name
+        `);
 
         // 5. Revenue by Sales Owner
         const revenueByOwner = db.query(`SELECT ProposalOwnerId, SUM(TotalNetAmountLocalCurrency_Amount) as Revenue FROM CrmOrder WHERE ${activeOrderCond} AND ProposalOwnerId IS NOT NULL GROUP BY ProposalOwnerId`);

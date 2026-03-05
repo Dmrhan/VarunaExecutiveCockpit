@@ -47,6 +47,7 @@ router.get('/', (req: Request, res: Response) => {
         SELECT
             q.*,
             a.Name              AS AccountName,
+            a.Title             AS AccountTitle,
             p.PersonNameSurname AS OwnerName,
             o.ProductGroupId    AS OppProductGroupId,
             pg.Name             AS ProductGroupName,
@@ -80,7 +81,7 @@ router.get('/', (req: Request, res: Response) => {
             id: row.Id,
             number: row.Number || '',
             dealId: row.OpportunityId || '',
-            customerName: row.AccountName || row.AccountId || 'Bilinmiyor',
+            customerName: row.AccountTitle || row.AccountName || row.AccountId || 'Bilinmiyor',
             salesRepId: row.ProposalOwnerId || '',
             salesRepName: row.OwnerName || row.ProposalOwnerId || 'Unknown',
             product: productName,

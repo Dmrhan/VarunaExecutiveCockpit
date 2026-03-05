@@ -90,7 +90,7 @@ router.get('/', (req: Request, res: Response) => {
         title: row.Name || '',
         customer_name: row.AccountTitle || row.AccountName || row.AccountId || 'Bilinmiyor',
         customerName: row.AccountTitle || row.AccountName || row.AccountId || 'Bilinmiyor',
-        product: row.ProductGroupName || row.ProductGroupId || 'EnRoute',
+        product: row.ProductGroupName || row.ProductGroupId || 'Unknown',
         productGroupId: row.ProductGroupId || '',
         value: row.Amount_Value || 0,
         stage: row.OpportunityStageNameTr || row.OpportunityStageName?.toString() || 'Lead',

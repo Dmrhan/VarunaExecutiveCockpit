@@ -12,12 +12,12 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import type { Deal } from '../../types/crm';
 
-const STAGE_CONFIG: { stage: DealStage; color: string; probability: number }[] = [
-    { stage: 'Lead', color: '#4f46e5', probability: 10 },   // indigo-600
-    { stage: 'Qualified', color: '#2563eb', probability: 30 },   // blue-600
-    { stage: 'Proposal', color: '#0284c7', probability: 60 },   // sky-600
-    { stage: 'Negotiation', color: '#0891b2', probability: 80 },   // cyan-600
-    { stage: 'Order', color: '#0d9488', probability: 100 },   // teal-600
+const STAGE_CONFIG: { stage: DealStage | string; matchStages: string[]; color: string; probability: number }[] = [
+    { stage: 'Lead', matchStages: ['Lead', 'Aday'], color: '#4f46e5', probability: 10 },   // indigo-600
+    { stage: 'Qualified', matchStages: ['Qualified', 'Nitelikli'], color: '#2563eb', probability: 30 },   // blue-600
+    { stage: 'Proposal', matchStages: ['Proposal', 'Teklif'], color: '#0284c7', probability: 60 },   // sky-600
+    { stage: 'Negotiation', matchStages: ['Negotiation', 'Müzakere'], color: '#0891b2', probability: 80 },   // cyan-600
+    { stage: 'Order', matchStages: ['Order', 'Kazanıldı', 'Onaylandı'], color: '#0d9488', probability: 100 },   // teal-600
 ];
 
 const formatCurrency = (value: number) => {
@@ -34,7 +34,7 @@ export function FunnelChart({ deals: propDeals }: FunnelChartProps) {
     const { t } = useTranslation();
     const { deals: contextDeals, users } = useData();
     const deals = propDeals || contextDeals;
-    const [selectedStage, setSelectedStage] = useState<DealStage | null>(null);
+    const [selectedStage, setSelectedStage] = useState<DealStage | string | null>(null);
     const [isFullScreen, setIsFullScreen] = useState(false);
 
     // Filter & Sort State
@@ -74,7 +74,7 @@ export function FunnelChart({ deals: propDeals }: FunnelChartProps) {
 
     const funnelData = useMemo(() => {
         return STAGE_CONFIG.map((config, index) => {
-            const stageDeals = deals.filter(d => d.stage === config.stage);
+            const stageDeals = deals.filter(d => config.matchStages.includes(d.stage));
             const totalValue = stageDeals.reduce((sum, d) => sum + d.value, 0);
             const widthScale = 100 - (index * 12);
 
@@ -88,14 +88,17 @@ export function FunnelChart({ deals: propDeals }: FunnelChartProps) {
         });
     }, [deals]);
 
-    const handleStageClick = (stage: DealStage) => {
+    const handleStageClick = (stage: DealStage | string) => {
         setSelectedStage(stage);
         setIsFullScreen(false);
     };
 
     const displayedDeals = useMemo(() => {
         if (!selectedStage) return [];
-        let result = deals.filter(d => d.stage === selectedStage);
+        let result = deals.filter(d => {
+            const config = STAGE_CONFIG.find(c => c.stage === selectedStage);
+            return config ? config.matchStages.includes(d.stage) : false;
+        });
 
         // 1. Filter
         if (columnFilters.topic) {

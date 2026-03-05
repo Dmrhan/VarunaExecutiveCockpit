@@ -88,8 +88,8 @@ router.get('/', (req: Request, res: Response) => {
             || PRODUCT_GROUP_NAMES[productGroupId]
             || 'EnRoute';
 
-        // Amount: VAT-included total
-        const amount = row.TotalAmountWithTaxLocalCurrency_Amount || row.TotalNetAmountLocalCurrency_Amount || 0;
+        // Amount
+        const amount = row.Total.Amount || 0;
 
         // Customer name: from the Account join on AccountId
         const customerName = row.AccountName || row.AccountId || 'Bilinmiyor';

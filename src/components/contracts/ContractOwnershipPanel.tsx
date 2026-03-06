@@ -13,7 +13,7 @@ export const ContractOwnershipPanel = () => {
     const ownershipData = useMemo(() => {
         const ownerMap: Record<string, { count: number, riskValue: number, highRiskCount: number, name: string }> = {};
 
-        contracts.filter(c => c.status === 'Active').forEach((c: Contract) => {
+        contracts.filter(c => c.status === 'Signed').forEach((c: Contract) => {
             if (!ownerMap[c.ownerName]) {
                 ownerMap[c.ownerName] = { count: 0, riskValue: 0, highRiskCount: 0, name: c.ownerName };
             }

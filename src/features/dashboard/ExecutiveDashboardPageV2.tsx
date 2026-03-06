@@ -605,7 +605,7 @@ export function ExecutiveDashboardPageV2() {
         }
         if (drilldownType === 'quotes') {
             return filteredData.quotes
-                .filter((q: any) => !['Draft', 'Review'].includes(q.status))
+                .filter((q: any) => !['1', '3'].includes(q.status))
                 .map((q: any) => ({
                     id: q.id,
                     title: q.title ?? `Teklif #${q.id}`,
@@ -622,7 +622,7 @@ export function ExecutiveDashboardPageV2() {
         }
         if (drilldownType === 'quotes_accepted') {
             return filteredData.quotes
-                .filter((q: any) => ['Accepted', 'Approved'].includes(q.status))
+                .filter((q: any) => ['7', '4'].includes(q.status))
                 .map((q: any) => ({
                     id: q.id,
                     title: q.title ?? `Teklif #${q.id}`,

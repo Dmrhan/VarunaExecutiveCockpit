@@ -125,18 +125,26 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
 
     // Helper for status badge (re-used from original code)
     const StatusBadge = ({ status }: { status: ContractStatus }) => {
-        const statusColors = {
-            'Active': 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
-            'Negotiation': 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
-            'Draft': 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300',
+        const statusColors: Record<string, string> = {
+            'InPreparation': 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300',
+            'SalesWaitingForInfo': 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+            'PriceNegotiation': 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+            'TextNegotiation': 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+            'AwaitingLegalApproval': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+            'AwaitingSalesApproval': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+            'ApprovedByLegalAndSales': 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400',
+            'SentToCustomer': 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+            'CustomerFeedback': 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+            'AwaitingCustomerSignature': 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400',
+            'AwaitingUniveraSignature': 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400',
+            'Signed': 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
+            'OnHold': 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+            'Cancelled': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
             'Expired': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-            'Archived': 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-            'Terminated': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-            'Renewed': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
         };
         return (
-            <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium", statusColors[status])}>
-                {t(`status.${status}`)}
+            <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium", statusColors[status] || statusColors['InPreparation'])}>
+                {t(`status.${status}`, status)}
             </span>
         );
     };
@@ -340,7 +348,7 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
                                 <div key={item.accountId} className="px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
                                     <div className="flex flex-col">
                                         <span className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate max-w-[150px]">{item.accountName}</span>
-                                        <span className="text-[10px] text-slate-400">{item.count} {t('navigation.contracts')} / {item.activeCount} {t('status.Active')}</span>
+                                        <span className="text-[10px] text-slate-400">{item.count} {t('navigation.contracts')} / {item.activeCount} {t('status.Signed', 'Signed')}</span>
                                     </div>
                                     <span className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400">
                                         {formatCurrency(item.amount)}
@@ -492,9 +500,9 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
                                     onChange={(e) => setStatusFilter(e.target.value as any)}
                                 >
                                     <option value="All">{t('contracts.list.filters.allStatuses')}</option>
-                                    <option value="Active">{t('status.Active')}</option>
-                                    <option value="Negotiation">{t('status.Negotiation')}</option>
-                                    <option value="Draft">{t('status.Draft')}</option>
+                                    <option value="Signed">{t('status.Signed', 'Signed')}</option>
+                                    <option value="PriceNegotiation">{t('status.PriceNegotiation', 'Price Negotiation')}</option>
+                                    <option value="InPreparation">{t('status.InPreparation', 'In Preparation')}</option>
                                 </select>
                             </div>
                         </div>
@@ -728,9 +736,9 @@ export const ContractsDashboard = () => {
                             </div>
                             <div className="text-xs text-slate-500 truncate mb-2">{contract.title}</div>
                             <div className="flex items-center justify-between">
-                                <span className={`text-[10px] px-1.5 py-0.5 rounded border ${contract.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-slate-100 text-slate-600 border-slate-200'
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded border ${contract.status === 'Signed' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-slate-100 text-slate-600 border-slate-200'
                                     }`}>
-                                    {t(`status.${contract.status}`)}
+                                    {t(`status.${contract.status}`, contract.status)}
                                 </span>
                                 <span className="text-xs font-mono font-medium text-slate-600 dark:text-slate-400">
                                     {formatCurrency(contract.totalValue, contract.currency)}
@@ -812,18 +820,27 @@ const StatCard = ({ label, value, colorClass, subtext }: { label: string; value:
 
 const StatusBadge = ({ status }: { status: ContractStatus }) => {
     const { t } = useTranslation();
-    const styles = {
-        Active: "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800",
-        Negotiation: "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 border-blue-100 dark:border-blue-800",
-        Draft: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700",
-        Archived: "bg-gray-50 text-gray-600 dark:bg-gray-800 dark:text-gray-500 border-gray-200 dark:border-gray-700",
-        Terminated: "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 border-red-100 dark:border-red-800",
-        Expired: "bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400 border-orange-100 dark:border-orange-800"
+    const styles: Record<string, string> = {
+        'InPreparation': 'bg-slate-50 text-slate-700 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700',
+        'SalesWaitingForInfo': 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400 border-amber-100 dark:border-amber-800',
+        'PriceNegotiation': 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 border-blue-100 dark:border-blue-800',
+        'TextNegotiation': 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 border-blue-100 dark:border-blue-800',
+        'AwaitingLegalApproval': 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 border-blue-100 dark:border-blue-800',
+        'AwaitingSalesApproval': 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 border-blue-100 dark:border-blue-800',
+        'ApprovedByLegalAndSales': 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400 border-indigo-100 dark:border-indigo-800',
+        'SentToCustomer': 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400 border-purple-100 dark:border-purple-800',
+        'CustomerFeedback': 'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400 border-orange-100 dark:border-orange-800',
+        'AwaitingCustomerSignature': 'bg-pink-50 text-pink-700 dark:bg-pink-900/20 dark:text-pink-400 border-pink-100 dark:border-pink-800',
+        'AwaitingUniveraSignature': 'bg-pink-50 text-pink-700 dark:bg-pink-900/20 dark:text-pink-400 border-pink-100 dark:border-pink-800',
+        'Signed': 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800',
+        'OnHold': 'bg-gray-50 text-gray-600 dark:bg-gray-800 dark:text-gray-500 border-gray-200 dark:border-gray-700',
+        'Cancelled': 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 border-red-100 dark:border-red-800',
+        'Expired': 'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400 border-orange-100 dark:border-orange-800'
     };
 
     return (
-        <span className={`px-2.5 py-0.5 rounded border text-xs font-medium ${styles[status] || styles.Draft}`}>
-            {t(`status.${status}`)}
+        <span className={`px-2.5 py-0.5 rounded border text-xs font-medium ${styles[status] || styles['InPreparation']}`}>
+            {t(`status.${status}`, status)}
         </span>
     );
 };

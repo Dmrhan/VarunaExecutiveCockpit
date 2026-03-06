@@ -133,7 +133,22 @@ export interface DashboardMetrics {
 }
 
 export type ContractType = 'Initialization' | 'Renewal' | 'Maintenance' | 'Rental' | 'License';
-export type ContractStatus = 'Draft' | 'Negotiation' | 'Active' | 'Archived' | 'Terminated';
+export type ContractStatus =
+    | 'InPreparation'
+    | 'SalesWaitingForInfo'
+    | 'PriceNegotiation'
+    | 'TextNegotiation'
+    | 'AwaitingLegalApproval'
+    | 'AwaitingSalesApproval'
+    | 'ApprovedByLegalAndSales'
+    | 'SentToCustomer'
+    | 'CustomerFeedback'
+    | 'AwaitingCustomerSignature'
+    | 'AwaitingUniveraSignature'
+    | 'Signed'
+    | 'OnHold'
+    | 'Cancelled'
+    | 'Expired';
 export type BillingStatus = 'Invoiced' | 'Pending' | 'Cancelled';
 export type ContractRiskLevel = 'Low' | 'Medium' | 'High';
 

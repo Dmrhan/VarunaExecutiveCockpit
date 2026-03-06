@@ -9,7 +9,7 @@ import {
     LayoutDashboard, FileText, ShoppingCart,
     CreditCard, Clock, Activity, AlertCircle,
     ChevronRight, TrendingUp, TrendingDown, X, Search, ArrowRight,
-    Building2, Calendar, Target, Brain, Sparkles, Maximize2, Minimize2, Package
+    Building2, Calendar, Target, Brain, Sparkles, Maximize2, Minimize2, Package, Users
 } from 'lucide-react';
 
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,6 +18,7 @@ import { GamifiedLeaderboard } from './GamifiedLeaderboard';
 import { ProductSalesDistribution } from './ProductSalesDistribution';
 import { CustomerPotentialChart } from './CustomerPotentialChart';
 import { AnalyticsService } from '../../services/AnalyticsService';
+import { TeamService } from '../../services/TeamService';
 import { useQuery } from '@tanstack/react-query';
 
 // --- Types & Mock Data Generators ---
@@ -449,12 +450,20 @@ export function ExecutiveDashboardPageV2() {
     const [selectedOwner, setSelectedOwner] = useState<string[]>(['all']);
     const [selectedProduct, setSelectedProduct] = useState<string[]>(['all']);
     const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null);
+    const [selectedTeam, setSelectedTeam] = useState<string[]>(['all']);
+
+    // Fetch Teams for Filter
+    const { data: teamsData } = useQuery({
+        queryKey: ['teams'],
+        queryFn: TeamService.getAll
+    });
 
     // Fetch Backend KPIs
     const { data: bffKpis, isLoading: isKpisLoading } = useQuery({
-        queryKey: ['analytics-kpis', dateFilter, selectedOwner, selectedCustomer, customRange],
+        queryKey: ['analytics-kpis', dateFilter, selectedOwner, selectedCustomer, customRange, selectedTeam],
         queryFn: () => AnalyticsService.getKpis({
             ownerId: selectedOwner.includes('all') ? undefined : selectedOwner[0],
+            teamId: selectedTeam.includes('all') ? undefined : selectedTeam[0],
             from: dateFilter === 'custom' && customRange.start ? customRange.start.toISOString().split('T')[0] :
                 dateFilter === 'ytd' ? new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0] :
                     dateFilter === 'this_month' ? new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0] :
@@ -840,12 +849,21 @@ export function ExecutiveDashboardPageV2() {
 
                     <div className="flex flex-col md:flex-row gap-3 items-start md:items-center flex-wrap">
 
+                        {/* Team Filter */}
+                        <MultiSelect
+                            options={(teamsData || []).map(t => ({ label: t.Definition, value: t.Id }))}
+                            selectedValues={selectedTeam}
+                            onChange={setSelectedTeam}
+                            icon={<Users size={16} className="text-slate-400" />}
+                            allLabel={t('dashboardV2.filters.allTeams', { defaultValue: 'Tüm Takımlar' })}
+                        />
+
                         {/* Department / Team Filter */}
                         <MultiSelect
                             options={departments.map(d => ({ label: d, value: d }))}
                             selectedValues={selectedDepartment}
                             onChange={setSelectedDepartment}
-                            allLabel={t('dashboardV2.filters.allTeams')}
+                            allLabel={t('dashboardV2.filters.allDepartments', { defaultValue: 'Tüm Departmanlar' })}
                         />
 
                         {/* Owner / Person Filter */}

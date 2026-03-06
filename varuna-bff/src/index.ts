@@ -40,6 +40,7 @@ import ordersRouter from './routes/orders';
 import usersRouter from './routes/users';
 import activitiesRouter from './routes/activities';
 import productGroupsRouter from './routes/product-groups';
+import teamsRouter from './routes/teams';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -88,6 +89,7 @@ app.use('/api/orders', ordersRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/activities', activitiesRouter);
 app.use('/api/product-groups', productGroupsRouter);
+app.use('/api/teams', teamsRouter);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {

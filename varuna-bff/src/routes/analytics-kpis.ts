@@ -51,6 +51,14 @@ router.get('/', (req: Request, res: Response) => {
             ctrWhere.push('SalesRepresentativeId = @ownerId');
             params.ownerId = req.query.ownerId;
         }
+        if (req.query.teamId) {
+            whereClauses.push('OwnerId IN (SELECT PersonId FROM TeamMember WHERE TeamId = @teamId)');
+            qWhere.push('ProposalOwnerId IN (SELECT PersonId FROM TeamMember WHERE TeamId = @teamId)');
+            ordWhere.push('ProposalOwnerId IN (SELECT PersonId FROM TeamMember WHERE TeamId = @teamId)');
+            ctrWhere.push('SalesRepresentativeId IN (SELECT PersonId FROM TeamMember WHERE TeamId = @teamId)');
+            params.teamId = req.query.teamId;
+        }
+
         if (req.query.accountId) {
             whereClauses.push('AccountId = @accountId');
             qWhere.push('AccountId = @accountId');

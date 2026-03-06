@@ -7,7 +7,13 @@ const router = Router();
 router.get('/', (req: Request, res: Response) => {
     try {
         const db = getDb();
-        const teams = db.query('SELECT * FROM TeamDefinition WHERE Status = 1 ORDER BY Definition ASC');
+        const teams = db.query(`
+            SELECT DISTINCT td.* 
+            FROM TeamDefinition td
+            JOIN TeamMember tm ON td.Id = tm.TeamId
+            WHERE td.Status = 1 
+            ORDER BY td.Definition ASC
+        `);
         res.json({ value: teams });
     } catch (error) {
         console.error('Failed to fetch teams', error);

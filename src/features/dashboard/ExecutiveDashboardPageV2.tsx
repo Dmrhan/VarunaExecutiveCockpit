@@ -589,7 +589,7 @@ export function ExecutiveDashboardPageV2() {
 
         if (drilldownType === 'deals') {
             return filteredData.deals
-                .filter(d => !['Lost', 'Kaybedildi'].includes(d.stage))
+                .filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi', 'Order', 'Onaylandı'].includes(d.stage))
                 .map(d => ({
                     id: d.id,
                     title: d.title,
@@ -679,7 +679,7 @@ export function ExecutiveDashboardPageV2() {
         {
             id: 'active_opps',
             title: t('dashboardV2.metrics.activeOpps'),
-            value: filteredData.deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi'].includes(d.stage)).length,
+            value: filteredData.deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi', 'Order', 'Onaylandı'].includes(d.stage)).length,
             subValue: `+12% ${t('dashboardV2.metrics.vsLastMonth')}`,
             trend: 'up',
             trendValue: '+12%',
@@ -742,7 +742,7 @@ export function ExecutiveDashboardPageV2() {
 
         switch (metricKey) {
             case 'active_opps':
-                return deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi'].includes(d.stage)).map(d => ({
+                return deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi', 'Order', 'Onaylandı'].includes(d.stage)).map(d => ({
                     id: d.id,
                     title: d.title,
                     subtitle: d.customerName,
@@ -896,8 +896,8 @@ export function ExecutiveDashboardPageV2() {
                     <div className="flex flex-row w-full min-w-[1000px] gap-3">
                         <PipelineStep
                             title={t('dashboardV2.pipeline.totalOpportunities')}
-                            count={filteredData.deals.filter(d => !['Lost', 'Kaybedildi'].includes(d.stage)).length}
-                            value={`${(filteredData.deals.filter(d => !['Lost', 'Kaybedildi'].includes(d.stage)).reduce((s, d) => s + d.value, 0) / 1000000).toFixed(1)}M ₺`}
+                            count={filteredData.deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi', 'Order', 'Onaylandı'].includes(d.stage)).length}
+                            value={`${(filteredData.deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi', 'Order', 'Onaylandı'].includes(d.stage)).reduce((s, d) => s + d.value, 0) / 1000000).toFixed(1)}M ₺`}
                             index={0} total={6}
                             icon={<Target size={16} strokeWidth={2.5} />}
                             iconColorClass="text-amber-500"
@@ -919,7 +919,7 @@ export function ExecutiveDashboardPageV2() {
                         <PipelineStep
                             title={t('dashboardV2.pipeline.conversionRate')}
                             count=""
-                            value={`%${((filteredData.quotes.reduce((s, q) => s + q.amount, 0) / (filteredData.deals.filter(d => !['Lost', 'Kaybedildi'].includes(d.stage)).reduce((s, d) => s + d.value, 0) || 1)) * 100).toFixed(1)}`}
+                            value={`%${((filteredData.quotes.reduce((s, q) => s + q.amount, 0) / (filteredData.deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi', 'Order', 'Onaylandı'].includes(d.stage)).reduce((s, d) => s + d.value, 0) || 1)) * 100).toFixed(1)}`}
                             index={2} total={6}
                             icon={<Activity size={16} strokeWidth={2.5} />}
                             iconColorClass="text-emerald-500"
@@ -928,7 +928,7 @@ export function ExecutiveDashboardPageV2() {
                             subMetric={
                                 <div className="mt-1 flex flex-col gap-0.5 w-fit">
                                     <div className="text-[11px] font-medium text-slate-400 mt-1">
-                                        {t('dashboardV2.pipeline.countConversion')}: <span className="text-slate-500 font-bold">%{(filteredData.quotes.length / (filteredData.deals.filter(d => !['Lost', 'Kaybedildi'].includes(d.stage)).length || 1) * 100).toFixed(1)}</span>
+                                        {t('dashboardV2.pipeline.countConversion')}: <span className="text-slate-500 font-bold">%{(filteredData.quotes.length / (filteredData.deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi', 'Order', 'Onaylandı'].includes(d.stage)).length || 1) * 100).toFixed(1)}</span>
                                     </div>
                                 </div>
                             }

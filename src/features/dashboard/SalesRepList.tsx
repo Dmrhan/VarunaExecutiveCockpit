@@ -7,42 +7,71 @@ import type { Deal, User } from '../../types/crm';
 import { formatCurrency } from '../../utils/formatters';
 
 interface SalesRepListProps {
-    deals: Deal[];
+    dateRange: { start: string | null; end: string | null };
     users: User[];
 }
 
-export const SalesRepList = ({ deals, users }: SalesRepListProps) => {
+export const SalesRepList = ({ dateRange, users }: SalesRepListProps) => {
     const { t } = useTranslation();
+    const [performanceData, setPerformanceData] = React.useState<any[]>([]);
+    const [isLoading, setIsLoading] = React.useState(false);
+
+    React.useEffect(() => {
+        const fetchPerformance = async () => {
+            setIsLoading(true);
+            try {
+                const params = new URLSearchParams();
+                if (dateRange.start) params.append('from', dateRange.start + ' 00:00:00');
+                if (dateRange.end) params.append('to', dateRange.end + ' 23:59:59');
+
+                const baseUrl = (window as any)['__RUNTIME_CONFIG__']?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+                const response = await fetch(`${baseUrl}/analytics/sales-performance/dashboard?${params.toString()}`);
+                if (!response.ok) throw new Error('Failed to fetch sales performance');
+
+                const data = await response.json();
+                setPerformanceData(data.value || []);
+            } catch (error) {
+                console.error('Error fetching sales performance:', error);
+                setPerformanceData([]);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchPerformance();
+    }, [dateRange.start, dateRange.end]);
 
     const repPerformance = useMemo(() => {
-        const stats: Record<string, { userId: string; name: string; avatar: string; totalRevenue: number; wonDeals: number; totalDeals: number }> = {};
+        return performanceData.map((rep: any) => {
+            const user = users.find(u => u.id === rep.OwnerId);
+            return {
+                userId: rep.OwnerId,
+                name: rep.OwnerName || user?.name || rep.OwnerId || 'Unknown',
+                avatar: user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(rep.OwnerName || user?.name || rep.OwnerId || 'Unknown')}&background=random`,
+                totalRevenue: Number(rep.TotalRevenue) || 0,
+                wonDeals: Number(rep.WonDealsCount) || 0,
+                totalDeals: Number(rep.WonDealsCount) || 0 // Currently backend only returns won deals
+            };
+        }).sort((a, b) => b.totalRevenue - a.totalRevenue);
+    }, [performanceData, users]);
 
-        deals.forEach(deal => {
-            if (!stats[deal.ownerId]) {
-                const user = users.find(u => u.id === deal.ownerId);
-                stats[deal.ownerId] = {
-                    userId: deal.ownerId,
-                    name: deal.ownerName || user?.name || deal.ownerId,
-                    avatar: user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(deal.ownerName || user?.name || deal.ownerId)}&background=random`,
-                    totalRevenue: 0,
-                    wonDeals: 0,
-                    totalDeals: 0
-                };
-            }
-
-            stats[deal.ownerId].totalDeals++;
-
-            // Sadece kazanılan fırsatların cirosunu topla (Satış yapıldı olarak kabul ediyoruz)
-            if (['Order', 'Kazanıldı'].includes(deal.stage)) {
-                stats[deal.ownerId].totalRevenue += deal.value;
-                stats[deal.ownerId].wonDeals++;
-            }
-        });
-
-        return Object.values(stats)
-            .filter(rep => rep.totalRevenue > 0) // Sadece satış yapanları göster
-            .sort((a, b) => b.totalRevenue - a.totalRevenue); // Ciroya göre büyükten küçüğe sırala
-    }, [deals, users]);
+    if (isLoading) {
+        return (
+            <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-slate-200 dark:border-slate-700 shadow-sm col-span-full">
+                <CardHeader>
+                    <CardTitle className="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                        <Users size={16} className="text-indigo-500 animate-pulse" />
+                        {t('opportunities.salesRepList', 'Satış Temsilcisi Performansı (Kazanılan)')}
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="text-center py-8 text-slate-500 text-sm animate-pulse">
+                        {t('common.loading', 'Yükleniyor...')}
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    }
 
     if (repPerformance.length === 0) {
         return (

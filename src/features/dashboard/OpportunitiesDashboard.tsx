@@ -129,22 +129,17 @@ export function OpportunitiesDashboard() {
 
     // --- Data processing ---
 
-    const filteredDeals = useMemo(() => {
-        let result = [...deals];
-
-        // Helper to format local date as YYYY-MM-DD
+    const currentDateRangeStr = useMemo(() => {
         const formatLocalDate = (d: Date) => {
             return new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().substring(0, 10);
         };
+        const now = new Date();
+        const todayStr = formatLocalDate(now);
 
-        // 1. Date Filter
+        let startStr = '';
+        let endStr = todayStr;
+
         if (dateFilter !== 'all') {
-            const now = new Date();
-            const todayStr = formatLocalDate(now);
-
-            let startStr = '';
-            let endStr = todayStr;
-
             switch (dateFilter) {
                 case 'today':
                     startStr = todayStr;
@@ -196,19 +191,30 @@ export function OpportunitiesDashboard() {
                     if (customRange.end) endStr = formatLocalDate(customRange.end);
                     break;
             }
+        }
+
+        return { start: startStr || null, end: endStr || null };
+    }, [dateFilter, customRange.start, customRange.end]);
+
+    const filteredDeals = useMemo(() => {
+        let result = [...deals];
+
+        // 1. Date Filter
+        if (dateFilter !== 'all') {
+            const { start: startStr, end: endStr } = currentDateRangeStr;
 
             if (startStr) {
                 result = result.filter(deal => {
                     const dealDateStr = deal.createdAt ? deal.createdAt.substring(0, 10) : '';
                     if (!dealDateStr) return false;
 
-                    if (dateFilter === 'custom' && !customRange.end) {
+                    if (dateFilter === 'custom' && (!customRange.end || !endStr)) {
                         return dealDateStr >= startStr;
                     }
-                    if (dateFilter === 'custom' && !customRange.start) {
-                        return dealDateStr <= endStr;
+                    if (dateFilter === 'custom' && (!customRange.start || !startStr)) {
+                        return endStr ? dealDateStr <= endStr : false;
                     }
-                    return dealDateStr >= startStr && dealDateStr <= endStr;
+                    return endStr ? (dealDateStr >= startStr && dealDateStr <= endStr) : dealDateStr >= startStr;
                 });
             }
         }
@@ -881,7 +887,7 @@ export function OpportunitiesDashboard() {
 
             {/* Sales Rep Performance List */}
             <div className="mt-8">
-                <SalesRepList deals={filteredDeals} users={users} />
+                <SalesRepList dateRange={currentDateRangeStr} users={users} />
             </div>
 
             {/* Opportunity Response Modal */}

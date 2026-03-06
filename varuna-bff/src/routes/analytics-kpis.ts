@@ -88,12 +88,12 @@ router.get('/', (req: Request, res: Response) => {
             SELECT
                 COUNT(*)                                                                   AS totalCount,
                 COALESCE(SUM(Amount_Value), 0)                                             AS totalAmount,
-                COALESCE(SUM(CASE WHEN OpportunityStageNameTr = 'Kazanıldı'  THEN 1 ELSE 0 END), 0)   AS wonCount,
+                CCOALESCE(SUM(CASE WHEN OpportunityStageNameTr = 'Kazanıldı'  THEN 1 ELSE 0 END), 0)   AS wonCount,
                 COALESCE(SUM(CASE WHEN OpportunityStageNameTr = 'Kazanıldı'  THEN Amount_Value ELSE 0 END), 0) AS wonAmount,
                 COALESCE(SUM(CASE WHEN OpportunityStageNameTr = 'Kaybedildi' THEN 1 ELSE 0 END), 0)   AS lostCount,
                 COALESCE(SUM(CASE WHEN OpportunityStageNameTr = 'Kaybedildi' THEN Amount_Value ELSE 0 END), 0) AS lostAmount,
-                COALESCE(SUM(CASE WHEN OpportunityStageNameTr = 'Açık' THEN 1 ELSE 0 END), 0)   AS openCount,
-                COALESCE(SUM(CASE WHEN OpportunityStageNameTr = 'Açık' THEN Amount_Value ELSE 0 END), 0) AS openAmount
+                COALESCE(SUM(CASE WHEN OpportunityStageNameTr != 'Kazanıldı' and OpportunityStageNameTr != 'Kaybedildi'  THEN 1 ELSE 0 END), 0)   AS openCount,
+                COALESCE(SUM(CASE WHEN OpportunityStageNameTr != 'Kazanıldı' and OpportunityStageNameTr != 'Kaybedildi' THEN Amount_Value ELSE
             FROM Opportunity
             WHERE 1=1 ${oppExtra}
         `, params)!;

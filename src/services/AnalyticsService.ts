@@ -79,15 +79,21 @@ export interface AnalyticsKpis {
 export interface AnalyticsFilter {
     ownerId?: string;
     accountId?: string;
-    teamId?: string;
+    teamId?: string | string[];
     from?: string;
     to?: string;
 }
 
 export const AnalyticsService = {
     getKpis: async (filter?: AnalyticsFilter): Promise<AnalyticsKpis> => {
+        // If teamId is an array, join it with commas for the backend to split
+        const processedFilter = { ...filter };
+        if (Array.isArray(processedFilter.teamId)) {
+            processedFilter.teamId = processedFilter.teamId.join(',');
+        }
+
         const response = await axios.get<AnalyticsKpis>(`${getApiBaseUrl()}/analytics/kpis`, {
-            params: filter
+            params: processedFilter
         });
         return response.data;
     }

@@ -15,9 +15,10 @@ export const TeamService = {
         }
     },
 
-    getMembers: async (teamId: string): Promise<TeamMember[]> => {
+    getMembers: async (teamId: string | string[]): Promise<TeamMember[]> => {
         try {
-            const res = await fetch(`${getApiBaseUrl()}/teams/${teamId}/members`);
+            const ids = Array.isArray(teamId) ? teamId.join(',') : teamId;
+            const res = await fetch(`${getApiBaseUrl()}/teams/members?ids=${ids}`);
             if (!res.ok) throw new Error('Failed to fetch team members');
             const json = await res.json();
             return json.value || [];

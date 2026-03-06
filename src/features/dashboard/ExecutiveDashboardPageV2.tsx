@@ -461,8 +461,8 @@ export function ExecutiveDashboardPageV2() {
     // Fetch Team Members for local filtering
     const { data: teamMembers } = useQuery({
         queryKey: ['team-members', selectedTeam],
-        queryFn: () => selectedTeam.includes('all') ? Promise.resolve([]) : TeamService.getMembers(selectedTeam[0]),
-        enabled: !selectedTeam.includes('all')
+        queryFn: () => selectedTeam.includes('all') ? Promise.resolve([]) : TeamService.getMembers(selectedTeam.filter(t => t !== 'all')),
+        enabled: !selectedTeam.includes('all') && selectedTeam.length > 0
     });
 
     // Fetch Backend KPIs
@@ -470,7 +470,7 @@ export function ExecutiveDashboardPageV2() {
         queryKey: ['analytics-kpis', dateFilter, selectedOwner, selectedCustomer, customRange, selectedTeam],
         queryFn: () => AnalyticsService.getKpis({
             ownerId: selectedOwner.includes('all') ? undefined : selectedOwner[0],
-            teamId: selectedTeam.includes('all') ? undefined : selectedTeam[0],
+            teamId: selectedTeam.includes('all') ? undefined : selectedTeam.filter(t => t !== 'all'),
             from: dateFilter === 'custom' && customRange.start ? customRange.start.toISOString().split('T')[0] :
                 dateFilter === 'ytd' ? new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0] :
                     dateFilter === 'this_month' ? new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0] :

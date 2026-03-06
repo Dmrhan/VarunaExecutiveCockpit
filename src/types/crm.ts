@@ -223,3 +223,18 @@ export interface CollectionAnalysisResult {
     insights: string[];
     recommendations: string[];
 }
+
+export interface Team {
+    Id: string;
+    Code: string;
+    Definition: string;
+    DealerId?: string;
+    Status: number;
+}
+
+export interface TeamMember {
+    Id: number;
+    TeamId: string;
+    PersonId: string;
+    PersonName?: string;
+}

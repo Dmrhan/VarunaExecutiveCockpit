@@ -79,6 +79,7 @@ export interface AnalyticsKpis {
 export interface AnalyticsFilter {
     ownerId?: string;
     accountId?: string;
+    teamId?: string;
     from?: string;
     to?: string;
 }

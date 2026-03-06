@@ -38,8 +38,10 @@ router.get('/dashboard', (req: Request, res: Response) => {
     }
 
     if (req.query.teamId) {
-        whereClauses.push('o.ProposalOwnerId IN (SELECT PersonId FROM TeamMember WHERE TeamId = @teamId)');
-        params.teamId = req.query.teamId;
+        const teamIds = String(req.query.teamId).split(',');
+        const placeholders = teamIds.map((_, i) => `@teamId${i}`).join(',');
+        whereClauses.push(`o.ProposalOwnerId IN (SELECT PersonId FROM TeamMember WHERE TeamId IN (${placeholders}))`);
+        teamIds.forEach((id, i) => params[`teamId${i}`] = id);
     }
 
     const whereString = 'WHERE ' + whereClauses.join(' AND ');

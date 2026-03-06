@@ -52,11 +52,15 @@ router.get('/', (req: Request, res: Response) => {
             params.ownerId = req.query.ownerId;
         }
         if (req.query.teamId) {
-            whereClauses.push('OwnerId IN (SELECT PersonId FROM TeamMember WHERE TeamId = @teamId)');
-            qWhere.push('ProposalOwnerId IN (SELECT PersonId FROM TeamMember WHERE TeamId = @teamId)');
-            ordWhere.push('ProposalOwnerId IN (SELECT PersonId FROM TeamMember WHERE TeamId = @teamId)');
-            ctrWhere.push('SalesRepresentativeId IN (SELECT PersonId FROM TeamMember WHERE TeamId = @teamId)');
-            params.teamId = req.query.teamId;
+            const teamIds = String(req.query.teamId).split(',');
+            const placeholders = teamIds.map((_, i) => `@teamId${i}`).join(',');
+
+            whereClauses.push(`OwnerId IN (SELECT PersonId FROM TeamMember WHERE TeamId IN (${placeholders}))`);
+            qWhere.push(`ProposalOwnerId IN (SELECT PersonId FROM TeamMember WHERE TeamId IN (${placeholders}))`);
+            ordWhere.push(`ProposalOwnerId IN (SELECT PersonId FROM TeamMember WHERE TeamId IN (${placeholders}))`);
+            ctrWhere.push(`SalesRepresentativeId IN (SELECT PersonId FROM TeamMember WHERE TeamId IN (${placeholders}))`);
+
+            teamIds.forEach((id, i) => params[`teamId${i}`] = id);
         }
 
         if (req.query.accountId) {

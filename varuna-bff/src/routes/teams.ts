@@ -15,6 +15,31 @@ router.get('/', (req: Request, res: Response) => {
     }
 });
 
+// GET /api/teams/members?ids=id1,id2
+router.get('/members', (req: Request, res: Response) => {
+    try {
+        const db = getDb();
+        const ids = req.query.ids as string;
+        if (!ids) return res.json({ value: [] });
+
+        const teamIds = ids.split(',');
+        const placeholders = teamIds.map((_, i) => `@id${i}`).join(',');
+        const params: any = {};
+        teamIds.forEach((id, i) => params[`id${i}`] = id);
+
+        const members = db.query(`
+            SELECT tm.*, p.PersonNameSurname as PersonName
+            FROM TeamMember tm
+            JOIN Person p ON tm.PersonId = p.Id
+            WHERE tm.TeamId IN (${placeholders})
+        `, params);
+        res.json({ value: members });
+    } catch (error) {
+        console.error('Failed to fetch team members', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // GET /api/teams/:id/members
 router.get('/:id/members', (req: Request, res: Response) => {
     try {

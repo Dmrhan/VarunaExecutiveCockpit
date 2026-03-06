@@ -458,6 +458,13 @@ export function ExecutiveDashboardPageV2() {
         queryFn: TeamService.getAll
     });
 
+    // Fetch Team Members for local filtering
+    const { data: teamMembers } = useQuery({
+        queryKey: ['team-members', selectedTeam],
+        queryFn: () => selectedTeam.includes('all') ? Promise.resolve([]) : TeamService.getMembers(selectedTeam[0]),
+        enabled: !selectedTeam.includes('all')
+    });
+
     // Fetch Backend KPIs
     const { data: bffKpis, isLoading: isKpisLoading } = useQuery({
         queryKey: ['analytics-kpis', dateFilter, selectedOwner, selectedCustomer, customRange, selectedTeam],
@@ -584,6 +591,14 @@ export function ExecutiveDashboardPageV2() {
             filteredOrders = filteredOrders.filter(o => o.salesRepId && selectedOwner.includes(o.salesRepId));
         }
 
+        // 3.5 Filter by Team (Custom Table)
+        if (!selectedTeam.includes('all') && selectedTeam.length > 0 && teamMembers) {
+            const memberIds = teamMembers.map(m => m.PersonId);
+            filteredDeals = filteredDeals.filter(d => memberIds.includes(d.ownerId));
+            filteredQuotes = filteredQuotes.filter(q => q.salesRepId && memberIds.includes(q.salesRepId));
+            filteredOrders = filteredOrders.filter(o => o.salesRepId && memberIds.includes(o.salesRepId));
+        }
+
         // 4. Filter by Product
         const baseOrders = [...filteredOrders];
 
@@ -603,7 +618,7 @@ export function ExecutiveDashboardPageV2() {
         }
 
         return { deals: filteredDeals, quotes: filteredQuotes, orders: filteredOrders, baseDeals, baseOrders };
-    }, [deals, quotes, orders, dateFilter, customRange, selectedDepartment, selectedOwner, selectedProduct, selectedCustomer, users]);
+    }, [deals, quotes, orders, dateFilter, customRange, selectedDepartment, selectedOwner, selectedProduct, selectedCustomer, users, selectedTeam, teamMembers]);
 
     // Drilldown State (after filteredData to allow dependency)
     const [drilldownType, setDrilldownType] = useState<string | null>(null);
@@ -1024,10 +1039,14 @@ export function ExecutiveDashboardPageV2() {
 
                 {/* Gamified Leaderboard & Product Distribution */}
                 <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <GamifiedLeaderboard dateRange={{
-                        start: customRange.start ? customRange.start.toISOString().split('T')[0] : null,
-                        end: customRange.end ? customRange.end.toISOString().split('T')[0] : null
-                    }} />
+                    <GamifiedLeaderboard
+                        dateRange={{
+                            start: customRange.start ? customRange.start.toISOString().split('T')[0] : null,
+                            end: customRange.end ? customRange.end.toISOString().split('T')[0] : null
+                        }}
+                        teamId={selectedTeam.includes('all') ? undefined : selectedTeam[0]}
+                        ownerId={selectedOwner.includes('all') ? undefined : selectedOwner[0]}
+                    />
                     <div className="flex flex-col gap-8 h-full">
                         <div className="flex-1">
                             <ProductSalesDistribution

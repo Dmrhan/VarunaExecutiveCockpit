@@ -566,7 +566,7 @@ export function OpportunitiesDashboard() {
                     <ProductPerformance deals={filteredDeals} />
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="w-full">
                     <HorizontalBarChart
                         title={t('opportunities.charts.customerPotentialTitle')}
                         data={chartData.customerRev.map((item: any) => ({

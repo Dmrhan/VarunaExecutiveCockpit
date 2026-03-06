@@ -55,12 +55,15 @@ export function OpportunityForecast({ deals, onMonthClick, activeFilterMonth }: 
         deals.forEach(deal => {
             if (!deal.expectedCloseDate) return;
 
+            // Only process specific active stages for the forecast
+            if (!['Demo', 'Konumlama', 'Teklif'].includes(deal.stage)) return;
+
             const closeDate = new Date(deal.expectedCloseDate);
             // Ignore invalid dates
             if (isNaN(closeDate.getTime())) return;
 
-            // Check for overdue (Close date < Today and NOT Won/Lost)
-            const isOverdue = closeDate < today && !['Kazanıldı', 'Kaybedildi', 'Order', 'Lost', 'Onaylandı'].includes(deal.stage);
+            // Check for overdue (Close date < Today)
+            const isOverdue = closeDate < today;
 
             // Find matching month bucket
             const monthIndex = months.findIndex(m =>
@@ -71,11 +74,9 @@ export function OpportunityForecast({ deals, onMonthClick, activeFilterMonth }: 
             if (monthIndex >= 0) {
                 const month = months[monthIndex];
 
-                if (!['Kaybedildi', 'Lost'].includes(deal.stage)) {
-                    month.totalValue += deal.value;
-                    month.weightedValue += deal.value * (deal.probability / 100);
-                    month.count += 1;
-                }
+                month.totalValue += deal.value;
+                month.weightedValue += deal.value * (deal.probability / 100);
+                month.count += 1;
 
                 if (isOverdue && month.isCurrent) {
                     // If it's in the current month bucket but technically the specific date is passed

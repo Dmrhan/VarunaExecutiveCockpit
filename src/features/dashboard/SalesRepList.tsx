@@ -43,12 +43,16 @@ export const SalesRepList = ({ dateRange, users }: SalesRepListProps) => {
 
     const repPerformance = useMemo(() => {
         return performanceData.map((rep: any) => {
-            const user = users.find(u => u.id === rep.OwnerId);
+            const user = users.find(u => u.id === rep.PersonId);
+            const name = rep.Name || '';
+            const surName = rep.SurName || '';
+            const fullName = `${name} ${surName}`.trim() || user?.name || rep.PersonId || 'Unknown';
+
             return {
-                userId: rep.OwnerId,
-                name: rep.OwnerName || user?.name || rep.OwnerId || 'Unknown',
-                avatar: user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(rep.OwnerName || user?.name || rep.OwnerId || 'Unknown')}&background=random`,
-                totalRevenue: Number(rep.TotalRevenue) || 0,
+                userId: rep.PersonId,
+                name: fullName,
+                avatar: user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=random`,
+                totalRevenue: Number(rep.TotalAmount) || 0,
                 wonDeals: Number(rep.WonDealsCount) || 0,
                 totalDeals: Number(rep.WonDealsCount) || 0 // Currently backend only returns won deals
             };

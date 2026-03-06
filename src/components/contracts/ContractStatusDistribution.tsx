@@ -11,18 +11,20 @@ export const ContractStatusDistribution = () => {
     const { t } = useTranslation();
     const { contracts } = useData();
 
-    // Group contracts by status
     const statusData = useMemo(() => {
         const stats: Record<string, { count: number; value: number; color: string }> = {
-            'Active': { count: 0, value: 0, color: '#10b981' }, // Emerald 500
-            'Negotiation': { count: 0, value: 0, color: '#3b82f6' }, // Blue 500
-            'Draft': { count: 0, value: 0, color: '#94a3b8' }, // Slate 400
-            'Archived': { count: 0, value: 0, color: '#cbd5e1' }, // Slate 300
-            'Terminated': { count: 0, value: 0, color: '#ef4444' }, // Red 500
+            'Signed': { count: 0, value: 0, color: '#10b981' }, // Emerald 500
+            'PriceNegotiation': { count: 0, value: 0, color: '#3b82f6' }, // Blue 500
+            'InPreparation': { count: 0, value: 0, color: '#94a3b8' }, // Slate 400
+            'OnHold': { count: 0, value: 0, color: '#cbd5e1' }, // Slate 300
+            'Cancelled': { count: 0, value: 0, color: '#ef4444' }, // Red 500
+            // Include other ones to ensure colors
+            'TextNegotiation': { count: 0, value: 0, color: '#8b5cf6' }, // Violet 500
+            'AwaitingCustomerSignature': { count: 0, value: 0, color: '#f59e0b' }, // Amber 500
         };
 
         contracts.forEach(c => {
-            const status = c.status as ContractStatus || 'Draft';
+            const status = c.status as ContractStatus || 'InPreparation';
             if (!stats[status]) {
                 stats[status] = { count: 0, value: 0, color: '#cbd5e1' };
             }

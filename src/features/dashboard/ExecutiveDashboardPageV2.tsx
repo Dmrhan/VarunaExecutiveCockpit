@@ -979,7 +979,10 @@ export function ExecutiveDashboardPageV2() {
 
                 {/* Gamified Leaderboard & Product Distribution */}
                 <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <GamifiedLeaderboard deals={filteredData.deals} orders={filteredData.orders} />
+                    <GamifiedLeaderboard dateRange={{
+                        start: customRange.start ? customRange.start.toISOString().split('T')[0] : null,
+                        end: customRange.end ? customRange.end.toISOString().split('T')[0] : null
+                    }} />
                     <div className="flex flex-col gap-8 h-full">
                         <div className="flex-1">
                             <ProductSalesDistribution

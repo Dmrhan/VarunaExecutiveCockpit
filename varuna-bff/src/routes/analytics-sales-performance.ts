@@ -32,6 +32,16 @@ router.get('/dashboard', (req: Request, res: Response) => {
         params.to = req.query.to;
     }
 
+    if (req.query.ownerId) {
+        whereClauses.push('o.ProposalOwnerId = @ownerId');
+        params.ownerId = req.query.ownerId;
+    }
+
+    if (req.query.teamId) {
+        whereClauses.push('o.ProposalOwnerId IN (SELECT PersonId FROM TeamMember WHERE TeamId = @teamId)');
+        params.teamId = req.query.teamId;
+    }
+
     const whereString = 'WHERE ' + whereClauses.join(' AND ');
 
     // Query formulation mapping precisely to:

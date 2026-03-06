@@ -29,9 +29,11 @@ import type { Deal, Order } from '../../types/crm';
 
 interface GamifiedLeaderboardProps {
     dateRange?: { start: string | null; end: string | null };
+    teamId?: string;
+    ownerId?: string;
 }
 
-export function GamifiedLeaderboard({ dateRange }: GamifiedLeaderboardProps) {
+export function GamifiedLeaderboard({ dateRange, teamId, ownerId }: GamifiedLeaderboardProps) {
     const { t } = useTranslation();
     const { users } = useData();
     const [performanceData, setPerformanceData] = useState<any[]>([]);
@@ -47,6 +49,8 @@ export function GamifiedLeaderboard({ dateRange }: GamifiedLeaderboardProps) {
                 const params = new URLSearchParams();
                 if (dateRange?.start) params.append('from', dateRange.start + ' 00:00:00');
                 if (dateRange?.end) params.append('to', dateRange.end + ' 23:59:59');
+                if (teamId) params.append('teamId', teamId);
+                if (ownerId) params.append('ownerId', ownerId);
 
                 const baseUrl = (window as any)['__RUNTIME_CONFIG__']?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
                 const response = await fetch(`${baseUrl}/analytics/sales-performance/dashboard?${params.toString()}`);
@@ -63,7 +67,7 @@ export function GamifiedLeaderboard({ dateRange }: GamifiedLeaderboardProps) {
         };
 
         fetchPerformance();
-    }, [dateRange?.start, dateRange?.end]);
+    }, [dateRange?.start, dateRange?.end, teamId, ownerId]);
 
     const leaderboardData = useMemo(() => {
         // Calculate Team Averages for Comparison

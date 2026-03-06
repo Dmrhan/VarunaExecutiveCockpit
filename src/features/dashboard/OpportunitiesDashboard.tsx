@@ -568,20 +568,6 @@ export function OpportunitiesDashboard() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <HorizontalBarChart
-                        title={t('opportunities.charts.sourceTitle')}
-                        data={chartData.sourceCount.map((item: any) => ({
-                            id: item.name,
-                            name: item.name,
-                            value: item.count,
-                            formattedValue: item.count.toString()
-                        }))}
-                        color="#818cf8"
-                        icon={Share2}
-                        insight={t('opportunities.charts.sourceInsight')}
-                        activeId={selectedSource}
-                        onBarClick={(item) => setSelectedSource(prev => prev === item.id ? null : item.id)}
-                    />
-                    <HorizontalBarChart
                         title={t('opportunities.charts.customerPotentialTitle')}
                         data={chartData.customerRev.map((item: any) => ({
                             id: item.name,
@@ -885,10 +871,7 @@ export function OpportunitiesDashboard() {
                 )
             }
 
-            {/* Sales Rep Performance List */}
-            <div className="mt-8">
-                <SalesRepList dateRange={currentDateRangeStr} users={users} />
-            </div>
+
 
             {/* Opportunity Response Modal */}
             <OpportunityDetailModal

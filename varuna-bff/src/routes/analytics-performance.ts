@@ -50,6 +50,11 @@ router.get('/daily', (req: Request, res: Response) => {
             orderOwner = ' AND ProposalOwnerId = ?';
             orderParams.push(ownerId);
         }
+        if (req.query.teamId) {
+            orderOwner += ' AND ProposalOwnerId IN (SELECT PersonId FROM TeamMember WHERE TeamId = ?)';
+            orderParams.push(req.query.teamId);
+        }
+
         let orderCompany = '';
         if (companyId) {
             orderCompany = ' AND CompanyId = ?';
@@ -155,10 +160,22 @@ router.get('/monthly', (req: Request, res: Response) => {
             orderOwner = ' AND ProposalOwnerId = ?';
             orderParams.push(ownerId);
         }
+        if (req.query.teamId) {
+            orderOwner += ' AND ProposalOwnerId IN (SELECT PersonId FROM TeamMember WHERE TeamId = ?)';
+            orderParams.push(req.query.teamId);
+        }
         let orderCompany = '';
         if (companyId) {
             orderCompany = ' AND CompanyId = ?';
             orderParams.push(companyId);
+        }
+
+        // Team filter for contract join logic
+        let teamContractJoin = ' ';
+        const contractParams: any[] = [...params];
+        if (req.query.teamId) {
+            ownerWhere += ' AND SalesRepresentativeId IN (SELECT PersonId FROM TeamMember WHERE TeamId = ?)';
+            params.push(req.query.teamId);
         }
 
         const dateSubstr = db.driver === 'mssql' ? 'LEFT(SigningDate, 7)' : 'substr(SigningDate, 1, 7)';

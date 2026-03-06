@@ -17,6 +17,8 @@ import { generateExecutiveBrief } from '../../services/ExecutiveBriefService';
 import { GamifiedLeaderboard } from './GamifiedLeaderboard';
 import { ProductSalesDistribution } from './ProductSalesDistribution';
 import { CustomerPotentialChart } from './CustomerPotentialChart';
+import { AnalyticsService } from '../../services/AnalyticsService';
+import { useQuery } from '@tanstack/react-query';
 
 // --- Types & Mock Data Generators ---
 
@@ -440,15 +442,35 @@ export function ExecutiveDashboardPageV2() {
 
     // Filters
     const [dateFilter, setDateFilter] = useState('all');
+    const [customRange, setCustomRange] = useState<{ start: Date | null, end: Date | null }>({ start: null, end: null });
+
     // Global Filters
     const [selectedDepartment, setSelectedDepartment] = useState<string[]>(['all']);
     const [selectedOwner, setSelectedOwner] = useState<string[]>(['all']);
     const [selectedProduct, setSelectedProduct] = useState<string[]>(['all']);
     const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null);
 
+    // Fetch Backend KPIs
+    const { data: bffKpis, isLoading: isKpisLoading } = useQuery({
+        queryKey: ['analytics-kpis', dateFilter, selectedOwner, selectedCustomer, customRange],
+        queryFn: () => AnalyticsService.getKpis({
+            ownerId: selectedOwner.includes('all') ? undefined : selectedOwner[0],
+            from: dateFilter === 'custom' && customRange.start ? customRange.start.toISOString().split('T')[0] :
+                dateFilter === 'ytd' ? new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0] :
+                    dateFilter === 'this_month' ? new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0] :
+                        dateFilter === 'this_week' ? (() => {
+                            const d = new Date();
+                            const day = d.getDay() || 7;
+                            d.setDate(d.getDate() - day + 1);
+                            return d.toISOString().split('T')[0];
+                        })() : undefined,
+            to: dateFilter === 'custom' && customRange.end ? customRange.end.toISOString().split('T')[0] : undefined
+        }),
+        staleTime: 1000 * 60 * 5, // 5 minutes
+    });
+
     // Date Picker State
     const [showDatePicker, setShowDatePicker] = useState(false);
-    const [customRange, setCustomRange] = useState<{ start: Date | null, end: Date | null }>({ start: null, end: null });
 
 
     // Derived Lists for Filters
@@ -901,8 +923,8 @@ export function ExecutiveDashboardPageV2() {
                     <div className="flex flex-row w-full min-w-[1000px] gap-3">
                         <PipelineStep
                             title={t('dashboardV2.pipeline.totalOpportunities')}
-                            count={filteredData.deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi', 'Order', 'Onaylandı'].includes(d.stage)).length}
-                            value={`${(filteredData.deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi', 'Order', 'Onaylandı'].includes(d.stage)).reduce((s, d) => s + d.value, 0) / 1000000).toFixed(1)}M ₺`}
+                            count={bffKpis?.opportunities.openCount ?? filteredData.deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi', 'Order', 'Onaylandı'].includes(d.stage)).length}
+                            value={`${((bffKpis?.opportunities.openAmount ?? filteredData.deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi', 'Order', 'Onaylandı'].includes(d.stage)).reduce((s, d) => s + d.value, 0)) / 1000000).toFixed(1)}M ₺`}
                             index={0} total={6}
                             icon={<Target size={16} strokeWidth={2.5} />}
                             iconColorClass="text-amber-500"
@@ -912,8 +934,8 @@ export function ExecutiveDashboardPageV2() {
                         />
                         <PipelineStep
                             title={t('dashboardV2.pipeline.quotesSent')}
-                            count={filteredData.quotes.filter(q => !['1', '2', '3'].includes(String(q.status))).length}
-                            value={`${(filteredData.quotes.filter(q => !['1', '2', '3'].includes(String(q.status))).reduce((s, q) => s + q.amount, 0) / 1000000).toFixed(1)}M ₺`}
+                            count={bffKpis?.quotes.sentCount ?? filteredData.quotes.filter(q => !['1', '2', '3'].includes(String(q.status))).length}
+                            value={`${((bffKpis?.quotes.sentNet ?? filteredData.quotes.filter(q => !['1', '2', '3'].includes(String(q.status))).reduce((s, q) => s + q.amount, 0)) / 1000000).toFixed(1)}M ₺`}
                             index={1} total={6}
                             icon={<FileText size={16} strokeWidth={2.5} />}
                             iconColorClass="text-blue-500"
@@ -924,7 +946,7 @@ export function ExecutiveDashboardPageV2() {
                         <PipelineStep
                             title={t('dashboardV2.pipeline.conversionRate')}
                             count=""
-                            value={`%${((filteredData.quotes.filter(q => !['1', '2', '3'].includes(String(q.status))).reduce((s, q) => s + q.amount, 0) / (filteredData.deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi', 'Order', 'Onaylandı'].includes(d.stage)).reduce((s, d) => s + d.value, 0) || 1)) * 100).toFixed(1)}`}
+                            value={`%${bffKpis?.quotes.proposalConversionRate ?? ((filteredData.quotes.filter(q => !['1', '2', '3'].includes(String(q.status))).reduce((s, q) => s + q.amount, 0) / (filteredData.deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi', 'Order', 'Onaylandı'].includes(d.stage)).reduce((s, d) => s + d.value, 0) || 1)) * 100).toFixed(1)}`}
                             index={2} total={6}
                             icon={<Activity size={16} strokeWidth={2.5} />}
                             iconColorClass="text-emerald-500"

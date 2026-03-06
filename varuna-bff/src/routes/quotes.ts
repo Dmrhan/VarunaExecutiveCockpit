@@ -40,7 +40,7 @@ const Q_STATUS_TR: Record<number, string> = {
 router.get('/', (req: Request, res: Response) => {
     const db = getDb();
 
-    const top = parseInt(req.query.$top as string) || 500;
+    const top = parseInt(req.query.$top as string) || 50000;
     const skip = parseInt(req.query.$skip as string) || 0;
 
     let querySql = `

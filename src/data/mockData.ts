@@ -261,7 +261,6 @@ export const generateMockData = (count: number = 451): { deals: Deal[], activiti
     // --- Generate Contracts ---
     const contracts: Contract[] = [];
     const CONTRACT_TYPES: ContractType[] = ['Initialization', 'Renewal', 'Maintenance', 'Rental', 'License'];
-
     const BILLING_STATUSES: BillingStatus[] = ['Invoiced', 'Pending', 'Cancelled'];
 
     // Generate ~120 contracts for richness
@@ -271,12 +270,12 @@ export const generateMockData = (count: number = 451): { deals: Deal[], activiti
         const productGroup = PRODUCTS[Math.floor(Math.random() * PRODUCTS.length)];
         const type = CONTRACT_TYPES[Math.floor(Math.random() * CONTRACT_TYPES.length)];
 
-        // Weighted status (mostly Active)
-        let status: ContractStatus = 'Active';
+        // Weighted status (mostly Signed)
+        let status: ContractStatus = 'Signed';
         const randStatus = Math.random();
-        if (randStatus > 0.8) status = 'Negotiation';
-        else if (randStatus > 0.9) status = 'Draft';
-        else if (randStatus > 0.95) status = 'Terminated';
+        if (randStatus > 0.8) status = 'PriceNegotiation';
+        else if (randStatus > 0.9) status = 'InPreparation';
+        else if (randStatus > 0.95) status = 'Cancelled';
 
         const totalValue = Math.floor(Math.random() * 2000000) + 100000;
         const currency = Math.random() > 0.7 ? (Math.random() > 0.5 ? 'USD' : 'EUR') : 'TRY';
@@ -502,7 +501,7 @@ export const generateMockData = (count: number = 451): { deals: Deal[], activiti
             ownerName: 'Ali Yılmaz',
             productGroup: 'EnRoute',
             type: 'Renewal',
-            status: 'Negotiation',
+            status: 'PriceNegotiation',
             totalValue: 4500000,
             currency: 'USD',
             totalValueTL: 4500000 * 32,
@@ -534,7 +533,7 @@ export const generateMockData = (count: number = 451): { deals: Deal[], activiti
             ownerName: 'Zeynep Çelik',
             productGroup: 'Stokbar',
             type: 'License',
-            status: 'Active',
+            status: 'Signed',
             totalValue: 850000,
             currency: 'EUR',
             totalValueTL: 850000 * 35,

@@ -89,7 +89,7 @@ router.get('/', (req: Request, res: Response) => {
             || 'EnRoute';
 
         // Amount: VAT-included total
-        const amount = row.TotalAmountWithTaxLocalCurrency_Amount || row.TotalNetAmountLocalCurrency_Amount || 0;
+        const amount = row.TotalNetAmountLocalCurrency_Amount || 0;
 
         // Customer name: from the Account join on AccountId
         const customerName = row.AccountName || row.AccountId || 'Bilinmiyor';

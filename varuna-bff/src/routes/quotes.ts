@@ -9,31 +9,31 @@ import { getDb } from '../db/database';
 
 const router = Router();
 
-// Quote Status map (matches seed-all.ts v2 + ExecutiveDashboardPageV2 filter expectations)
+// Quote Status map (matches EQuoteStatus enum)
 const Q_STATUS_LABEL: Record<number, string> = {
-    0: 'Draft',        // Taslak  — dashboard filtresi 'Draft'
-    1: 'NeedsReview',  // Değerlendirme Gerekiyor
-    2: 'InReview',     // Değerlendirmeye Alındı
-    3: 'Approved',     // Onaylandı
-    4: 'Rejected',     // Reddedildi
-    5: 'Sent',         // Gönderildi (Aktif) — dashboard filtresi 'Sent'
-    6: 'Accepted',     // Kabul Edildi
-    7: 'Cancelled',    // İptal Edildi
-    8: 'Lost',         // Kaybedildi
-    9: 'Partial',      // Kısmen Siparişleşti
+    1: 'Draft',            // Taslak
+    2: 'NeedsReview',      // Değerlendirme Gerekiyor
+    3: 'InReview',         // Değerlendirmeye Alındı
+    4: 'Approved',         // Onaylandı
+    5: 'Reject',           // Reddedildi
+    6: 'Presented',        // Gönderildi (Aktif)
+    7: 'Accepted',         // Kabul Edildi
+    8: 'Denied',           // İptal Edildi
+    9: 'Closed',           // Kaybedildi
+    10: 'PartiallyOrdered' // Kısmen Siparişleşti
 };
 
 const Q_STATUS_TR: Record<number, string> = {
-    0: 'Taslak',
-    1: 'Değerlendirme Gerekiyor',
-    2: 'Değerlendirmeye Alındı',
-    3: 'Onaylandı',
-    4: 'Reddedildi',
-    5: 'Gönderildi (Aktif)',
-    6: 'Kabul Edildi',
-    7: 'İptal Edildi',
-    8: 'Kaybedildi',
-    9: 'Kısmen Siparişleşti',
+    1: 'Taslak',
+    2: 'Değerlendirme Gerekiyor',
+    3: 'Değerlendirmeye Alındı',
+    4: 'Onaylandı',
+    5: 'Reddedildi',
+    6: 'Gönderildi (Aktif)',
+    7: 'Kabul Edildi',
+    8: 'İptal Edildi.',
+    9: 'Kaybedildi',
+    10: 'Kısmen Siparişleşti'
 };
 
 
@@ -90,9 +90,10 @@ router.get('/', (req: Request, res: Response) => {
             amount,
             netAmount: row.TotalNetAmountLocalCurrency_Amount || 0,
             currency: 'TRY',
-            status: Q_STATUS_LABEL[statusCode] ?? 'Unknown',
+            status: String(statusCode),
+            statusLabel: Q_STATUS_LABEL[statusCode] ?? String(statusCode),
             statusTr: Q_STATUS_TR[statusCode] ?? String(statusCode),
-            statusCode,
+            statusCode: String(statusCode),
             createdAt: row.FirstCreatedDate || row._SyncedAt,
             validUntil: row.ExpirationDate || '',
             serviceStart: row.ServiceStartDate || '',

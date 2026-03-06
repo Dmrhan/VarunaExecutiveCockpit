@@ -605,14 +605,17 @@ export function ExecutiveDashboardPageV2() {
         }
         if (drilldownType === 'quotes') {
             return filteredData.quotes
-                .filter((q: any) => !['1', '3'].includes(q.status))
+                .filter((q: any) => !['1', '2', '3'].includes(String(q.status)))
                 .map((q: any) => ({
                     id: q.id,
                     title: q.title ?? `Teklif #${q.id}`,
                     subtitle: q.customerName ?? '-',
                     owner: q.salesRepName ?? ownerName(q.salesRepId ?? q.ownerId),
                     status: q.status,
-                    statusColor: 'bg-blue-50 text-blue-700 border-blue-200',
+                    statusColor: ['4', '7', '10'].includes(String(q.status)) ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                        ['5', '8', '9'].includes(String(q.status)) ? 'bg-rose-50 text-rose-700 border-rose-200' :
+                            ['1', '2', '3'].includes(String(q.status)) ? 'bg-slate-50 text-slate-700 border-slate-200' :
+                                'bg-blue-50 text-blue-700 border-blue-200',
                     date: q.createdAt ? new Date(q.createdAt).toLocaleDateString('tr-TR') : '-',
                     value: fmt(q.amount),
                     product: q.product,
@@ -622,14 +625,14 @@ export function ExecutiveDashboardPageV2() {
         }
         if (drilldownType === 'quotes_accepted') {
             return filteredData.quotes
-                .filter((q: any) => ['7', '4'].includes(q.status))
+                .filter((q: any) => ['4', '7', '10'].includes(String(q.status)))
                 .map((q: any) => ({
                     id: q.id,
                     title: q.title ?? `Teklif #${q.id}`,
                     subtitle: q.customerName ?? '-',
                     owner: q.salesRepName ?? ownerName(q.salesRepId ?? q.ownerId),
                     status: q.status,
-                    statusColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+                    statusColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
                     date: q.createdAt ? new Date(q.createdAt).toLocaleDateString('tr-TR') : '-',
                     value: fmt(q.amount),
                     product: q.product,
@@ -693,7 +696,7 @@ export function ExecutiveDashboardPageV2() {
         {
             id: 'pending_quotes',
             title: t('dashboardV2.metrics.pendingQuotes'),
-            value: filteredData.quotes.filter(q => ['Draft', 'Sent'].includes(q.status)).length,
+            value: filteredData.quotes.filter(q => ['1', '6'].includes(String(q.status))).length,
             subValue: `${(filteredData.quotes.reduce((s, q) => s + q.amount, 0) / 1000000).toFixed(1)}M ₺ ${t('dashboardV2.metrics.volume')}`,
             icon: FileText,
             color: 'text-blue-500',
@@ -909,8 +912,8 @@ export function ExecutiveDashboardPageV2() {
                         />
                         <PipelineStep
                             title={t('dashboardV2.pipeline.quotesSent')}
-                            count={filteredData.quotes.filter(q => !['Draft', 'Review'].includes(q.status)).length}
-                            value={`${(filteredData.quotes.filter(q => !['Draft', 'Review'].includes(q.status)).reduce((s, q) => s + q.amount, 0) / 1000000).toFixed(1)}M ₺`}
+                            count={filteredData.quotes.filter(q => !['1', '2', '3'].includes(String(q.status))).length}
+                            value={`${(filteredData.quotes.filter(q => !['1', '2', '3'].includes(String(q.status))).reduce((s, q) => s + q.amount, 0) / 1000000).toFixed(1)}M ₺`}
                             index={1} total={6}
                             icon={<FileText size={16} strokeWidth={2.5} />}
                             iconColorClass="text-blue-500"
@@ -921,7 +924,7 @@ export function ExecutiveDashboardPageV2() {
                         <PipelineStep
                             title={t('dashboardV2.pipeline.conversionRate')}
                             count=""
-                            value={`%${((filteredData.quotes.filter(q => !['Draft', 'Review'].includes(q.status)).reduce((s, q) => s + q.amount, 0) / (filteredData.deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi', 'Order', 'Onaylandı'].includes(d.stage)).reduce((s, d) => s + d.value, 0) || 1)) * 100).toFixed(1)}`}
+                            value={`%${((filteredData.quotes.filter(q => !['1', '2', '3'].includes(String(q.status))).reduce((s, q) => s + q.amount, 0) / (filteredData.deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi', 'Order', 'Onaylandı'].includes(d.stage)).reduce((s, d) => s + d.value, 0) || 1)) * 100).toFixed(1)}`}
                             index={2} total={6}
                             icon={<Activity size={16} strokeWidth={2.5} />}
                             iconColorClass="text-emerald-500"
@@ -930,15 +933,15 @@ export function ExecutiveDashboardPageV2() {
                             subMetric={
                                 <div className="mt-1 flex flex-col gap-0.5 w-fit">
                                     <div className="text-[11px] font-medium text-slate-400 mt-1">
-                                        {t('dashboardV2.pipeline.countConversion')}: <span className="text-slate-500 font-bold">%{(filteredData.quotes.filter(q => !['Draft', 'Review'].includes(q.status)).length / (filteredData.deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi', 'Order', 'Onaylandı'].includes(d.stage)).length || 1) * 100).toFixed(1)}</span>
+                                        {t('dashboardV2.pipeline.countConversion')}: <span className="text-slate-500 font-bold">%{(filteredData.quotes.filter(q => !['1', '2', '3'].includes(String(q.status))).length / (filteredData.deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi', 'Order', 'Onaylandı'].includes(d.stage)).length || 1) * 100).toFixed(1)}</span>
                                     </div>
                                 </div>
                             }
                         />
                         <PipelineStep
                             title={t('dashboardV2.pipeline.acceptedQuotes')}
-                            count={filteredData.quotes.filter(q => ['Accepted', 'Approved'].includes(q.status)).length}
-                            value={`${(filteredData.quotes.filter(q => ['Accepted', 'Approved'].includes(q.status)).reduce((s, q) => s + q.amount, 0) / 1000000).toFixed(1)}M ₺`}
+                            count={filteredData.quotes.filter(q => ['4', '7', '10'].includes(String(q.status))).length}
+                            value={`${(filteredData.quotes.filter(q => ['4', '7', '10'].includes(String(q.status))).reduce((s, q) => s + q.amount, 0) / 1000000).toFixed(1)}M ₺`}
                             index={3} total={6}
                             icon={<AlertCircle size={16} strokeWidth={2.5} />}
                             iconColorClass="text-indigo-500"
@@ -948,7 +951,7 @@ export function ExecutiveDashboardPageV2() {
                                 <div className="mt-1 flex flex-col gap-0.5 w-fit">
                                     <div className="text-[11px] font-medium text-slate-400 flex items-center gap-1">
                                         <span>{t('dashboardV2.pipeline.winRate')} :</span>
-                                        <span className="text-slate-600 dark:text-slate-300 font-bold">%{((filteredData.quotes.filter(q => ['Accepted', 'Approved'].includes(q.status)).reduce((s, q) => s + q.amount, 0) / (filteredData.quotes.filter(q => !['Draft', 'Review'].includes(q.status)).reduce((s, q) => s + q.amount, 0) || 1)) * 100).toFixed(1)}</span>
+                                        <span className="text-slate-600 dark:text-slate-300 font-bold">%{((filteredData.quotes.filter(q => ['4', '7', '10'].includes(String(q.status))).reduce((s, q) => s + q.amount, 0) / (filteredData.quotes.filter(q => !['1', '2', '3'].includes(String(q.status))).reduce((s, q) => s + q.amount, 0) || 1)) * 100).toFixed(1)}</span>
                                     </div>
                                 </div>
                             }

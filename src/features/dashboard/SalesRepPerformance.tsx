@@ -21,7 +21,7 @@ export function SalesRepPerformance({ quotes }: SalesRepPerformanceProps) {
     const topPerformers = useMemo(() => {
         // Filter for approved/accepted quotes (closed business)
         const closedQuotes = quotes.filter(q =>
-            ['Accepted', 'Approved', 'Sözleşme', 'Kazanıldı'].includes(q.status)
+            ['4', '7', '10'].includes(String(q.status))
         );
 
         const performanceMap = new Map<string, {

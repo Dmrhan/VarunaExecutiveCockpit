@@ -27,7 +27,7 @@ const calculateQuoteRisk = (quote: Quote) => {
     const created = new Date(quote.createdAt);
     const now = new Date();
     const daysOpen = Math.floor((now.getTime() - created.getTime()) / (1000 * 3600 * 24));
-    if (daysOpen > 30 && ['Draft', 'Review', 'Sent'].includes(quote.status)) {
+    if (daysOpen > 30 && ['1', '2', '3', '6'].includes(String(quote.status))) {
         score += 30;
         reasons.push(`Open for ${daysOpen} days`);
     }
@@ -65,23 +65,29 @@ const calculateQuoteRisk = (quote: Quote) => {
 };
 
 const statusColors = {
-    'Draft': "bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20",
-    'Review': "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20",
-    'Sent': "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20",
-    'Accepted': "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
-    'Approved': "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
-    'Rejected': "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20",
-    'Denied': "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20",
+    '1': "bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20",
+    '2': "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20",
+    '3': "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20",
+    '4': "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
+    '5': "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20",
+    '6': "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20",
+    '7': "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
+    '8': "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20",
+    '9': "bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20",
+    '10': "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
 };
 
 const statusSolidColors = {
-    'Draft': "bg-slate-400",
-    'Review': "bg-indigo-400",
-    'Sent': "bg-blue-500",
-    'Accepted': "bg-emerald-500",
-    'Approved': "bg-emerald-600",
-    'Rejected': "bg-rose-500",
-    'Denied': "bg-rose-600",
+    '1': "bg-slate-400",
+    '2': "bg-indigo-400",
+    '3': "bg-indigo-400",
+    '4': "bg-emerald-600",
+    '5': "bg-rose-500",
+    '6': "bg-blue-500",
+    '7': "bg-emerald-500",
+    '8': "bg-rose-600",
+    '9': "bg-slate-600",
+    '10': "bg-emerald-500",
 };
 
 // Removed DashboardGridCard
@@ -238,9 +244,9 @@ export function QuotesDashboard() {
     const metrics = useMemo(() => {
         const totalCount = finalQuotes.length;
         const totalValue = finalQuotes.reduce((s, q) => s + q.amount, 0);
-        const wonQuotes = finalQuotes.filter(q => ['Accepted', 'Approved'].includes(q.status));
-        const lostQuotes = finalQuotes.filter(q => ['Rejected', 'Denied'].includes(q.status));
-        const openQuotes = finalQuotes.filter(q => !['Accepted', 'Approved', 'Rejected', 'Denied'].includes(q.status));
+        const wonQuotes = finalQuotes.filter(q => ['4', '7', '10'].includes(String(q.status)));
+        const lostQuotes = finalQuotes.filter(q => ['5', '8', '9'].includes(String(q.status)));
+        const openQuotes = finalQuotes.filter(q => !['4', '7', '10', '5', '8', '9'].includes(String(q.status)));
         const wonValue = wonQuotes.reduce((s, q) => s + q.amount, 0);
         const lostValue = lostQuotes.reduce((s, q) => s + q.amount, 0);
         const openValue = openQuotes.reduce((s, q) => s + q.amount, 0);
@@ -282,7 +288,7 @@ export function QuotesDashboard() {
 
     const uniqueStatuses = useMemo(() => {
         // Ensure a consistent order for kanban columns
-        const order: QuoteStatus[] = ['Draft', 'Review', 'Sent', 'Accepted', 'Approved', 'Rejected', 'Denied'];
+        const order: QuoteStatus[] = ['1', '2', '3', '6', '4', '7', '10', '5', '8', '9'] as any;
         const existingStatuses = Array.from(new Set(quotes.map(q => q.status)));
         return order.filter(status => existingStatuses.includes(status)).concat(
             existingStatuses.filter(status => !order.includes(status))

@@ -441,8 +441,8 @@ export function QuoteProductPerformance({ quotes: propQuotes }: QuoteProductPerf
                                                             <span className={cn(
                                                                 "px-2.5 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-wider",
                                                                 // Use statusSolidColors logic or simpler color mapping
-                                                                quote.status === 'Accepted' || quote.status === 'Approved' ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20" :
-                                                                    quote.status === 'Rejected' || quote.status === 'Denied' ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20" :
+                                                                ['4', '7', '10'].includes(String(quote.status)) ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20" :
+                                                                    ['5', '8', '9'].includes(String(quote.status)) ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20" :
                                                                         "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20"
                                                             )}>
                                                                 {t(`quotes.status.${quote.status}`, { defaultValue: quote.status })}

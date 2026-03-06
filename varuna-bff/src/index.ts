@@ -75,6 +75,7 @@ app.use('/api/quote/sync', syncQuoteRouter);
 app.use('/api/analytics/quote', analyticsQuoteRouter);
 app.use('/api/contract/sync', syncContractRouter);
 app.use('/api/analytics/contract', analyticsContractRouter);
+app.use('/api/analytics/sales-performance', salesPerformanceRouter);
 app.use('/api/salespipeline/sync', syncSalesPipelineRouter);
 app.use('/api/analytics/salespipeline', analyticsSalesPipelineRouter);
 app.use('/api/companycurrency/sync', syncCompanyCurrencyRouter);

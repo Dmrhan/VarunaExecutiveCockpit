@@ -26,6 +26,7 @@ import { OpportunityForecast } from './OpportunityForecast';
 import { ProductGroupService } from '../../services/ProductGroupService';
 import type { IProductGroup } from '../../types/crm';
 import { HorizontalBarChart } from '../../components/ui/HorizontalBarChart';
+import { SalesRepList } from './SalesRepList';
 
 import type { Deal } from '../../types/crm';
 
@@ -878,9 +879,10 @@ export function OpportunitiesDashboard() {
                 )
             }
 
-
-
-
+            {/* Sales Rep Performance List */}
+            <div className="mt-8">
+                <SalesRepList deals={filteredDeals} users={users} />
+            </div>
 
             {/* Opportunity Response Modal */}
             <OpportunityDetailModal

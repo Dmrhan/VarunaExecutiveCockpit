@@ -13,14 +13,17 @@ import { getDb } from '../db/database';
 
 const router = Router();
 
-// Quote Status integers (must match seed-all.ts + analytics-quote.ts)
-const Q_DRAFT = 0;
-const Q_SENT = 1;
-const Q_ACCEPTED = 2;
-const Q_REJECTED = 3;
-const Q_REVIEW = 4;
-const Q_APPROVED = 5;
-const Q_DENIED = 6;
+// Quote Status integers (matches EQuoteStatus enum)
+const Q_DRAFT = 1;
+const Q_NEEDS_REVIEW = 2;
+const Q_IN_REVIEW = 3;
+const Q_APPROVED = 4;
+const Q_REJECTED = 5;
+const Q_PRESENTED = 6;
+const Q_ACCEPTED = 7;
+const Q_DENIED = 8;
+const Q_CLOSED = 9;
+const Q_PARTIAL = 10;
 
 // Opportunity DealStatus integers
 const OPP_OPEN = 0;
@@ -115,21 +118,21 @@ router.get('/', (req: Request, res: Response) => {
                 COUNT(*)                                                                                                  AS totalCount,
                 COALESCE(SUM(TotalNetAmountLocalCurrency_Amount), 0)                                                      AS totalNet,
                 COALESCE(SUM(TotalAmountWithTaxLocalCurrency_Amount), 0)                                                  AS totalVat,
-                -- Sent+ (all except Draft)
-                COALESCE(SUM(CASE WHEN Status != ${Q_DRAFT} THEN 1 ELSE 0 END), 0)                                       AS sentCount,
-                COALESCE(SUM(CASE WHEN Status != ${Q_DRAFT} THEN TotalNetAmountLocalCurrency_Amount ELSE 0 END), 0)       AS sentNet,
-                -- Won (Accepted + Approved)
-                COALESCE(SUM(CASE WHEN Status IN (${Q_ACCEPTED},${Q_APPROVED}) THEN 1 ELSE 0 END), 0)                    AS wonCount,
-                COALESCE(SUM(CASE WHEN Status IN (${Q_ACCEPTED},${Q_APPROVED}) THEN TotalNetAmountLocalCurrency_Amount ELSE 0 END), 0)  AS wonNet,
-                COALESCE(SUM(CASE WHEN Status IN (${Q_ACCEPTED},${Q_APPROVED}) THEN TotalAmountWithTaxLocalCurrency_Amount ELSE 0 END), 0) AS wonVat,
-                -- Lost (Rejected + Denied)
-                COALESCE(SUM(CASE WHEN Status IN (${Q_REJECTED},${Q_DENIED})   THEN 1 ELSE 0 END), 0)                    AS lostCount,
-                COALESCE(SUM(CASE WHEN Status IN (${Q_REJECTED},${Q_DENIED})   THEN TotalNetAmountLocalCurrency_Amount ELSE 0 END), 0)  AS lostNet,
-                -- Open (Sent + Review)
-                COALESCE(SUM(CASE WHEN Status IN (${Q_SENT},${Q_REVIEW})       THEN 1 ELSE 0 END), 0)                    AS openCount,
-                COALESCE(SUM(CASE WHEN Status IN (${Q_SENT},${Q_REVIEW})       THEN TotalNetAmountLocalCurrency_Amount ELSE 0 END), 0)  AS openNet,
-                -- Draft
-                COALESCE(SUM(CASE WHEN Status = ${Q_DRAFT} THEN 1 ELSE 0 END), 0)                                        AS draftCount
+                -- Sent+ (all except Draft, Needs Review, In Review)
+                COALESCE(SUM(CASE WHEN Status NOT IN (${Q_DRAFT},${Q_NEEDS_REVIEW},${Q_IN_REVIEW}) THEN 1 ELSE 0 END), 0)                                       AS sentCount,
+                COALESCE(SUM(CASE WHEN Status NOT IN (${Q_DRAFT},${Q_NEEDS_REVIEW},${Q_IN_REVIEW}) THEN TotalNetAmountLocalCurrency_Amount ELSE 0 END), 0)       AS sentNet,
+                -- Won (Approved + Accepted + Partially Ordered)
+                COALESCE(SUM(CASE WHEN Status IN (${Q_APPROVED},${Q_ACCEPTED},${Q_PARTIAL}) THEN 1 ELSE 0 END), 0)                    AS wonCount,
+                COALESCE(SUM(CASE WHEN Status IN (${Q_APPROVED},${Q_ACCEPTED},${Q_PARTIAL}) THEN TotalNetAmountLocalCurrency_Amount ELSE 0 END), 0)  AS wonNet,
+                COALESCE(SUM(CASE WHEN Status IN (${Q_APPROVED},${Q_ACCEPTED},${Q_PARTIAL}) THEN TotalAmountWithTaxLocalCurrency_Amount ELSE 0 END), 0) AS wonVat,
+                -- Lost (Reject + Denied + Closed)
+                COALESCE(SUM(CASE WHEN Status IN (${Q_REJECTED},${Q_DENIED},${Q_CLOSED})   THEN 1 ELSE 0 END), 0)                    AS lostCount,
+                COALESCE(SUM(CASE WHEN Status IN (${Q_REJECTED},${Q_DENIED},${Q_CLOSED})   THEN TotalNetAmountLocalCurrency_Amount ELSE 0 END), 0)  AS lostNet,
+                -- Open (Presented)
+                COALESCE(SUM(CASE WHEN Status = ${Q_PRESENTED}       THEN 1 ELSE 0 END), 0)                    AS openCount,
+                COALESCE(SUM(CASE WHEN Status = ${Q_PRESENTED}       THEN TotalNetAmountLocalCurrency_Amount ELSE 0 END), 0)  AS openNet,
+                -- Draft (Draft + NeedsReview + InReview)
+                COALESCE(SUM(CASE WHEN Status IN (${Q_DRAFT},${Q_NEEDS_REVIEW},${Q_IN_REVIEW}) THEN 1 ELSE 0 END), 0)                                        AS draftCount
             FROM Quote
             WHERE 1=1 ${quoteExtra}
         `, params)!;

@@ -565,7 +565,17 @@
             "Accepted": "Kabul Edildi",
             "Approved": "Onaylandı",
             "Rejected": "Reddedildi",
-            "Denied": "Geri Çevrildi"
+            "Denied": "Geri Çevrildi",
+            "1": "Taslak",
+            "2": "Değerlendirme Gerekiyor",
+            "3": "Değerlendirmeye Alındı",
+            "4": "Onaylandı",
+            "5": "Reddedildi",
+            "6": "Gönderildi (Aktif)",
+            "7": "Kabul Edildi",
+            "8": "İptal Edildi.",
+            "9": "Kaybedildi",
+            "10": "Kısmen Siparişleşti"
         },
         "list": {
             "title": "Teklif Listesi",

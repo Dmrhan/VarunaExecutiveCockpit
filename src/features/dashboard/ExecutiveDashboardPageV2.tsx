@@ -496,7 +496,15 @@ export function ExecutiveDashboardPageV2() {
         return Array.from(new Set([...requiredTeams, ...apiTeams]));
     }, [users]);
 
-    const owners = useMemo(() => users.filter(u => u.role === 'sales_rep' || u.role === 'manager'), [users]);
+    const owners = useMemo(() => {
+        if (!users) return [];
+        let filteredUsers = [...users];
+        if (!selectedTeam.includes('all') && selectedTeam.length > 0 && teamMembers) {
+            const memberIds = teamMembers.map(m => m.PersonId);
+            filteredUsers = filteredUsers.filter(u => memberIds.includes(u.id));
+        }
+        return filteredUsers.filter(u => u.role === 'sales_rep' || u.role === 'manager').map(u => ({ id: u.id, name: u.name }));
+    }, [users, selectedTeam, teamMembers]);
     const products = useMemo(() => {
         const requiredProducts = ['EnRoute', 'Quest', 'Stokbar', 'ServiceCore', 'Varuna', 'Hosting', 'Unidox'];
         const apiProducts = Array.from(new Set([
@@ -508,42 +516,14 @@ export function ExecutiveDashboardPageV2() {
 
 
     // --- Rich Mock Data (Independent of filters for now, or could filter if dates present) ---
-    const { delayedOrders, collections } = useMemo(() => {
-        // Enhanced Mock Generator inside component for specific dashboard needs
-        const delayReasons = ['Software Waiting', 'UAT Phase', 'Customer Testing', 'P/O Pending', 'SAP Transfer', 'Budget Approval', 'Legal Review'];
-
-        // Generate MORE delayed orders for richness
-        const dOrders = Array.from({ length: 45 }).map((_, i) => ({
-            id: `ORD-DELAY-${2024000 + i}`,
-            customer: ['Mavi Giyim', 'LC Waikiki', 'Defacto', 'Migros', 'CarrefourSA', 'BİM', 'A101', 'Şok'][Math.floor(Math.random() * 8)],
-            amount: Math.floor(Math.random() * 500000) + 50000,
-            reason: delayReasons[Math.floor(Math.random() * delayReasons.length)],
-            daysOpen: Math.floor(Math.random() * 60) + 15,
-            owner: ['Ali Yılmaz', 'Ayşe Demir', 'Mehmet Kaya', 'Zeynep Çelik', 'Begüm Hayta'][Math.floor(Math.random() * 5)]
-        }));
-
-        // Generate MORE Collection items
-        const dCollections = Array.from({ length: 60 }).map((_, i) => {
-            const isOverdue = Math.random() > 0.4; // 60% overdue for dramatic effect
-            const days = isOverdue ? Math.floor(Math.random() * 45) + 1 : Math.floor(Math.random() * 15);
-            return {
-                id: `INV-${2024900 + i}`,
-                customer: ['Koç Holding', 'Sabancı', 'Eczacıbaşı', 'Doğuş Grubu', 'Yıldız Holding', 'Anadolu Grubu'][Math.floor(Math.random() * 6)],
-                amount: Math.floor(Math.random() * 1000000) + 100000,
-                dueDate: new Date(Date.now() + (isOverdue ? -1 : 1) * days * 86400000).toISOString(),
-                status: isOverdue ? 'Overdue' : 'Pending',
-                daysDiff: days
-            };
-        });
-
-        return { delayedOrders: dOrders, collections: dCollections };
-    }, []);
+    // Metrics below filteredData to avoid circular dependency
 
     // --- Data Processing with Filters ---
     const filteredData = useMemo(() => {
         let filteredDeals = [...deals];
         let filteredQuotes = [...quotes];
         let filteredOrders = [...orders];
+        let filteredContracts = [...contracts];
 
         // 1. Filter by Date
         const now = new Date();
@@ -572,16 +552,16 @@ export function ExecutiveDashboardPageV2() {
             filteredDeals = filteredDeals.filter(d => filterByDate(d.createdAt));
             filteredQuotes = filteredQuotes.filter(q => filterByDate(q.createdAt));
             filteredOrders = filteredOrders.filter(o => filterByDate(o.createdAt));
+            filteredContracts = filteredContracts.filter(c => filterByDate(c.startDate));
         }
 
         // 2. Filter by Team (Department)
         if (!selectedDepartment.includes('all') && selectedDepartment.length > 0) {
             const usersInSelectedDepts = users.filter(u => u.department && selectedDepartment.includes(u.department)).map(u => u.id);
             filteredDeals = filteredDeals.filter(d => usersInSelectedDepts.includes(d.ownerId));
-            // Since quotes/orders are generated/linked to deals, we filter them implicitly or explicitly
-            // For explicitly:
             filteredQuotes = filteredQuotes.filter(q => q.salesRepId && usersInSelectedDepts.includes(q.salesRepId));
             filteredOrders = filteredOrders.filter(o => o.salesRepId && usersInSelectedDepts.includes(o.salesRepId));
+            filteredContracts = filteredContracts.filter(c => usersInSelectedDepts.includes(c.salesOwnerId));
         }
 
         // 3. Filter by Owner (Person)
@@ -589,6 +569,7 @@ export function ExecutiveDashboardPageV2() {
             filteredDeals = filteredDeals.filter(d => selectedOwner.includes(d.ownerId));
             filteredQuotes = filteredQuotes.filter(q => q.salesRepId && selectedOwner.includes(q.salesRepId));
             filteredOrders = filteredOrders.filter(o => o.salesRepId && selectedOwner.includes(o.salesRepId));
+            filteredContracts = filteredContracts.filter(c => selectedOwner.includes(c.salesOwnerId));
         }
 
         // 3.5 Filter by Team (Custom Table)
@@ -597,6 +578,7 @@ export function ExecutiveDashboardPageV2() {
             filteredDeals = filteredDeals.filter(d => memberIds.includes(d.ownerId));
             filteredQuotes = filteredQuotes.filter(q => q.salesRepId && memberIds.includes(q.salesRepId));
             filteredOrders = filteredOrders.filter(o => o.salesRepId && memberIds.includes(o.salesRepId));
+            filteredContracts = filteredContracts.filter(c => memberIds.includes(c.salesOwnerId));
         }
 
         // 4. Filter by Product
@@ -617,8 +599,57 @@ export function ExecutiveDashboardPageV2() {
             filteredOrders = filteredOrders.filter(o => o.customerName === selectedCustomer);
         }
 
-        return { deals: filteredDeals, quotes: filteredQuotes, orders: filteredOrders, baseDeals, baseOrders };
-    }, [deals, quotes, orders, dateFilter, customRange, selectedDepartment, selectedOwner, selectedProduct, selectedCustomer, users, selectedTeam, teamMembers]);
+        return {
+            deals: filteredDeals,
+            quotes: filteredQuotes,
+            orders: filteredOrders,
+            contracts: filteredContracts,
+            baseDeals,
+            baseOrders
+        };
+    }, [deals, quotes, orders, contracts, dateFilter, customRange, selectedDepartment, selectedOwner, selectedProduct, selectedCustomer, users, selectedTeam, teamMembers]);
+
+    // --- Derived Metrics after filtering ---
+    const { delayedOrders, collections } = useMemo(() => {
+        // Real logic for delayed orders
+        const dOrders = filteredData.orders
+            .filter(o => o.status === 'Open')
+            .map(o => {
+                const created = new Date(o.createdAt);
+                const daysOpen = Math.floor((Date.now() - created.getTime()) / (1000 * 3600 * 24));
+                return {
+                    id: o.id,
+                    customer: o.customerName,
+                    amount: o.amount,
+                    reason: daysOpen > 30 ? 'Overdue Delivery' : 'In Progress',
+                    daysOpen: daysOpen,
+                    owner: (o as any).salesRepName || o.salesRepId || 'Unknown'
+                };
+            })
+            .sort((a, b) => b.daysOpen - a.daysOpen);
+
+        // Real logic for Collection Risks
+        const dCollections: any[] = [];
+        filteredData.contracts.forEach(c => {
+            if (c.paymentPlan) {
+                c.paymentPlan.forEach(p => {
+                    const due = new Date(p.date);
+                    if (p.status !== 'Collected' && due < new Date()) {
+                        dCollections.push({
+                            id: p.id || `P-${c.id}`,
+                            customer: c.customerName,
+                            amount: p.amount,
+                            dueDate: p.date,
+                            status: 'Overdue',
+                            daysDiff: Math.floor((Date.now() - due.getTime()) / (1000 * 3600 * 24))
+                        });
+                    }
+                });
+            }
+        });
+
+        return { delayedOrders: dOrders, collections: dCollections.sort((a, b) => b.daysDiff - a.daysDiff) };
+    }, [filteredData.orders, filteredData.contracts]);
 
     // Drilldown State (after filteredData to allow dependency)
     const [drilldownType, setDrilldownType] = useState<string | null>(null);
@@ -793,7 +824,7 @@ export function ExecutiveDashboardPageV2() {
 
         switch (metricKey) {
             case 'active_opps':
-                return deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi', 'Order', 'Onaylandı'].includes(d.stage)).map(d => ({
+                return filteredData.deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi', 'Order', 'Onaylandı'].includes(d.stage)).map(d => ({
                     id: d.id,
                     title: d.title,
                     subtitle: d.customerName,
@@ -801,7 +832,7 @@ export function ExecutiveDashboardPageV2() {
                     status: d.stage,
                     statusColor: 'bg-indigo-100 text-indigo-700 border-indigo-200',
                     date: new Date(d.createdAt).toLocaleDateString(),
-                    owner: t('opportunities.owner') // Mock
+                    owner: d.ownerName || 'Unknown'
                 }));
             case 'collection_risk':
                 return collections.filter(c => c.status === 'Overdue').map(c => ({
@@ -844,7 +875,7 @@ export function ExecutiveDashboardPageV2() {
     };
 
     // Calculate AI Narrative based on filtered deals
-    const { narrativeParams } = useMemo(() => generateExecutiveBrief(filteredData.deals, contracts, t), [filteredData.deals, contracts, t]);
+    const { narrativeParams } = useMemo(() => generateExecutiveBrief(filteredData.deals, filteredData.contracts, t), [filteredData.deals, filteredData.contracts, t]);
 
     return (
         <div className="min-h-screen bg-slate-50/50 dark:bg-slate-900/50 pb-20">

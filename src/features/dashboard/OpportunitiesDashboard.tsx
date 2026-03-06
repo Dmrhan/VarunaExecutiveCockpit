@@ -556,7 +556,7 @@ export function OpportunitiesDashboard() {
                         <FunnelChart deals={filteredDeals} />
                     </div>
                     <div className="xl:col-span-1 h-[600px]">
-                        <GamifiedLeaderboard deals={filteredDeals} />
+                        <GamifiedLeaderboard dateRange={currentDateRangeStr} />
                     </div>
                 </div>
 

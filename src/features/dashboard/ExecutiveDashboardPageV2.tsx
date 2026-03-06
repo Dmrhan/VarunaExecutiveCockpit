@@ -604,19 +604,21 @@ export function ExecutiveDashboardPageV2() {
                 }));
         }
         if (drilldownType === 'quotes') {
-            return filteredData.quotes.map((q: any) => ({
-                id: q.id,
-                title: q.title ?? `Teklif #${q.id}`,
-                subtitle: q.customerName ?? '-',
-                owner: q.salesRepName ?? ownerName(q.salesRepId ?? q.ownerId),
-                status: q.status,
-                statusColor: 'bg-blue-50 text-blue-700 border-blue-200',
-                date: q.createdAt ? new Date(q.createdAt).toLocaleDateString('tr-TR') : '-',
-                value: fmt(q.amount),
-                product: q.product,
-                discount: q.discount,
-                hasCompetitor: q.hasCompetitor,
-            }));
+            return filteredData.quotes
+                .filter((q: any) => !['Draft', 'Review'].includes(q.status))
+                .map((q: any) => ({
+                    id: q.id,
+                    title: q.title ?? `Teklif #${q.id}`,
+                    subtitle: q.customerName ?? '-',
+                    owner: q.salesRepName ?? ownerName(q.salesRepId ?? q.ownerId),
+                    status: q.status,
+                    statusColor: 'bg-blue-50 text-blue-700 border-blue-200',
+                    date: q.createdAt ? new Date(q.createdAt).toLocaleDateString('tr-TR') : '-',
+                    value: fmt(q.amount),
+                    product: q.product,
+                    discount: q.discount,
+                    hasCompetitor: q.hasCompetitor,
+                }));
         }
         if (drilldownType === 'quotes_accepted') {
             return filteredData.quotes
@@ -907,8 +909,8 @@ export function ExecutiveDashboardPageV2() {
                         />
                         <PipelineStep
                             title={t('dashboardV2.pipeline.quotesSent')}
-                            count={filteredData.quotes.length}
-                            value={`${(filteredData.quotes.reduce((s, q) => s + q.amount, 0) / 1000000).toFixed(1)}M ₺`}
+                            count={filteredData.quotes.filter(q => !['Draft', 'Review'].includes(q.status)).length}
+                            value={`${(filteredData.quotes.filter(q => !['Draft', 'Review'].includes(q.status)).reduce((s, q) => s + q.amount, 0) / 1000000).toFixed(1)}M ₺`}
                             index={1} total={6}
                             icon={<FileText size={16} strokeWidth={2.5} />}
                             iconColorClass="text-blue-500"
@@ -919,7 +921,7 @@ export function ExecutiveDashboardPageV2() {
                         <PipelineStep
                             title={t('dashboardV2.pipeline.conversionRate')}
                             count=""
-                            value={`%${((filteredData.quotes.reduce((s, q) => s + q.amount, 0) / (filteredData.deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi', 'Order', 'Onaylandı'].includes(d.stage)).reduce((s, d) => s + d.value, 0) || 1)) * 100).toFixed(1)}`}
+                            value={`%${((filteredData.quotes.filter(q => !['Draft', 'Review'].includes(q.status)).reduce((s, q) => s + q.amount, 0) / (filteredData.deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi', 'Order', 'Onaylandı'].includes(d.stage)).reduce((s, d) => s + d.value, 0) || 1)) * 100).toFixed(1)}`}
                             index={2} total={6}
                             icon={<Activity size={16} strokeWidth={2.5} />}
                             iconColorClass="text-emerald-500"
@@ -928,7 +930,7 @@ export function ExecutiveDashboardPageV2() {
                             subMetric={
                                 <div className="mt-1 flex flex-col gap-0.5 w-fit">
                                     <div className="text-[11px] font-medium text-slate-400 mt-1">
-                                        {t('dashboardV2.pipeline.countConversion')}: <span className="text-slate-500 font-bold">%{(filteredData.quotes.length / (filteredData.deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi', 'Order', 'Onaylandı'].includes(d.stage)).length || 1) * 100).toFixed(1)}</span>
+                                        {t('dashboardV2.pipeline.countConversion')}: <span className="text-slate-500 font-bold">%{(filteredData.quotes.filter(q => !['Draft', 'Review'].includes(q.status)).length / (filteredData.deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi', 'Order', 'Onaylandı'].includes(d.stage)).length || 1) * 100).toFixed(1)}</span>
                                     </div>
                                 </div>
                             }
@@ -946,7 +948,7 @@ export function ExecutiveDashboardPageV2() {
                                 <div className="mt-1 flex flex-col gap-0.5 w-fit">
                                     <div className="text-[11px] font-medium text-slate-400 flex items-center gap-1">
                                         <span>{t('dashboardV2.pipeline.winRate')} :</span>
-                                        <span className="text-slate-600 dark:text-slate-300 font-bold">%{((filteredData.quotes.filter(q => ['Accepted', 'Approved'].includes(q.status)).reduce((s, q) => s + q.amount, 0) / (filteredData.quotes.reduce((s, q) => s + q.amount, 0) || 1)) * 100).toFixed(1)}</span>
+                                        <span className="text-slate-600 dark:text-slate-300 font-bold">%{((filteredData.quotes.filter(q => ['Accepted', 'Approved'].includes(q.status)).reduce((s, q) => s + q.amount, 0) / (filteredData.quotes.filter(q => !['Draft', 'Review'].includes(q.status)).reduce((s, q) => s + q.amount, 0) || 1)) * 100).toFixed(1)}</span>
                                     </div>
                                 </div>
                             }

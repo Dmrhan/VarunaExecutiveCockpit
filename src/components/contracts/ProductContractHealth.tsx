@@ -21,7 +21,7 @@ export const ProductContractHealth = () => {
             stats[p] = { activeValue: 0, count: 0, riskValue: 0 };
         });
 
-        contracts.filter(c => c.status === 'Active').forEach((c: Contract) => {
+        contracts.filter(c => c.status === 'Signed').forEach((c: Contract) => {
             const group = c.productGroup as ProductGroup;
             if (stats[group]) {
                 stats[group].activeValue += c.totalValueTL;

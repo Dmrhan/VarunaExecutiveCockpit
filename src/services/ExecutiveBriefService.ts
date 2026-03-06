@@ -91,7 +91,7 @@ export const generateExecutiveBrief = (deals: Deal[], contracts: Contract[] = []
 
     // Calculate Contract Metrics if contracts are provided
     if (contracts.length > 0) {
-        const activeContracts = contracts.filter(c => c.status === 'Active');
+        const activeContracts = contracts.filter(c => c.status === 'Signed');
         const totalARR = activeContracts.reduce((sum, c) => sum + c.totalValueTL, 0);
         const highRiskContracts = activeContracts.filter(c => c.riskLevel === 'High');
         const highRiskValue = highRiskContracts.reduce((sum, c) => sum + c.totalValueTL, 0);

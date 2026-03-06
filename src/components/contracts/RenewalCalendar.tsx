@@ -25,7 +25,7 @@ export const RenewalCalendar = () => {
             let count = 0;
             let highRiskCount = 0;
 
-            contracts.filter(c => c.status === 'Active').forEach(c => {
+            contracts.filter(c => c.status === 'Signed').forEach(c => {
                 const renewalDate = new Date(c.renewalDate);
                 if (renewalDate >= monthStart && renewalDate <= monthEnd) {
                     value += c.totalValueTL;

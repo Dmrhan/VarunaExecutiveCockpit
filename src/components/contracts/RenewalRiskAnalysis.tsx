@@ -21,7 +21,7 @@ export const RenewalRiskAnalysis = () => {
 
         const critical: any[] = [];
 
-        contracts.filter(c => c.status === 'Active').forEach(c => {
+        contracts.filter(c => c.status === 'Signed').forEach(c => {
             // Determine Risk Logic (Simple Mock Logic based upon mock data or real fields)
             // If paymentDiscipline is poor or manually flagged, or standard "riskLevel" from mock
             // Using the existing 'riskLevel' from mockData if available, or deriving it.

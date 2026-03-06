@@ -28,10 +28,10 @@ export function ExecutiveSummaryDashboard() {
         const activeDeals = deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi'].includes(d.stage)).length;
         const winRate = orders.filter(o => o.status === 'Closed').length / (orders.length || 1) * 100;
 
-        const totalARR = contracts.filter(c => c.status === 'Active').reduce((sum, c) => sum + c.totalValueTL, 0);
-        const renewalRiskValue = contracts.filter(c => c.status === 'Active' && c.riskLevel === 'High').reduce((sum, c) => sum + c.totalValueTL, 0);
+        const totalARR = contracts.filter(c => c.status === 'Signed').reduce((sum, c) => sum + c.totalValueTL, 0);
+        const renewalRiskValue = contracts.filter(c => c.status === 'Signed' && c.riskLevel === 'High').reduce((sum, c) => sum + c.totalValueTL, 0);
         // Active contracts count for avg calculation
-        const activeContractsCount = contracts.filter(c => c.status === 'Active').length;
+        const activeContractsCount = contracts.filter(c => c.status === 'Signed').length;
         const avgContractValue = activeContractsCount > 0 ? totalARR / activeContractsCount : 0;
 
         return {

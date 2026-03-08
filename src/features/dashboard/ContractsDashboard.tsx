@@ -20,7 +20,7 @@ import { ContractDetailView } from '../../components/contracts/ContractDetailVie
 import { RenewalRiskAnalysis } from '../../components/contracts/RenewalRiskAnalysis'; // New component
 import { LayoutDashboard, List, Users } from 'lucide-react';
 
-import { ContractService } from '../../services/ListingServices';
+import { ContractService, AccountService } from '../../services/ListingServices';
 import { ContractOwnershipPanel } from '../../components/contracts/ContractOwnershipPanel';
 import { ContractStatusDistribution } from '../../components/contracts/ContractStatusDistribution';
 import { ProductContractHealth } from '../../components/contracts/ProductContractHealth';
@@ -42,15 +42,8 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
     const [trendMetric, setTrendMetric] = useState<'amount' | 'count'>('amount');
 
     const fetchAccounts = async () => {
-        try {
-            const response = await fetch('/api/analytics/account/list');
-            if (response.ok) {
-                const data = await response.json();
-                setAccounts(data);
-            }
-        } catch (error) {
-            console.error('Error fetching accounts:', error);
-        }
+        const data = await AccountService.getList();
+        setAccounts(data);
     };
 
     const fetchDashboard = async () => {

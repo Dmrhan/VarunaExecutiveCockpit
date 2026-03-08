@@ -15,7 +15,7 @@ import { cn } from '../../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const NAV_ITEMS = [
-    { icon: PieChart, key: 'executive' },
+    //  { icon: PieChart, key: 'executive' },
     { icon: LayoutDashboard, key: 'executivev2' },
     { icon: Gauge, key: 'performance' },
     { icon: Briefcase, key: 'opportunities' },

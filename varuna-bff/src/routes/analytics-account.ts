@@ -66,20 +66,29 @@ router.get('/', (_req: Request, res: Response) => {
     }
 });
 
-// 11. List all accounts for filters (ID, Name, Title) with pagination
+// 11. List all accounts for filters (ID, Name, Title) with pagination and search
 router.get('/list', (req: Request, res: Response) => {
     try {
         const db = getDb();
         const top = parseInt(req.query.$top as string) || 100;
         const skip = parseInt(req.query.$skip as string) || 0;
+        const search = req.query.$search as string;
         const activeStateCond = 'State = 1';
 
         let querySql = `
             SELECT Id, Name, Title 
             FROM Account 
-            WHERE ${activeStateCond} 
-            ORDER BY COALESCE(Title, Name) ASC
+            WHERE ${activeStateCond}
         `;
+
+        const queryParams: any = { limit: top, offset: skip };
+
+        if (search) {
+            querySql += ` AND (Name LIKE @search OR Title LIKE @search)`;
+            queryParams.search = `%${search}%`;
+        }
+
+        querySql += ` ORDER BY COALESCE(Title, Name) ASC`;
 
         if (db.driver === 'mssql') {
             querySql += ` OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY`;
@@ -87,7 +96,7 @@ router.get('/list', (req: Request, res: Response) => {
             querySql += ` LIMIT @limit OFFSET @offset`;
         }
 
-        const accounts = db.query(querySql, { limit: top, offset: skip });
+        const accounts = db.query(querySql, queryParams);
         res.json(accounts);
     } catch (e: any) {
         res.status(500).json({ error: e.message });

@@ -67,9 +67,14 @@ export const OrderService = {
 };
 
 export const AccountService = {
-    getList: async (top: number = 100, skip: number = 0) => {
+    getList: async (top: number = 100, skip: number = 0, search: string = '') => {
         try {
-            const res = await fetch(`${getApiBaseUrl()}/analytics/account/list?$top=${top}&$skip=${skip}`);
+            const url = new URL(`${getApiBaseUrl()}/analytics/account/list`);
+            url.searchParams.append('$top', top.toString());
+            url.searchParams.append('$skip', skip.toString());
+            if (search) url.searchParams.append('$search', search);
+
+            const res = await fetch(url.toString());
             if (!res.ok) throw new Error('Failed to fetch account list');
             return await res.json();
         } catch (error) {

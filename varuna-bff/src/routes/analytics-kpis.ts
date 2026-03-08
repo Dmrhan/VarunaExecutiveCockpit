@@ -71,17 +71,17 @@ router.get('/', (req: Request, res: Response) => {
             params.accountId = req.query.accountId;
         }
         if (req.query.from) {
-            whereClauses.push('COALESCE(FirstCreatedDate, CloseDate, _SyncedAt) >= @from');
-            qWhere.push('COALESCE(FirstCreatedDate, _SyncedAt) >= @from');
-            ordWhere.push('COALESCE(CreateOrderDate, _SyncedAt) >= @from');
-            ctrWhere.push('COALESCE(StartDate, _SyncedAt) >= @from');
+            whereClauses.push('COALESCE(FirstCreatedDate, CloseDate) >= @from');
+            qWhere.push('FirstCreatedDate >= @from');
+            ordWhere.push('CreateOrderDate >= @from');
+            ctrWhere.push('StartDate >= @from');
             params.from = req.query.from;
         }
         if (req.query.to) {
-            whereClauses.push('COALESCE(FirstCreatedDate, CloseDate, _SyncedAt) <= @to');
-            qWhere.push('COALESCE(FirstCreatedDate, _SyncedAt) <= @to');
-            ordWhere.push('COALESCE(CreateOrderDate, _SyncedAt) <= @to');
-            ctrWhere.push('COALESCE(StartDate, _SyncedAt) <= @to');
+            whereClauses.push('COALESCE(FirstCreatedDate, CloseDate) <= @to');
+            qWhere.push('FirstCreatedDate <= @to');
+            ordWhere.push('CreateOrderDate <= @to');
+            ctrWhere.push('StartDate <= @to');
             params.to = req.query.to;
         }
 

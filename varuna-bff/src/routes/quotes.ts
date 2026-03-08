@@ -94,7 +94,7 @@ router.get('/', (req: Request, res: Response) => {
             statusLabel: Q_STATUS_LABEL[statusCode] ?? String(statusCode),
             statusTr: Q_STATUS_TR[statusCode] ?? String(statusCode),
             statusCode: String(statusCode),
-            createdAt: row.FirstCreatedDate || row._SyncedAt,
+            createdAt: row.FirstCreatedDate,
             validUntil: row.ExpirationDate || '',
             serviceStart: row.ServiceStartDate || '',
             serviceEnd: row.ServiceFinishDate || '',

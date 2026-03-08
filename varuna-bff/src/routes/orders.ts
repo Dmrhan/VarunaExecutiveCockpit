@@ -119,7 +119,7 @@ router.get('/', (req: Request, res: Response) => {
             status: STATUS_LABEL[statusCode] ?? 'Open',
             statusCode,
             isInvoiced: !!row.InvoiceDate,
-            createdAt: row.CreateOrderDate || row._SyncedAt,
+            createdAt: row.CreateOrderDate,
             invoiceDate: row.InvoiceDate || null,
             deliveryDate: row.DeliveryDate || null,
         };

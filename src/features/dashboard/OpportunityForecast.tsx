@@ -117,9 +117,7 @@ export function OpportunityForecast({ deals, onMonthClick, activeFilterMonth }: 
                     <p className="text-sm text-slate-600 dark:text-slate-300">
                         Toplam Tutar: <span className="font-bold text-orange-600 dark:text-orange-400">{formatCurrency(data.totalValue) || '₺0'}</span>
                     </p>
-                    <p className="text-sm text-slate-600 dark:text-slate-300">
-                        Ağırlıklı Tutar: <span className="font-bold">{formatCurrency(data.weightedValue) || '₺0'}</span>
-                    </p>
+
                     <p className="text-sm text-slate-600 dark:text-slate-300">
                         Açık Fırsat: <span className="font-bold">{data.count}</span>
                     </p>

@@ -56,6 +56,7 @@ router.get('/', (req: Request, res: Response) => {
         SELECT
             o.*,
             a.Name              AS AccountName,
+            a.Title             AS AccountTitle,
             p.PersonNameSurname AS OwnerName,
             op.ProductGroupId   AS OppProductGroupId,
             ${productNamesSub} AS ProductNames,
@@ -92,7 +93,7 @@ router.get('/', (req: Request, res: Response) => {
         const amount = row.TotalNetAmountLocalCurrency_Amount || 0;
 
         // Customer name: from the Account join on AccountId
-        const customerName = row.AccountName || row.AccountId || 'Bilinmiyor';
+        const customerName = row.AccountTitle || row.AccountName || row.AccountId || 'Bilinmiyor';
 
         // Order name: use Name field (we seed it as "Müşteri – Ürün Siparişi")
         const title = row.Name || `Sipariş #${row.Id}`;

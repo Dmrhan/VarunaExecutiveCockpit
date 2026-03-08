@@ -37,8 +37,21 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
         status: 'All'
     });
     const [dashboardData, setDashboardData] = useState<any>(null);
+    const [accounts, setAccounts] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [trendMetric, setTrendMetric] = useState<'amount' | 'count'>('amount');
+
+    const fetchAccounts = async () => {
+        try {
+            const response = await fetch('/api/analytics/account/list');
+            if (response.ok) {
+                const data = await response.json();
+                setAccounts(data);
+            }
+        } catch (error) {
+            console.error('Error fetching accounts:', error);
+        }
+    };
 
     const fetchDashboard = async () => {
         setIsLoading(true);
@@ -51,6 +64,10 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
         if (data) setDashboardData(data);
         setIsLoading(false);
     };
+
+    React.useEffect(() => {
+        fetchAccounts();
+    }, []);
 
     React.useEffect(() => {
         fetchDashboard();
@@ -228,8 +245,8 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
                                 onChange={(e) => setFilters({ ...filters, accountId: e.target.value })}
                             >
                                 <option value="">{t('common.all', 'Tümü')}</option>
-                                {accountBreakdown?.map((acc: any) => (
-                                    <option key={acc.accountId} value={acc.accountId}>{acc.accountName}</option>
+                                {accounts.map((acc: any) => (
+                                    <option key={acc.Id} value={acc.Id}>{acc.Title || acc.Name}</option>
                                 ))}
                             </select>
                         </div>

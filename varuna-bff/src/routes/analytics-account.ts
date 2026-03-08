@@ -66,4 +66,21 @@ router.get('/', (_req: Request, res: Response) => {
     }
 });
 
+// 11. List all accounts for filters (ID, Name, Title)
+router.get('/list', (_req: Request, res: Response) => {
+    try {
+        const db = getDb();
+        const activeStateCond = 'State = 1';
+        const accounts = db.query(`
+            SELECT Id, Name, Title 
+            FROM Account 
+            WHERE ${activeStateCond} 
+            ORDER BY COALESCE(Title, Name) ASC
+        `);
+        res.json(accounts);
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 export default router;

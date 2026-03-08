@@ -237,7 +237,7 @@ router.post('/dashboard', (req: Request, res: Response) => {
             FROM Contract c
             LEFT JOIN Account a ON c.AccountId = a.Id
             ${whereClause}
-            GROUP BY c.AccountId, a.Name
+            GROUP BY c.AccountId, a.Name, a.Title
             ORDER BY amount DESC
             ${db.driver === 'mssql' ? 'OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY' : 'LIMIT 10'}
         `, [asOfDate, asOfDate, asOfDate, asOfDate, ...params]);

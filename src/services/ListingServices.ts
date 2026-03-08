@@ -65,3 +65,16 @@ export const OrderService = {
         }
     }
 };
+
+export const AccountService = {
+    getList: async () => {
+        try {
+            const res = await fetch(`${getApiBaseUrl()}/analytics/account/list`);
+            if (!res.ok) throw new Error('Failed to fetch account list');
+            return await res.json();
+        } catch (error) {
+            console.error('Account List API error', error);
+            return [];
+        }
+    }
+};

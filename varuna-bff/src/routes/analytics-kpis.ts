@@ -71,17 +71,17 @@ router.get('/', (req: Request, res: Response) => {
             params.accountId = req.query.accountId;
         }
         if (req.query.from) {
-            whereClauses.push('CloseDate >= @from');
-            qWhere.push('FirstCreatedDate >= @from');
-            ordWhere.push('CreateOrderDate >= @from');
-            ctrWhere.push('StartDate >= @from');
+            whereClauses.push('COALESCE(FirstCreatedDate, CloseDate, _SyncedAt) >= @from');
+            qWhere.push('COALESCE(FirstCreatedDate, _SyncedAt) >= @from');
+            ordWhere.push('COALESCE(CreateOrderDate, _SyncedAt) >= @from');
+            ctrWhere.push('COALESCE(StartDate, _SyncedAt) >= @from');
             params.from = req.query.from;
         }
         if (req.query.to) {
-            whereClauses.push('CloseDate <= @to');
-            qWhere.push('FirstCreatedDate <= @to');
-            ordWhere.push('CreateOrderDate <= @to');
-            ctrWhere.push('StartDate <= @to');
+            whereClauses.push('COALESCE(FirstCreatedDate, CloseDate, _SyncedAt) <= @to');
+            qWhere.push('COALESCE(FirstCreatedDate, _SyncedAt) <= @to');
+            ordWhere.push('COALESCE(CreateOrderDate, _SyncedAt) <= @to');
+            ctrWhere.push('COALESCE(StartDate, _SyncedAt) <= @to');
             params.to = req.query.to;
         }
 
@@ -207,7 +207,7 @@ router.get('/', (req: Request, res: Response) => {
                 COALESCE(SUM(CASE WHEN cpp.HasBeenCollected = 0 THEN cpp.Price_Amount ELSE 0 END), 0)        AS pendingAmount
             FROM ContractPaymentPlans cpp
             INNER JOIN Contract c ON cpp.ContractId = c.Id
-            WHERE 1=1 ${ctrExtra.replace(/StartDate/g, 'c.StartDate').replace(/AccountId/g, 'c.AccountId').replace(/SalesRepresentativeId/g, 'c.SalesRepresentativeId')}
+            WHERE 1=1 ${ctrExtra.replace(/StartDate/g, 'c.StartDate').replace(/AccountId/g, 'c.AccountId').replace(/SalesRepresentativeId/g, 'c.SalesRepresentativeId').replace(/_SyncedAt/g, 'c._SyncedAt')}
         `, params)!;
 
         // ── Response ─────────────────────────────────────────────────────────

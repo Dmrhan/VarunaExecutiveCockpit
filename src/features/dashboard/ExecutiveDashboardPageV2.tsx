@@ -151,7 +151,7 @@ const DrillDownModal = ({ isOpen, onClose, title, rows, drilldownType }: { isOpe
                             <button
                                 onClick={() => setIsFullscreen(f => !f)}
                                 className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                                title={isFullscreen ? 'Küçült' : 'Tam Ekran'}
+                                title={isFullscreen ? t('common.minimize') : t('common.fullscreen')}
                             >
                                 {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
                             </button>
@@ -1064,7 +1064,7 @@ export function ExecutiveDashboardPageV2() {
                             index={5} total={6}
                             icon={<CreditCard size={16} strokeWidth={2.5} />}
                             iconColorClass="text-emerald-500"
-                            unit="SİPARİŞ"
+                            unit={t('dashboardV2.pipeline.orderUnit')}
                             trend={2}
                             onClick={() => setDrilldownType('orders_closed')}
                         />

@@ -901,10 +901,19 @@
                 "owner": "Owner",
                 "dateStatus": "Date/Status",
                 "value": "Value",
-                "customerAndDeals": "Customer / Deals",
+                "customerAndDeals": "Customer / Deal",
                 "stage": "Stage",
                 "probability": "Probability",
-                "estimatedClose": "Estimated Close"
+                "estimatedClose": "Estimated Close",
+                "quoteName": "Quote Name",
+                "orderName": "Order Name",
+                "customer": "Customer",
+                "date": "Date",
+                "product": "Product",
+                "status": "Status",
+                "amount": "Amount",
+                "risk": "Risk",
+                "condition": "Status / Reason"
             }
         },
         "closeForecast": {

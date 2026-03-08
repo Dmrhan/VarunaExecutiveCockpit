@@ -461,7 +461,6 @@ export function ExecutiveDashboardPageV2() {
     const [customRange, setCustomRange] = useState<{ start: Date | null, end: Date | null }>({ start: null, end: null });
 
     // Global Filters
-    const [selectedDepartment, setSelectedDepartment] = useState<string[]>(['all']);
     const [selectedOwner, setSelectedOwner] = useState<string[]>(['all']);
     const [selectedProduct, setSelectedProduct] = useState<string[]>(['all']);
     const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null);
@@ -505,12 +504,6 @@ export function ExecutiveDashboardPageV2() {
 
 
     // Derived Lists for Filters
-    const departments = useMemo(() => {
-        const requiredTeams = ['Univera Satış', 'EnRoute PY', 'Quest PY', 'Stokbar PY', 'İş Ortakları'];
-        const apiTeams = Array.from(new Set(users.map(u => u.department))).filter(Boolean) as string[];
-        return Array.from(new Set([...requiredTeams, ...apiTeams]));
-    }, [users]);
-
     const owners = useMemo(() => {
         if (!users) return [];
         let filteredUsers = [...users];
@@ -570,15 +563,6 @@ export function ExecutiveDashboardPageV2() {
             filteredContracts = filteredContracts.filter(c => filterByDate(c.startDate));
         }
 
-        // 2. Filter by Team (Department)
-        if (!selectedDepartment.includes('all') && selectedDepartment.length > 0) {
-            const usersInSelectedDepts = users.filter(u => u.department && selectedDepartment.includes(u.department)).map(u => u.id);
-            filteredDeals = filteredDeals.filter(d => usersInSelectedDepts.includes(d.ownerId));
-            filteredQuotes = filteredQuotes.filter(q => q.salesRepId && usersInSelectedDepts.includes(q.salesRepId));
-            filteredOrders = filteredOrders.filter(o => o.salesRepId && usersInSelectedDepts.includes(o.salesRepId));
-            filteredContracts = filteredContracts.filter(c => usersInSelectedDepts.includes(c.salesOwnerId));
-        }
-
         // 3. Filter by Owner (Person)
         if (!selectedOwner.includes('all') && selectedOwner.length > 0) {
             filteredDeals = filteredDeals.filter(d => selectedOwner.includes(d.ownerId));
@@ -622,7 +606,7 @@ export function ExecutiveDashboardPageV2() {
             baseDeals,
             baseOrders
         };
-    }, [deals, quotes, orders, contracts, dateFilter, customRange, selectedDepartment, selectedOwner, selectedProduct, selectedCustomer, users, selectedTeam, teamMembers]);
+    }, [deals, quotes, orders, contracts, dateFilter, customRange, selectedOwner, selectedProduct, selectedCustomer, users, selectedTeam, teamMembers]);
 
     // --- Derived Metrics after filtering ---
     const { delayedOrders, collections } = useMemo(() => {
@@ -905,14 +889,6 @@ export function ExecutiveDashboardPageV2() {
                             onChange={setSelectedTeam}
                             icon={<Users size={16} className="text-slate-400" />}
                             allLabel={t('dashboardV2.filters.allTeams', { defaultValue: 'Tüm Takımlar' })}
-                        />
-
-                        {/* Department / Team Filter */}
-                        <MultiSelect
-                            options={departments.map(d => ({ label: d, value: d }))}
-                            selectedValues={selectedDepartment}
-                            onChange={setSelectedDepartment}
-                            allLabel={t('dashboardV2.filters.allDepartments', { defaultValue: 'Tüm Departmanlar' })}
                         />
 
                         {/* Owner / Person Filter */}

@@ -18,7 +18,7 @@ import { OpportunityForm } from './features/dashboard/OpportunityForm';
 
 function App() {
   // Store key instead of translated label to persist view across language changes
-  const [activeView, setActiveView] = useState('executive');
+  const [activeView, setActiveView] = useState('executivev2');
 
   const renderContent = () => {
     switch (activeView) {
@@ -33,7 +33,7 @@ function App() {
       case 'orders': return <OrdersDashboard />;
       case 'contracts': return <ContractsDashboard />;
       case 'scorecard': return <PersonScorecardPage />;
-      default: return <ExecutiveSummaryDashboard />;
+      default: return <ExecutiveDashboardPageV2 />;
     }
   };
 

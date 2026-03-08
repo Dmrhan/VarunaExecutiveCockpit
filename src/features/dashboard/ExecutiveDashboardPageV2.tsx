@@ -85,11 +85,18 @@ const PRODUCT_BADGE: Record<string, { bg: string; text: string }> = {
 const QUOTE_STATUS_BADGE: Record<string, string> = {
     'Accepted': 'bg-emerald-50 text-emerald-700 border border-emerald-200',
     'Approved': 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+    'Gönderildi (Aktif)': 'bg-blue-50 text-blue-700 border border-blue-200',
     'Sent': 'bg-blue-50 text-blue-700 border border-blue-200',
+    'Presented': 'bg-blue-50 text-blue-700 border border-blue-200',
     'Draft': 'bg-slate-100 text-slate-600 border border-slate-200',
+    'Taslak': 'bg-slate-100 text-slate-600 border border-slate-200',
     'Review': 'bg-amber-50 text-amber-700 border border-amber-200',
+    'NeedsReview': 'bg-amber-50 text-amber-700 border border-amber-200',
     'Rejected': 'bg-red-50 text-red-600 border border-red-200',
+    'Reddedildi': 'bg-red-50 text-red-600 border border-red-200',
     'Denied': 'bg-red-50 text-red-600 border border-red-200',
+    'Kaybedildi': 'bg-red-50 text-red-600 border border-red-200',
+    'Closed': 'bg-red-50 text-red-600 border border-red-200',
 };
 
 const DrillDownModal = ({ isOpen, onClose, title, rows, drilldownType }: { isOpen: boolean; onClose: () => void; title: string; rows: DrillDownRow[]; drilldownType?: string }) => {
@@ -191,6 +198,7 @@ const DrillDownModal = ({ isOpen, onClose, title, rows, drilldownType }: { isOpe
                                         <>
                                             <th className="px-5 py-3 font-semibold text-xs uppercase tracking-wide text-slate-500">{t('dashboardV2.drilldown.columns.quoteName')}</th>
                                             <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wide text-slate-500">{t('dashboardV2.drilldown.columns.customer')}</th>
+                                            <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wide text-slate-500">{t('dashboardV2.drilldown.columns.date')}</th>
                                             <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wide text-slate-500">{t('dashboardV2.drilldown.columns.product')}</th>
                                             <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wide text-slate-500">{t('dashboardV2.drilldown.columns.status')}</th>
                                             <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wide text-slate-500 text-right">{t('dashboardV2.drilldown.columns.amount')}</th>
@@ -201,6 +209,7 @@ const DrillDownModal = ({ isOpen, onClose, title, rows, drilldownType }: { isOpe
                                         <>
                                             <th className="px-5 py-3 font-semibold text-xs uppercase tracking-wide text-slate-500">{t('dashboardV2.drilldown.columns.orderName')}</th>
                                             <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wide text-slate-500">{t('dashboardV2.drilldown.columns.customer')}</th>
+                                            <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wide text-slate-500">{t('dashboardV2.drilldown.columns.date')}</th>
                                             <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wide text-slate-500">{t('dashboardV2.drilldown.columns.condition')}</th>
                                             <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wide text-slate-500 text-right">{t('dashboardV2.drilldown.columns.amount')}</th>
                                         </>
@@ -267,6 +276,9 @@ const DrillDownModal = ({ isOpen, onClose, title, rows, drilldownType }: { isOpe
                                                         </div>
                                                     </td>
                                                     <td className="px-4 py-3.5">
+                                                        <div className="text-xs text-slate-600 dark:text-slate-300 flex items-center gap-1"><Calendar size={11} />{row.date}</div>
+                                                    </td>
+                                                    <td className="px-4 py-3.5">
                                                         {pb ? (
                                                             <span className="px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wide whitespace-nowrap"
                                                                 style={{ backgroundColor: pb.bg, color: pb.text }}>
@@ -307,6 +319,9 @@ const DrillDownModal = ({ isOpen, onClose, title, rows, drilldownType }: { isOpe
                                                         <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-600">{row.subtitle.charAt(0)}</div>
                                                         <span className="text-xs text-slate-600 dark:text-slate-300">{row.subtitle}</span>
                                                     </div>
+                                                </td>
+                                                <td className="px-4 py-3.5">
+                                                    <div className="text-xs text-slate-600 dark:text-slate-300 flex items-center gap-1"><Calendar size={11} />{row.date}</div>
                                                 </td>
                                                 <td className="px-4 py-3.5">
                                                     <span className={cn(
@@ -680,36 +695,24 @@ export function ExecutiveDashboardPageV2() {
                     expectedCloseDate: d.expectedCloseDate ? new Date(d.expectedCloseDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' }) : undefined,
                 }));
         }
-        if (drilldownType === 'quotes') {
+        if (drilldownType === 'quotes' || drilldownType === 'quotes_accepted') {
+            const isAcceptedOnly = drilldownType === 'quotes_accepted';
             return filteredData.quotes
-                .filter((q: any) => !['1', '2', '3'].includes(String(q.status)))
+                .filter((q: any) => {
+                    if (isAcceptedOnly) return ['4', '7', '10'].includes(String(q.status));
+                    // Sent+ (all except Draft=1, NeedsReview=2, InReview=3)
+                    return !['1', '2', '3'].includes(String(q.status));
+                })
                 .map((q: any) => ({
                     id: q.id,
-                    title: q.title ?? `Teklif #${q.id}`,
+                    title: q.title || q.number || `Teklif #${q.id}`,
                     subtitle: q.customerName ?? '-',
                     owner: q.salesRepName ?? ownerName(q.salesRepId ?? q.ownerId),
-                    status: q.status,
+                    status: q.statusTr || q.statusLabel || q.status,
                     statusColor: ['4', '7', '10'].includes(String(q.status)) ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
                         ['5', '8', '9'].includes(String(q.status)) ? 'bg-rose-50 text-rose-700 border-rose-200' :
                             ['1', '2', '3'].includes(String(q.status)) ? 'bg-slate-50 text-slate-700 border-slate-200' :
                                 'bg-blue-50 text-blue-700 border-blue-200',
-                    date: q.createdAt ? new Date(q.createdAt).toLocaleDateString('tr-TR') : '-',
-                    value: fmt(q.amount),
-                    product: q.product,
-                    discount: q.discount,
-                    hasCompetitor: q.hasCompetitor,
-                }));
-        }
-        if (drilldownType === 'quotes_accepted') {
-            return filteredData.quotes
-                .filter((q: any) => ['4', '7', '10'].includes(String(q.status)))
-                .map((q: any) => ({
-                    id: q.id,
-                    title: q.title ?? `Teklif #${q.id}`,
-                    subtitle: q.customerName ?? '-',
-                    owner: q.salesRepName ?? ownerName(q.salesRepId ?? q.ownerId),
-                    status: q.status,
-                    statusColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
                     date: q.createdAt ? new Date(q.createdAt).toLocaleDateString('tr-TR') : '-',
                     value: fmt(q.amount),
                     product: q.product,
@@ -722,7 +725,7 @@ export function ExecutiveDashboardPageV2() {
                 .filter((o: any) => o.status === 'Open')
                 .map((o: any) => ({
                     id: o.id,
-                    title: o.title ?? `Sipariş #${o.id}`,
+                    title: o.title || `Sipariş #${o.id}`,
                     subtitle: o.customerName ?? o.product ?? '-',
                     owner: o.salesRepName || ownerName(o.salesRepId ?? o.ownerId),
                     status: 'Açık',
@@ -736,7 +739,7 @@ export function ExecutiveDashboardPageV2() {
                 .filter((o: any) => o.status === 'Closed')
                 .map((o: any) => ({
                     id: o.id,
-                    title: o.title ?? `Sipariş #${o.id}`,
+                    title: o.title || `Sipariş #${o.id}`,
                     subtitle: o.customerName ?? o.product ?? '-',
                     owner: o.salesRepName || ownerName(o.salesRepId ?? o.ownerId),
                     status: 'Faturalandı',

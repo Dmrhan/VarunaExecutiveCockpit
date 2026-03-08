@@ -43,6 +43,26 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
     const [isFetchingAccounts, setIsFetchingAccounts] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [trendMetric, setTrendMetric] = useState<'amount' | 'count'>('amount');
+    const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
+    const accountDropdownRef = React.useRef<HTMLDivElement>(null);
+
+    const handleAccountScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+        if (scrollHeight - scrollTop <= clientHeight + 50) {
+            fetchAccounts();
+        }
+    };
+
+    // Close dropdown on outside click
+    React.useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (accountDropdownRef.current && !accountDropdownRef.current.contains(event.target as Node)) {
+                setIsAccountDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const fetchAccounts = async (reset = false) => {
         if (isFetchingAccounts || (!hasMore && !reset)) return;
@@ -247,18 +267,54 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
                                 ))}
                             </select>
                         </div>
-                        <div className="flex flex-col gap-1">
+                        <div className="flex flex-col gap-1 relative" ref={accountDropdownRef}>
                             <label className="text-[10px] font-bold text-slate-400 uppercase">{t('contracts.filters.customer', 'Müşteri')}</label>
-                            <select
-                                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500 outline-none min-w-[150px]"
-                                value={filters.accountId}
-                                onChange={(e) => setFilters({ ...filters, accountId: e.target.value })}
+                            <div
+                                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500 outline-none min-w-[150px] cursor-pointer relative"
+                                onClick={() => setIsAccountDropdownOpen(!isAccountDropdownOpen)}
                             >
-                                <option value="">{t('common.all', 'Tümü')}</option>
-                                {accounts.map((acc: any) => (
-                                    <option key={acc.Id} value={acc.Id}>{acc.Title || acc.Name}</option>
-                                ))}
-                            </select>
+                                <span className="truncate block pr-4">
+                                    {filters.accountId ? (accounts.find(a => a.Id === filters.accountId)?.Title || accounts.find(a => a.Id === filters.accountId)?.Name || filters.accountId) : t('common.all', 'Tümü')}
+                                </span>
+                                <div className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                                    <ChevronRight size={14} className={cn("transition-transform", isAccountDropdownOpen ? "rotate-90" : "")} />
+                                </div>
+                            </div>
+
+                            {isAccountDropdownOpen && (
+                                <div
+                                    className="absolute z-[60] top-full left-0 mt-1 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl py-1 max-h-60 overflow-y-auto"
+                                    onScroll={handleAccountScroll}
+                                >
+                                    <div
+                                        className="px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer text-xs"
+                                        onClick={() => {
+                                            setFilters({ ...filters, accountId: '' });
+                                            setIsAccountDropdownOpen(false);
+                                        }}
+                                    >
+                                        {t('common.all', 'Tümü')}
+                                    </div>
+                                    {accounts.map((acc: any) => (
+                                        <div
+                                            key={acc.Id}
+                                            className="px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer text-xs truncate"
+                                            onClick={() => {
+                                                setFilters({ ...filters, accountId: acc.Id });
+                                                setIsAccountDropdownOpen(false);
+                                            }}
+                                            title={acc.Title || acc.Name}
+                                        >
+                                            {acc.Title || acc.Name}
+                                        </div>
+                                    ))}
+                                    {isFetchingAccounts && (
+                                        <div className="px-3 py-1.5 text-center text-[10px] text-slate-400 italic">
+                                            {t('common.loading', 'Yükleniyor...')}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                         <div className="flex flex-col gap-1">
                             <label className="text-[10px] font-bold text-slate-400 uppercase">{t('contracts.filters.status', 'Sözleşme Durumu')}</label>

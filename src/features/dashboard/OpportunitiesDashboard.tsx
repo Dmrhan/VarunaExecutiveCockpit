@@ -416,7 +416,7 @@ export function OpportunitiesDashboard() {
         OpportunityService.getStats(
             startDate,
             endDate,
-            selectedOwner.includes('all') ? undefined : selectedOwner[0],
+            selectedOwner.includes('all') ? undefined : selectedOwner,
             selectedTeam.includes('all') ? undefined : selectedTeam.filter(t => t !== 'all')
         ).then(setBackendStats).catch(console.error);
     }, [dateFilter, customRange, selectedOwner, selectedTeam]);
@@ -634,8 +634,8 @@ export function OpportunitiesDashboard() {
                     <div className="xl:col-span-1 h-[600px]">
                         <GamifiedLeaderboard
                             dateRange={currentDateRangeStr}
-                            teamId={selectedTeam.includes('all') ? undefined : selectedTeam[0]}
-                            ownerId={selectedOwner.includes('all') ? undefined : selectedOwner[0]}
+                            teamId={selectedTeam.includes('all') ? undefined : selectedTeam.filter(t => t !== 'all')}
+                            ownerId={selectedOwner.includes('all') ? undefined : selectedOwner}
                         />
                     </div>
                 </div>
@@ -648,8 +648,8 @@ export function OpportunitiesDashboard() {
                         <SalesRepList
                             dateRange={currentDateRangeStr}
                             users={users}
-                            teamId={selectedTeam.includes('all') ? undefined : selectedTeam[0]}
-                            ownerId={selectedOwner.includes('all') ? undefined : selectedOwner[0]}
+                            teamId={selectedTeam.includes('all') ? undefined : selectedTeam.filter(t => t !== 'all')}
+                            ownerId={selectedOwner.includes('all') ? undefined : selectedOwner}
                         />
                     </div>
                 </div>

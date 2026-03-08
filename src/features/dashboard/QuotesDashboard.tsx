@@ -14,9 +14,9 @@ import type { Quote, QuoteStatus, ProductGroup } from '../../types/crm';
 import { PRODUCT_COLORS } from '../../data/mockData';
 
 const formatCurrency = (value: number) => {
-    if (value >= 1000000) return `${(value / 1000000).toFixed(1)} M`;
-    if (value >= 1000) return `${(value / 1000).toFixed(0)} k`;
-    return value.toString();
+    if (value >= 1000000) return `${(value / 1000000).toFixed(1)} M ₺`;
+    if (value >= 1000) return `${(value / 1000).toFixed(0)} k ₺`;
+    return `${value} ₺`;
 };
 
 const calculateQuoteRisk = (quote: Quote) => {

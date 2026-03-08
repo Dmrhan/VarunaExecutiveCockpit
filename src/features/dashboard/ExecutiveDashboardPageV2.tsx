@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { useData } from '../../context/DataContext';
@@ -465,6 +465,11 @@ export function ExecutiveDashboardPageV2() {
     const [selectedProduct, setSelectedProduct] = useState<string[]>(['all']);
     const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null);
     const [selectedTeam, setSelectedTeam] = useState<string[]>(['all']);
+
+    // Reset Person filter when Team changes
+    useEffect(() => {
+        setSelectedOwner(['all']);
+    }, [selectedTeam]);
 
     // Fetch Teams for Filter
     const { data: teamsData } = useQuery({

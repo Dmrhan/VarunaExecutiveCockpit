@@ -224,7 +224,9 @@ export function OrderProductPerformance({ orders: propOrders }: OrderProductPerf
                                     </h3>
                                 </div>
                                 <div className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                                    ${(stat.revenue / 1000).toFixed(1)}k
+                                    {stat.revenue >= 1000000
+                                        ? `${(stat.revenue / 1000000).toFixed(1)}M ₺`
+                                        : `${(stat.revenue / 1000).toFixed(1)}k ₺`}
                                 </div>
                                 <div className="text-xs text-slate-400 mt-1">
                                     {stat.count} {t('performance.activeOrders', { defaultValue: 'aktif sipariş' })}

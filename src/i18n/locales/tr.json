@@ -895,8 +895,8 @@
             "noResults": "Arama kriterlerine uygun kayıt bulunamadı.",
             "records": "kayıt listeleniyor",
             "estimated": "Tahmini",
-            "lowRisk": "LOW RISK",
-            "mediumRisk": "MEDIUM RISK",
+            "lowRisk": "Düşük Risk",
+            "mediumRisk": "Orta Risk",
             "highDiscount": "Yüksek İndirim",
             "competitor": "Rakip",
             "columns": {
@@ -904,10 +904,19 @@
                 "owner": "Sorumlu",
                 "dateStatus": "Tarih/Durum",
                 "value": "Değer",
-                "customerAndDeals": "Müşteri / Fırsatlar",
+                "customerAndDeals": "Müşteri / Fırsat",
                 "stage": "Aşama",
                 "probability": "Olasılık",
-                "estimatedClose": "Tahmini Kapanış"
+                "estimatedClose": "Tahmini Kapanış",
+                "quoteName": "Teklif Adı",
+                "orderName": "Sipariş Adı",
+                "customer": "Müşteri",
+                "date": "Tarih",
+                "product": "Ürün",
+                "status": "Durum",
+                "amount": "Tutar",
+                "risk": "Risk",
+                "condition": "Durum / Neden"
             }
         },
         "closeForecast": {

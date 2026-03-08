@@ -59,7 +59,7 @@ router.get('/', (req: Request, res: Response) => {
         LEFT JOIN Opportunity o ON q.OpportunityId    = o.Id
         LEFT JOIN ProductGroup pg ON o.ProductGroupId = pg.Id
         LEFT JOIN ProductGroup ppg ON pg.ParentGroupId = ppg.Id
-        ORDER BY q.FirstCreatedDate DESC
+        ORDER BY q.CreatedOn DESC
     `;
 
     if (db.driver === 'mssql') {
@@ -94,7 +94,7 @@ router.get('/', (req: Request, res: Response) => {
             statusLabel: Q_STATUS_LABEL[statusCode] ?? String(statusCode),
             statusTr: Q_STATUS_TR[statusCode] ?? String(statusCode),
             statusCode: String(statusCode),
-            createdAt: row.FirstCreatedDate,
+            createdAt: row.CreatedOn || row.FirstCreatedDate,
             validUntil: row.ExpirationDate || '',
             serviceStart: row.ServiceStartDate || '',
             serviceEnd: row.ServiceFinishDate || '',

@@ -81,6 +81,7 @@ const quoteSchema = z.object({
     OrderWillBeCreate: z.number().int().min(0).max(1).nullable().optional(),
     OrderOwnerWillBeChanged: z.number().int().min(0).max(1).nullable().optional(),
     TPOutReferenceCode: z.string().nullable().optional(),
+    CreatedOn: z.string().nullable().optional(),
 
     // Deep Arrays
     QuoteOrderDetails: z.array(z.object({
@@ -180,7 +181,8 @@ router.post('/', (req: Request, res: Response) => {
             CrmOrderId: payload.CrmOrderId ?? null,
             OrderWillBeCreate: payload.OrderWillBeCreate ?? null,
             OrderOwnerWillBeChanged: payload.OrderOwnerWillBeChanged ?? null,
-            TPOutReferenceCode: payload.TPOutReferenceCode ?? null
+            TPOutReferenceCode: payload.TPOutReferenceCode ?? null,
+            CreatedOn: payload.CreatedOn ?? payload.FirstCreatedDate ?? null
         };
 
         const existing = db.queryOne('SELECT Id FROM Quote WHERE Id = ?', [payload.Id]);
@@ -222,6 +224,7 @@ router.post('/', (req: Request, res: Response) => {
                         ProductsAndServices2=@ProductsAndServices2, StockId=@StockId, ItemNo=@ItemNo,
                         QuoteType=@QuoteType, CrmOrderId=@CrmOrderId, OrderWillBeCreate=@OrderWillBeCreate,
                         OrderOwnerWillBeChanged=@OrderOwnerWillBeChanged, TPOutReferenceCode=@TPOutReferenceCode,
+                        CreatedOn=@CreatedOn,
                         _SyncedAt=GETUTCDATE()
                 WHEN NOT MATCHED THEN
                     INSERT (
@@ -242,8 +245,8 @@ router.post('/', (req: Request, res: Response) => {
                         ReferenceCode, TransferWithForeignCurrency, ContactId, FirstCreatedDate, FirstCreatedByName, 
                         TeamId, TeamCreatedById, SubTotalDiscountType, SubTotalDiscountAmount, InRefCode, CompanyId, 
                         QuoteApprovalProcessStatus, TotalDiscountRate, FirstReleaseDate, RevisedDate, CRMRevNo, 
-                        PublicationSource, TermsAndConditions2, ProductsAndServices2, StockId, ItemNo, QuoteType, 
-                        CrmOrderId, OrderWillBeCreate, OrderOwnerWillBeChanged, TPOutReferenceCode, _SyncedAt
+                        QuoteType, CrmOrderId, OrderWillBeCreate, OrderOwnerWillBeChanged, 
+                        TPOutReferenceCode, CreatedOn, _SyncedAt
                     ) VALUES (
                         @Id, @OpportunityId, @RevisionId, @Number, @Name, @ExpirationDate, @SubTotalDiscount, 
                         @WarehouseId, @ProposalOwnerId, @PaymentType, @PaymentTypeTime, @Status, @AddressIdentifier, 
@@ -287,7 +290,7 @@ router.post('/', (req: Request, res: Response) => {
                     TeamId, TeamCreatedById, SubTotalDiscountType, SubTotalDiscountAmount, InRefCode, CompanyId, 
                     QuoteApprovalProcessStatus, TotalDiscountRate, FirstReleaseDate, RevisedDate, CRMRevNo, 
                     PublicationSource, TermsAndConditions2, ProductsAndServices2, StockId, ItemNo, QuoteType, 
-                    CrmOrderId, OrderWillBeCreate, OrderOwnerWillBeChanged, TPOutReferenceCode, _SyncedAt
+                    CrmOrderId, OrderWillBeCreate, OrderOwnerWillBeChanged, TPOutReferenceCode, CreatedOn, _SyncedAt
                 ) VALUES (
                     :Id, :OpportunityId, :RevisionId, :Number, :Name, :ExpirationDate, :SubTotalDiscount, 
                     :WarehouseId, :ProposalOwnerId, :PaymentType, :PaymentTypeTime, :Status, :AddressIdentifier, 
@@ -307,7 +310,7 @@ router.post('/', (req: Request, res: Response) => {
                     :TeamId, :TeamCreatedById, :SubTotalDiscountType, :SubTotalDiscountAmount, :InRefCode, :CompanyId, 
                     :QuoteApprovalProcessStatus, :TotalDiscountRate, :FirstReleaseDate, :RevisedDate, :CRMRevNo, 
                     :PublicationSource, :TermsAndConditions2, :ProductsAndServices2, :StockId, :ItemNo, :QuoteType, 
-                    :CrmOrderId, :OrderWillBeCreate, :OrderOwnerWillBeChanged, :TPOutReferenceCode, datetime('now')
+                    :CrmOrderId, :OrderWillBeCreate, :OrderOwnerWillBeChanged, :TPOutReferenceCode, :CreatedOn, datetime('now')
                 )
                 ON CONFLICT(Id) DO UPDATE SET
                     OpportunityId=excluded.OpportunityId, RevisionId=excluded.RevisionId, Number=excluded.Number,
@@ -336,8 +339,9 @@ router.post('/', (req: Request, res: Response) => {
                     TotalDiscountRate=excluded.TotalDiscountRate, FirstReleaseDate=excluded.FirstReleaseDate, RevisedDate=excluded.RevisedDate,
                     CRMRevNo=excluded.CRMRevNo, PublicationSource=excluded.PublicationSource, TermsAndConditions2=excluded.TermsAndConditions2,
                     ProductsAndServices2=excluded.ProductsAndServices2, StockId=excluded.StockId, ItemNo=excluded.ItemNo,
-                    QuoteType=excluded.QuoteType, CrmOrderId=excluded.CrmOrderId, OrderWillBeCreate=excluded.OrderWillBeCreate,
+                    OrderWillBeCreate=excluded.OrderWillBeCreate,
                     OrderOwnerWillBeChanged=excluded.OrderOwnerWillBeChanged, TPOutReferenceCode=excluded.TPOutReferenceCode,
+                    CreatedOn=excluded.CreatedOn,
                     _SyncedAt=datetime('now')
             `;
         }

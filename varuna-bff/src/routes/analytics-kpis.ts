@@ -72,14 +72,14 @@ router.get('/', (req: Request, res: Response) => {
         }
         if (req.query.from) {
             whereClauses.push('COALESCE(FirstCreatedDate, CloseDate) >= @from');
-            qWhere.push('FirstCreatedDate >= @from');
+            qWhere.push('CreatedOn >= @from');
             ordWhere.push('CreateOrderDate >= @from');
             ctrWhere.push('StartDate >= @from');
             params.from = req.query.from;
         }
         if (req.query.to) {
             whereClauses.push('COALESCE(FirstCreatedDate, CloseDate) <= @to');
-            qWhere.push('FirstCreatedDate <= @to');
+            qWhere.push('CreatedOn <= @to');
             ordWhere.push('CreateOrderDate <= @to');
             ctrWhere.push('StartDate <= @to');
             params.to = req.query.to;

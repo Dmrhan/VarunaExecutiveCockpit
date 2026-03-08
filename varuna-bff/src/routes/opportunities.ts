@@ -140,6 +140,7 @@ router.get('/stats', (req: Request, res: Response) => {
         const endDate = reqEndDate ? reqEndDate.substring(0, 10) : undefined;
         const ownerId = req.query.ownerId as string | string[] | undefined;
         const teamId = (req.query.teamId as string | string[]) || undefined;
+        const product = req.query.product as string | string[] | undefined;
 
         let dateFilter = '';
         const params: any = {};
@@ -165,8 +166,15 @@ router.get('/stats', (req: Request, res: Response) => {
 
         if (teamId) {
             const teamIds = Array.isArray(teamId) ? teamId : [teamId];
-            filterParts.push(`o.OwnerId IN (SELECT PersonId FROM PersonTeam WHERE TeamId IN (${teamIds.map((_, i) => `@t${i}`).join(',')}))`);
+            filterParts.push(`o.OwnerId IN (SELECT PersonId FROM TeamMember WHERE TeamId IN (${teamIds.map((_, i) => `@t${i}`).join(',')}))`);
             teamIds.forEach((id, i) => params[`t${i}`] = id);
+        }
+
+        if (product) {
+            const products = Array.isArray(product) ? product : [product];
+            // Join with ProductGroup to filter by name
+            filterParts.push(`o.ProductGroupId IN (SELECT Id FROM ProductGroup WHERE Name IN (${products.map((_, i) => `@p${i}`).join(',')}))`);
+            products.forEach((p, i) => params[`p${i}`] = p);
         }
 
         dateFilter = filterParts.length > 0 ? `WHERE ${filterParts.join(' AND ')}` : '';

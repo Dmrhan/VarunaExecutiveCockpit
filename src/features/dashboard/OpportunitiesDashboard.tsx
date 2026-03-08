@@ -422,9 +422,10 @@ export function OpportunitiesDashboard() {
             startDate,
             endDate,
             selectedOwner.includes('all') ? undefined : selectedOwner,
-            selectedTeam.includes('all') ? undefined : selectedTeam.filter(t => t !== 'all')
+            selectedTeam.includes('all') ? undefined : selectedTeam.filter(t => t !== 'all'),
+            selectedProduct.includes('all') ? undefined : selectedProduct
         ).then(setBackendStats).catch(console.error);
-    }, [dateFilter, customRange, selectedOwner, selectedTeam]);
+    }, [dateFilter, customRange, selectedOwner, selectedTeam, selectedProduct]);
 
     const metrics = useMemo(() => {
         if (backendStats) return backendStats.metrics;

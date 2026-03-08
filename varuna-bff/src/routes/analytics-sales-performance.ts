@@ -33,8 +33,10 @@ router.get('/dashboard', (req: Request, res: Response) => {
     }
 
     if (req.query.ownerId) {
-        whereClauses.push('o.ProposalOwnerId = @ownerId');
-        params.ownerId = req.query.ownerId;
+        const ownerIds = String(req.query.ownerId).split(',');
+        const placeholders = ownerIds.map((_, i) => `@ownerId${i}`).join(',');
+        whereClauses.push(`o.ProposalOwnerId IN (${placeholders})`);
+        ownerIds.forEach((id, i) => params[`ownerId${i}`] = id);
     }
 
     if (req.query.teamId) {

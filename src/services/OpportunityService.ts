@@ -231,11 +231,11 @@ export const OpportunityService = {
         if (!response.ok) throw new Error('Failed to delete opportunity');
     },
 
-    getStats: async (startDate?: string, endDate?: string, ownerId?: string, teamId?: string[]): Promise<any> => {
+    getStats: async (startDate?: string, endDate?: string, ownerId?: string[], teamId?: string[]): Promise<any> => {
         const params = new URLSearchParams();
         if (startDate) params.append('startDate', startDate);
         if (endDate) params.append('endDate', endDate);
-        if (ownerId) params.append('ownerId', ownerId);
+        if (ownerId) ownerId.forEach(id => params.append('ownerId', id));
         if (teamId) teamId.forEach(t => params.append('teamId', t));
 
         const response = await fetch(`${getOpportunityUrl()}/stats?${params.toString()}`);

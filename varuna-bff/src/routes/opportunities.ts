@@ -138,7 +138,7 @@ router.get('/stats', (req: Request, res: Response) => {
 
         const startDate = reqStartDate ? reqStartDate.substring(0, 10) : undefined;
         const endDate = reqEndDate ? reqEndDate.substring(0, 10) : undefined;
-        const ownerId = req.query.ownerId as string | undefined;
+        const ownerId = req.query.ownerId as string | string[] | undefined;
         const teamId = (req.query.teamId as string | string[]) || undefined;
 
         let dateFilter = '';
@@ -158,8 +158,9 @@ router.get('/stats', (req: Request, res: Response) => {
         }
 
         if (ownerId) {
-            filterParts.push(`o.OwnerId = @ownerId`);
-            params.ownerId = ownerId;
+            const ownerIds = Array.isArray(ownerId) ? ownerId : [ownerId];
+            filterParts.push(`o.OwnerId IN (${ownerIds.map((_, i) => `@o${i}`).join(',')})`);
+            ownerIds.forEach((id, i) => params[`o${i}`] = id);
         }
 
         if (teamId) {

@@ -38,6 +38,7 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
     });
     const [dashboardData, setDashboardData] = useState<any>(null);
     const [accounts, setAccounts] = useState<any[]>([]);
+    const [accountSearch, setAccountSearch] = useState('');
     const [page, setPage] = useState(0);
     const [hasMore, setHasMore] = useState(true);
     const [isFetchingAccounts, setIsFetchingAccounts] = useState(false);
@@ -64,11 +65,11 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const fetchAccounts = async (reset = false) => {
+    const fetchAccounts = async (reset = false, search = accountSearch) => {
         if (isFetchingAccounts || (!hasMore && !reset)) return;
         setIsFetchingAccounts(true);
         const newPage = reset ? 0 : page;
-        const data = await AccountService.getList(50, newPage * 50);
+        const data = await AccountService.getList(50, newPage * 50, search);
 
         if (data.length < 50) setHasMore(false);
         else setHasMore(true);
@@ -82,6 +83,16 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
         }
         setIsFetchingAccounts(false);
     };
+
+    // Debounced search for accounts
+    React.useEffect(() => {
+        const timer = setTimeout(() => {
+            if (isAccountDropdownOpen) {
+                fetchAccounts(true, accountSearch);
+            }
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [accountSearch]);
 
     const fetchDashboard = async () => {
         setIsLoading(true);
@@ -283,36 +294,64 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
 
                             {isAccountDropdownOpen && (
                                 <div
-                                    className="absolute z-[60] top-full left-0 mt-1 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl py-1 max-h-60 overflow-y-auto"
-                                    onScroll={handleAccountScroll}
+                                    className="absolute z-[60] top-full left-0 mt-1 w-full min-w-[200px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl py-1 flex flex-col"
                                 >
-                                    <div
-                                        className="px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer text-xs"
-                                        onClick={() => {
-                                            setFilters({ ...filters, accountId: '' });
-                                            setIsAccountDropdownOpen(false);
-                                        }}
-                                    >
-                                        {t('common.all', 'Tümü')}
+                                    <div className="p-2 border-b border-slate-100 dark:border-slate-700">
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-7 py-1 text-[10px] outline-none focus:ring-1 focus:ring-indigo-500"
+                                                placeholder={t('common.search', 'Ara...')}
+                                                value={accountSearch}
+                                                onChange={(e) => setAccountSearch(e.target.value)}
+                                                onClick={(e) => e.stopPropagation()}
+                                            />
+                                            <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+                                        </div>
                                     </div>
-                                    {accounts.map((acc: any) => (
+
+                                    <div
+                                        className="max-h-60 overflow-y-auto"
+                                        onScroll={handleAccountScroll}
+                                    >
                                         <div
-                                            key={acc.Id}
-                                            className="px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer text-xs truncate"
+                                            className="px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer text-xs"
                                             onClick={() => {
-                                                setFilters({ ...filters, accountId: acc.Id });
+                                                setFilters({ ...filters, accountId: '' });
                                                 setIsAccountDropdownOpen(false);
+                                                setAccountSearch('');
                                             }}
-                                            title={acc.Title || acc.Name}
                                         >
-                                            {acc.Title || acc.Name}
+                                            {t('common.all', 'Tümü')}
                                         </div>
-                                    ))}
-                                    {isFetchingAccounts && (
-                                        <div className="px-3 py-1.5 text-center text-[10px] text-slate-400 italic">
-                                            {t('common.loading', 'Yükleniyor...')}
-                                        </div>
-                                    )}
+                                        {accounts.map((acc: any) => (
+                                            <div
+                                                key={acc.Id}
+                                                className={cn(
+                                                    "px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer text-xs truncate",
+                                                    filters.accountId === acc.Id && "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-medium"
+                                                )}
+                                                onClick={() => {
+                                                    setFilters({ ...filters, accountId: acc.Id });
+                                                    setIsAccountDropdownOpen(false);
+                                                    setAccountSearch('');
+                                                }}
+                                                title={acc.Title || acc.Name}
+                                            >
+                                                {acc.Title || acc.Name}
+                                            </div>
+                                        ))}
+                                        {isFetchingAccounts && (
+                                            <div className="px-3 py-1.5 text-center text-[10px] text-slate-400 italic">
+                                                {t('common.loading', 'Yükleniyor...')}
+                                            </div>
+                                        )}
+                                        {!isFetchingAccounts && accounts.length === 0 && (
+                                            <div className="px-3 py-4 text-center text-xs text-slate-400">
+                                                {t('common.noResults', 'Sonuç bulunamadı')}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             )}
                         </div>

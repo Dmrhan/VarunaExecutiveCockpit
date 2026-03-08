@@ -53,8 +53,8 @@ router.get('/', (req: Request, res: Response) => {
             SELECT 
                 COUNT(Id) as count, 
                 COALESCE(SUM(ExpectedRevenue_Value), 0) as amount,
-                SUM(CASE WHEN (DealStatus IS NULL OR DealStatus NOT IN (2,3)) THEN 1 ELSE 0 END) as openCount,
-                COALESCE(SUM(CASE WHEN (DealStatus IS NULL OR DealStatus NOT IN (2,3)) THEN ExpectedRevenue_Value ELSE 0 END), 0) as openAmount
+                SUM(CASE WHEN (OpportunityStageNameTr NOT IN ('Kazanıldı', 'Order', 'Kaybedildi', 'Lost')) THEN 1 ELSE 0 END) as openCount,
+                COALESCE(SUM(CASE WHEN (OpportunityStageNameTr NOT IN ('Kazanıldı', 'Order', 'Kaybedildi', 'Lost')) THEN ExpectedRevenue_Value ELSE 0 END), 0) as openAmount
             FROM Opportunity 
             WHERE OwnerId = ? ${companyFilterSql} ${oppDates.sql}
         `;
@@ -259,7 +259,7 @@ router.get('/', (req: Request, res: Response) => {
                 COALESCE(SUM(o.ExpectedRevenue_Value), 0) as expectedRevenue,
                 COUNT(o.Id) as count
             FROM Opportunity o
-            WHERE o.OwnerId = ? AND (o.DealStatus IS NULL OR o.DealStatus NOT IN (2,3)) AND o.CloseDate IS NOT NULL ${companyFilterSql.replace('CompanyId', 'o.CompanyId')} ${oppDates.sql.replace('FirstCreatedDate', 'o.FirstCreatedDate')}
+            WHERE o.OwnerId = ? AND (o.OpportunityStageNameTr NOT IN ('Kazanıldı', 'Order', 'Kaybedildi', 'Lost')) AND o.CloseDate IS NOT NULL ${companyFilterSql.replace('CompanyId', 'o.CompanyId')} ${oppDates.sql.replace('FirstCreatedDate', 'o.FirstCreatedDate')}
             GROUP BY ${db.driver === 'mssql' ? "FORMAT(o.CloseDate, 'yyyy-MM')" : "strftime('%Y-%m', o.CloseDate)"}
             ORDER BY monthKey ASC
         `, [personId, ...companyPrm, ...oppDates.prm]);
@@ -291,7 +291,7 @@ router.get('/', (req: Request, res: Response) => {
                 o.OpportunityStageNameTr as stageName
             FROM Opportunity o
             LEFT JOIN Account a ON o.AccountId = a.Id
-            WHERE o.OwnerId = ? AND (o.DealStatus IS NULL OR o.DealStatus NOT IN (2,3)) AND o.CloseDate IS NOT NULL ${companyFilterSql.replace('CompanyId', 'o.CompanyId')} ${oppDates.sql.replace('FirstCreatedDate', 'o.FirstCreatedDate')}
+            WHERE o.OwnerId = ? AND (o.OpportunityStageNameTr NOT IN ('Kazanıldı', 'Order', 'Kaybedildi', 'Lost')) AND o.CloseDate IS NOT NULL ${companyFilterSql.replace('CompanyId', 'o.CompanyId')} ${oppDates.sql.replace('FirstCreatedDate', 'o.FirstCreatedDate')}
             ORDER BY o.CloseDate ASC
         `, [personId, ...companyPrm, ...oppDates.prm]);
 

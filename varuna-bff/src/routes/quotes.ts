@@ -73,7 +73,7 @@ router.get('/', (req: Request, res: Response) => {
     const mapped = rows.map(row => {
         const statusCode: number = row.Status ?? 0;
         const productGroupId: string = row.OppProductGroupId || '';
-        const productName = row.ParentGroupName || row.ProductGroupName || productGroupId || 'EnRoute';
+        const productName = row.ParentGroupName || row.ProductGroupName || productGroupId || 'Unknown';
         // Amount: use VAT-included figure (same as what was seeded)
         const amount = row.TotalAmountWithTaxLocalCurrency_Amount || row.TotalNetAmountLocalCurrency_Amount || 0;
 

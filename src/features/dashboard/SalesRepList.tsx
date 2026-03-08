@@ -9,9 +9,11 @@ import { formatCurrency } from '../../utils/formatters';
 interface SalesRepListProps {
     dateRange: { start: string | null; end: string | null };
     users: User[];
+    teamId?: string;
+    ownerId?: string;
 }
 
-export const SalesRepList = ({ dateRange, users }: SalesRepListProps) => {
+export const SalesRepList = ({ dateRange, users, teamId, ownerId }: SalesRepListProps) => {
     const { t } = useTranslation();
     const [performanceData, setPerformanceData] = React.useState<any[]>([]);
     const [isLoading, setIsLoading] = React.useState(false);
@@ -23,6 +25,8 @@ export const SalesRepList = ({ dateRange, users }: SalesRepListProps) => {
                 const params = new URLSearchParams();
                 if (dateRange.start) params.append('from', dateRange.start + ' 00:00:00');
                 if (dateRange.end) params.append('to', dateRange.end + ' 23:59:59');
+                if (teamId) params.append('teamId', teamId);
+                if (ownerId) params.append('ownerId', ownerId);
 
                 const baseUrl = (window as any)['__RUNTIME_CONFIG__']?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
                 const response = await fetch(`${baseUrl}/analytics/sales-performance/dashboard?${params.toString()}`);
@@ -39,7 +43,7 @@ export const SalesRepList = ({ dateRange, users }: SalesRepListProps) => {
         };
 
         fetchPerformance();
-    }, [dateRange.start, dateRange.end]);
+    }, [dateRange.start, dateRange.end, teamId, ownerId]);
 
     const repPerformance = useMemo(() => {
         return performanceData.map((rep: any) => {

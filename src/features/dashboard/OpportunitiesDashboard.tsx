@@ -3,8 +3,11 @@ import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { useData } from '../../context/DataContext';
-import { Share2, Info, Users, Sparkles, Calendar, AlertCircle, CheckCircle2, Clock, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Share2, Info, Users, Sparkles, Calendar, AlertCircle, CheckCircle2, Clock, ArrowUpRight, ArrowDownRight, Building2, Package } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { useQuery } from '@tanstack/react-query';
+import { TeamService } from '../../services/TeamService';
+import { MultiSelect } from '../../components/ui/MultiSelect';
 
 const STAGE_COLORS: Record<string, string> = {
     'Lead': '#6366f1',
@@ -74,6 +77,24 @@ export function OpportunitiesDashboard() {
     const [customRange, setCustomRange] = useState<{ start: Date | null, end: Date | null }>({ start: null, end: null });
     const [showDatePicker, setShowDatePicker] = useState(false);
 
+    // Global Filters
+    const [selectedOwner, setSelectedOwner] = useState<string[]>(['all']);
+    const [selectedProduct, setSelectedProduct] = useState<string[]>(['all']);
+    const [selectedTeam, setSelectedTeam] = useState<string[]>(['all']);
+
+    // Fetch Teams
+    const { data: teamsData } = useQuery({
+        queryKey: ['teams'],
+        queryFn: TeamService.getAll
+    });
+
+    // Fetch Team Members
+    const { data: teamMembers } = useQuery({
+        queryKey: ['team-members', selectedTeam],
+        queryFn: () => selectedTeam.includes('all') ? Promise.resolve([]) : TeamService.getMembers(selectedTeam.filter(t => t !== 'all')),
+        enabled: !selectedTeam.includes('all') && selectedTeam.length > 0
+    });
+
     // AI Response Modal State
     const [selectedDealForResponse, setSelectedDealForResponse] = useState<Deal | null>(null);
     const [isResponseModalOpen, setIsResponseModalOpen] = useState(false);
@@ -126,6 +147,21 @@ export function OpportunitiesDashboard() {
         }
     };
 
+
+    const owners = useMemo(() => {
+        if (!users) return [];
+        let filteredUsers = [...users];
+        if (!selectedTeam.includes('all') && selectedTeam.length > 0 && teamMembers) {
+            const memberIds = teamMembers.map(m => m.PersonId);
+            filteredUsers = filteredUsers.filter(u => memberIds.includes(u.id));
+        }
+        return filteredUsers.map(u => ({ id: u.id, name: u.name }));
+    }, [users, selectedTeam, teamMembers]);
+
+    const products = useMemo(() => {
+        const pGroups = Array.from(new Set(deals.map(d => d.product))).filter(Boolean) as string[];
+        return pGroups;
+    }, [deals]);
 
     // --- Data processing ---
 
@@ -268,39 +304,48 @@ export function OpportunitiesDashboard() {
             });
         }
 
+        // 4. Team / Owner Filter
+        if (!selectedTeam.includes('all') && selectedTeam.length > 0 && teamMembers) {
+            const memberIds = teamMembers.map(m => m.PersonId);
+            result = result.filter(d => memberIds.includes(d.ownerId));
+        }
+
+        if (!selectedOwner.includes('all') && selectedOwner.length > 0) {
+            result = result.filter(d => selectedOwner.includes(d.ownerId));
+        }
+
+        // 5. Product Filter
+        if (!selectedProduct.includes('all') && selectedProduct.length > 0) {
+            result = result.filter(d => selectedProduct.includes(d.product));
+        }
+
         return result;
-    }, [dateFilter, customRange, deals, columnFilters, users, forecastMonthFilter]);
+    }, [dateFilter, customRange, deals, columnFilters, users, forecastMonthFilter, selectedTeam, teamMembers, selectedOwner, selectedProduct, selectedSource, selectedTopCustomer]);
 
     // Deals specifically for the Forecast Component
     // (Ignores "Created Date" filter to show future pipeline, but respects Owner/Product/Value filters)
     const forecastDeals = useMemo(() => {
         let result = deals;
 
-        // Apply ONLY Column Filters (Entity filters)
-        if (columnFilters.customer) {
-            const search = columnFilters.customer.toLowerCase();
-            result = result.filter(d =>
-                d.customerName.toLowerCase().includes(search) ||
-                d.title.toLowerCase().includes(search)
-            );
-        }
-        if (columnFilters.stage !== 'all') {
-            result = result.filter(d => d.stage === columnFilters.stage);
-        }
-        if (columnFilters.owner) {
-            const search = columnFilters.owner.toLowerCase();
-            result = result.filter(d => {
-                const ownerName = (d.ownerName || users.find(u => u.id === d.ownerId)?.name || '').toLowerCase();
-                return ownerName.includes(search);
-            });
-        }
-        if (columnFilters.minValue) result = result.filter(d => d.value >= Number(columnFilters.minValue));
-        if (columnFilters.maxValue) result = result.filter(d => d.value <= Number(columnFilters.maxValue));
         if (columnFilters.minProb) result = result.filter(d => d.probability >= Number(columnFilters.minProb));
         if (columnFilters.maxProb) result = result.filter(d => d.probability <= Number(columnFilters.maxProb));
 
+        // Global Filters (Team / Owner / Product)
+        if (!selectedTeam.includes('all') && selectedTeam.length > 0 && teamMembers) {
+            const memberIds = teamMembers.map(m => m.PersonId);
+            result = result.filter(d => memberIds.includes(d.ownerId));
+        }
+
+        if (!selectedOwner.includes('all') && selectedOwner.length > 0) {
+            result = result.filter(d => selectedOwner.includes(d.ownerId));
+        }
+
+        if (!selectedProduct.includes('all') && selectedProduct.length > 0) {
+            result = result.filter(d => selectedProduct.includes(d.product));
+        }
+
         return result;
-    }, [deals, columnFilters, users]);
+    }, [deals, columnFilters, users, selectedTeam, teamMembers, selectedOwner, selectedProduct]);
 
     const [backendStats, setBackendStats] = useState<any>(null);
 
@@ -368,8 +413,13 @@ export function OpportunitiesDashboard() {
             }
         }
 
-        OpportunityService.getStats(startDate, endDate).then(setBackendStats).catch(console.error);
-    }, [dateFilter, customRange]);
+        OpportunityService.getStats(
+            startDate,
+            endDate,
+            selectedOwner.includes('all') ? undefined : selectedOwner[0],
+            selectedTeam.includes('all') ? undefined : selectedTeam.filter(t => t !== 'all')
+        ).then(setBackendStats).catch(console.error);
+    }, [dateFilter, customRange, selectedOwner, selectedTeam]);
 
     const metrics = useMemo(() => {
         if (backendStats) return backendStats.metrics;
@@ -488,7 +538,33 @@ export function OpportunitiesDashboard() {
                     <p className="text-slate-500 dark:text-slate-400 text-sm">{t('opportunities.subtitle')}</p>
                 </div>
 
-                <div className="flex flex-col md:flex-row gap-2">
+                <div className="flex flex-col md:flex-row gap-2 items-center">
+                    {/* Team Filter */}
+                    <MultiSelect
+                        options={(teamsData || []).map(t => ({ label: t.Definition, value: t.Id }))}
+                        selectedValues={selectedTeam}
+                        onChange={setSelectedTeam}
+                        icon={<Users size={16} className="text-slate-400" />}
+                        allLabel={t('dashboardV2.filters.allTeams', { defaultValue: 'Tüm Takımlar' })}
+                    />
+
+                    {/* Owner / Person Filter */}
+                    <MultiSelect
+                        options={owners.map(u => ({ label: u.name, value: u.id }))}
+                        selectedValues={selectedOwner}
+                        onChange={setSelectedOwner}
+                        icon={<Building2 size={16} className="text-slate-400" />}
+                        allLabel={t('dashboardV2.filters.allPersons', { defaultValue: 'Tüm Kişiler' })}
+                    />
+
+                    {/* Product Filter */}
+                    <MultiSelect
+                        options={products.map(p => ({ label: p, value: p }))}
+                        selectedValues={selectedProduct}
+                        onChange={setSelectedProduct}
+                        icon={<Package size={16} className="text-slate-400" />}
+                        allLabel={t('dashboardV2.filters.allProducts', { defaultValue: 'Tüm Ürünler' })}
+                    />
 
                     {/* Date Filter Buttons */}
                     <div className="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-xl items-center gap-1 overflow-x-auto scrollbar-hide">
@@ -556,7 +632,11 @@ export function OpportunitiesDashboard() {
                         <FunnelChart deals={filteredDeals} />
                     </div>
                     <div className="xl:col-span-1 h-[600px]">
-                        <GamifiedLeaderboard dateRange={currentDateRangeStr} />
+                        <GamifiedLeaderboard
+                            dateRange={currentDateRangeStr}
+                            teamId={selectedTeam.includes('all') ? undefined : selectedTeam[0]}
+                            ownerId={selectedOwner.includes('all') ? undefined : selectedOwner[0]}
+                        />
                     </div>
                 </div>
 
@@ -564,6 +644,14 @@ export function OpportunitiesDashboard() {
                 <div>
                     <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-4">{t('opportunities.productPerformance')}</h3>
                     <ProductPerformance deals={filteredDeals} />
+                    <div className="mt-8">
+                        <SalesRepList
+                            dateRange={currentDateRangeStr}
+                            users={users}
+                            teamId={selectedTeam.includes('all') ? undefined : selectedTeam[0]}
+                            ownerId={selectedOwner.includes('all') ? undefined : selectedOwner[0]}
+                        />
+                    </div>
                 </div>
 
                 <div className="w-full">

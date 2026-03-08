@@ -918,6 +918,10 @@
             "subtitle": "Total opportunity volume per customer",
             "potential": "Potential",
             "dealCount": "Deal Count"
+        },
+        "productBalance": {
+            "title": "Product Based Sales",
+            "subtitle": "Revenue distribution by product groups"
         }
     },
     "performanceCockpit": {

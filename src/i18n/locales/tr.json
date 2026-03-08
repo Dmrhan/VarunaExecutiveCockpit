@@ -921,6 +921,10 @@
             "subtitle": "Müşteri başına toplam fırsat hacmi",
             "potential": "Potansiyel",
             "dealCount": "Fırsat Sayısı"
+        },
+        "productBalance": {
+            "title": "Ürün Bazlı Satışlar",
+            "subtitle": "Ürün gruplarına göre ciro dağılımı"
         }
     },
     "performanceCockpit": {

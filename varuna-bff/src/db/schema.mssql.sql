@@ -841,6 +841,7 @@ CREATE TABLE [dbo].[Quote] (
     OrderWillBeCreate INT,
     OrderOwnerWillBeChanged INT,
     TPOutReferenceCode NVARCHAR(MAX),
+    CreatedOn DATETIME,
     _SyncedAt DATETIME DEFAULT GETUTCDATE()
 );
 END

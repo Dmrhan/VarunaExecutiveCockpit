@@ -1051,6 +1051,7 @@ CREATE TABLE IF NOT EXISTS Quote (
     OrderWillBeCreate INTEGER,
     OrderOwnerWillBeChanged INTEGER,
     TPOutReferenceCode TEXT,
+    CreatedOn DATETIME,
     
     _SyncedAt DATETIME DEFAULT (datetime('now'))
 );

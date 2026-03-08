@@ -349,6 +349,9 @@ export function OpportunitiesDashboard() {
             result = result.filter(d => selectedProduct.includes(d.product));
         }
 
+        // Exclude Won and Lost deals from Forecast
+        result = result.filter(d => !['Kazanıldı', 'Order', 'Kaybedildi', 'Lost'].includes(d.stage));
+
         return result;
     }, [deals, columnFilters, users, selectedTeam, teamMembers, selectedOwner, selectedProduct]);
 

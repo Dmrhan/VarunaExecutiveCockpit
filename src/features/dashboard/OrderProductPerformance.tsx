@@ -45,31 +45,41 @@ export function OrderProductPerformance({ orders: propOrders }: OrderProductPerf
     }, [selectedProduct]);
 
     const productStats = useMemo(() => {
-        const stats: Record<string, { revenue: number, count: number, growth: number }> = {};
+        const stats: Record<string, {
+            revenue: number,
+            count: number,
+            growth: number,
+            parentName: string,
+            productName: string
+        }> = {};
 
         orders.forEach(order => {
-            if (!stats[order.product]) {
-                stats[order.product] = { revenue: 0, count: 0, growth: Math.floor(Math.random() * 40) - 10 }; // mocked growth
-            }
-            stats[order.product].revenue += order.amount;
-            stats[order.product].count += 1;
-        });
+            // Group by Parent Category name if available, otherwise fallback to product name
+            const groupName = order.parentGroupName || order.product || 'Diğer';
 
-        // Ensure we always have the 6 main products
-        const products: ProductGroup[] = ['EnRoute', 'Stokbar', 'Hosting', 'ServiceCore', 'Quest', 'Varuna'];
-        products.forEach(p => {
-            if (!stats[p]) stats[p] = { revenue: 0, count: 0, growth: 0 };
+            if (!stats[groupName]) {
+                const growth = Math.floor(Math.random() * 40) - 10;
+                stats[groupName] = {
+                    revenue: 0,
+                    count: 0,
+                    growth,
+                    parentName: order.parentGroupName || '',
+                    productName: order.product || groupName
+                };
+            }
+            stats[groupName].revenue += order.amount || 0;
+            stats[groupName].count += 1;
         });
 
         return Object.entries(stats)
-            .filter(([name]) => products.includes(name as ProductGroup))
+            .filter(([_, stat]) => stat.revenue > 0) // Hide groups with 0 revenue
             .sort((a, b) => b[1].revenue - a[1].revenue);
     }, [orders]);
 
     // All orders for the selected product (used for charts)
     const selectedOrders = useMemo(() => {
         if (!selectedProduct) return [];
-        return orders.filter(o => o.product === selectedProduct);
+        return orders.filter(o => o.product === selectedProduct || o.parentGroupName === selectedProduct);
     }, [orders, selectedProduct]);
 
     // Orders filtered by status (used for table view)
@@ -205,9 +215,16 @@ export function OrderProductPerformance({ orders: propOrders }: OrderProductPerf
                                     </div>
                                 </div>
 
-                                <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{product}</h3>
+                                <div className="mb-1">
+                                    <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold truncate leading-tight">
+                                        {stat.parentName}
+                                    </p>
+                                    <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                                        {stat.productName}
+                                    </h3>
+                                </div>
                                 <div className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                                    ${(stat.revenue / 1000000).toFixed(1)}M
+                                    ${(stat.revenue / 1000).toFixed(1)}k
                                 </div>
                                 <div className="text-xs text-slate-400 mt-1">
                                     {stat.count} {t('performance.activeOrders', { defaultValue: 'aktif sipariş' })}

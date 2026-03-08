@@ -122,6 +122,8 @@ router.get('/', (req: Request, res: Response) => {
             createdAt: row.CreateOrderDate,
             invoiceDate: row.InvoiceDate || null,
             deliveryDate: row.DeliveryDate || null,
+            parentGroupName: row.ParentGroupName,
+            productLevel: row.ProductLevel,
         };
     });
 

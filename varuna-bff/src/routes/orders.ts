@@ -59,6 +59,8 @@ router.get('/', (req: Request, res: Response) => {
             a.Title             AS AccountTitle,
             p.PersonNameSurname AS OwnerName,
             op.ProductGroupId   AS OppProductGroupId,
+            pg.Name             AS ProductGroupName,
+            ppg.Name            AS ParentGroupName,
             ${productNamesSub} AS ProductNames,
             ${primaryStockSub} AS PrimaryStockId
         FROM CrmOrder o
@@ -66,6 +68,8 @@ router.get('/', (req: Request, res: Response) => {
         LEFT JOIN Person      p  ON o.ProposalOwnerId = p.Id
         LEFT JOIN Quote       q  ON o.QuoteId         = q.Id
         LEFT JOIN Opportunity op ON q.OpportunityId   = op.Id
+        LEFT JOIN ProductGroup pg ON op.ProductGroupId = pg.Id
+        LEFT JOIN ProductGroup ppg ON pg.ParentGroupId = ppg.Id
         ORDER BY o.CreateOrderDate DESC
     `;
 
@@ -85,7 +89,9 @@ router.get('/', (req: Request, res: Response) => {
         // Derive product from: order products list → opp product group → fallback
         const productGroupId: string = row.OppProductGroupId || '';
         const primaryStockName = row.PrimaryStockId ? (STOCK_ID_TO_NAME[row.PrimaryStockId] || '') : '';
-        const productName = primaryStockName
+        const productName = row.ParentGroupName
+            || row.ProductGroupName
+            || primaryStockName
             || PRODUCT_GROUP_NAMES[productGroupId]
             || 'EnRoute';
 

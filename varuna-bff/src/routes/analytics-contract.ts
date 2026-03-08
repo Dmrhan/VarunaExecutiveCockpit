@@ -227,7 +227,7 @@ router.post('/dashboard', (req: Request, res: Response) => {
         // 4. Müşteri Breakdown (Top 10)
         const accountBreakdown = db.query(`
             SELECT
-                COALESCE(a.Name, c.AccountId) as accountName,
+                COALESCE(a.Title, a.Name, c.AccountId) as accountName,
                 c.AccountId as accountId,
                 COUNT(c.Id) as count,
                 COALESCE(SUM(c.TotalAmountLocalCurrency_Amount), 0) as amount,

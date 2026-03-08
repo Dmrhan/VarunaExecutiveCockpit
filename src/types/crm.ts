@@ -109,6 +109,8 @@ export interface Quote {
     discount?: number; // percentage 0-100
     lastActivityDate?: string;
     hasCompetitor?: boolean;
+    parentGroupName?: string;
+    productLevel?: number;
 }
 
 export interface Order {
@@ -122,6 +124,8 @@ export interface Order {
     createdAt: string;
     deliveryDate: string;
     salesRepId: string;
+    parentGroupName?: string;
+    productLevel?: number;
 }
 
 export interface DashboardMetrics {

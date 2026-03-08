@@ -138,21 +138,37 @@ router.get('/stats', (req: Request, res: Response) => {
 
         const startDate = reqStartDate ? reqStartDate.substring(0, 10) : undefined;
         const endDate = reqEndDate ? reqEndDate.substring(0, 10) : undefined;
+        const ownerId = req.query.ownerId as string | undefined;
+        const teamId = (req.query.teamId as string | string[]) || undefined;
 
         let dateFilter = '';
         const params: any = {};
+        const filterParts: string[] = [];
 
         if (startDate && endDate) {
-            dateFilter = `WHERE o.FirstCreatedDate BETWEEN @startDate AND @endDate`;
+            filterParts.push(`o.FirstCreatedDate BETWEEN @startDate AND @endDate`);
             params.startDate = startDate;
             params.endDate = endDate;
         } else if (startDate) {
-            dateFilter = `WHERE o.FirstCreatedDate >= @startDate`;
+            filterParts.push(`o.FirstCreatedDate >= @startDate`);
             params.startDate = startDate;
         } else if (endDate) {
-            dateFilter = `WHERE o.FirstCreatedDate <= @endDate`;
+            filterParts.push(`o.FirstCreatedDate <= @endDate`);
             params.endDate = endDate;
         }
+
+        if (ownerId) {
+            filterParts.push(`o.OwnerId = @ownerId`);
+            params.ownerId = ownerId;
+        }
+
+        if (teamId) {
+            const teamIds = Array.isArray(teamId) ? teamId : [teamId];
+            filterParts.push(`o.OwnerId IN (SELECT PersonId FROM PersonTeam WHERE TeamId IN (${teamIds.map((_, i) => `@t${i}`).join(',')}))`);
+            teamIds.forEach((id, i) => params[`t${i}`] = id);
+        }
+
+        dateFilter = filterParts.length > 0 ? `WHERE ${filterParts.join(' AND ')}` : '';
 
         const metricsQuery = `
             SELECT 

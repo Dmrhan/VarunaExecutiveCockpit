@@ -114,6 +114,11 @@ export function OpportunitiesDashboard() {
     // --- Forecast State ---
     const [forecastMonthFilter, setForecastMonthFilter] = useState<Date | null>(null);
 
+    // Reset Person filter when Team changes
+    useEffect(() => {
+        setSelectedOwner(['all']);
+    }, [selectedTeam]);
+
     const handleSort = (key: keyof Deal | 'ownerName') => {
         setSortConfig(prev => {
             if (prev?.key === key) {

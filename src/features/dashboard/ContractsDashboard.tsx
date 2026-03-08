@@ -38,12 +38,29 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
     });
     const [dashboardData, setDashboardData] = useState<any>(null);
     const [accounts, setAccounts] = useState<any[]>([]);
+    const [page, setPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const [isFetchingAccounts, setIsFetchingAccounts] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [trendMetric, setTrendMetric] = useState<'amount' | 'count'>('amount');
 
-    const fetchAccounts = async () => {
-        const data = await AccountService.getList();
-        setAccounts(data);
+    const fetchAccounts = async (reset = false) => {
+        if (isFetchingAccounts || (!hasMore && !reset)) return;
+        setIsFetchingAccounts(true);
+        const newPage = reset ? 0 : page;
+        const data = await AccountService.getList(50, newPage * 50);
+
+        if (data.length < 50) setHasMore(false);
+        else setHasMore(true);
+
+        if (reset) {
+            setAccounts(data);
+            setPage(1);
+        } else {
+            setAccounts(prev => [...prev, ...data]);
+            setPage(newPage + 1);
+        }
+        setIsFetchingAccounts(false);
     };
 
     const fetchDashboard = async () => {

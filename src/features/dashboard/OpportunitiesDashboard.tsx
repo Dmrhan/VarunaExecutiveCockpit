@@ -653,14 +653,6 @@ export function OpportunitiesDashboard() {
                 <div>
                     <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-4">{t('opportunities.productPerformance')}</h3>
                     <ProductPerformance deals={filteredDeals} />
-                    <div className="mt-8">
-                        <SalesRepList
-                            dateRange={currentDateRangeStr}
-                            users={users}
-                            teamId={selectedTeam.includes('all') ? undefined : selectedTeam.filter(t => t !== 'all')}
-                            ownerId={selectedOwner.includes('all') ? undefined : selectedOwner}
-                        />
-                    </div>
                 </div>
 
                 <div className="w-full">

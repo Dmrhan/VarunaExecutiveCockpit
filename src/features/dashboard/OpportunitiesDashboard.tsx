@@ -486,7 +486,8 @@ export function OpportunitiesDashboard() {
 
     // Use filteredDeals for List/Kanban
     const sortedDeals = useMemo(() => {
-        let result = [...filteredDeals];
+        // Filter out Won and Lost deals from the list/kanban views
+        let result = filteredDeals.filter(d => !['Kazanıldı', 'Order', 'Kaybedildi', 'Lost'].includes(d.stage));
 
         if (sortConfig) {
             result.sort((a, b) => {
@@ -701,7 +702,7 @@ export function OpportunitiesDashboard() {
                                         >{t('opportunities.kanbanView')}</button>
                                     </div>
                                 </div>
-                                <span className="text-xs text-slate-400 font-mono font-bold uppercase">{t('performance.listingDetails_short', { count: filteredDeals.length, defaultValue: `${filteredDeals.length} Kayıt` })}</span>
+                                <span className="text-xs text-slate-400 font-mono font-bold uppercase">{t('performance.listingDetails_short', { count: sortedDeals.length, defaultValue: `${sortedDeals.length} Kayıt` })}</span>
                             </div>
                         </CardHeader>
                         <CardContent className="p-0 overflow-auto h-[600px]">
@@ -892,10 +893,10 @@ export function OpportunitiesDashboard() {
                                     >{t('opportunities.kanbanView', 'Pano')}</button>
                                 </div>
                             </div>
-                            <span className="text-xs text-slate-400 font-mono font-bold uppercase">{t('performance.listingDetails_short', { count: filteredDeals.length, defaultValue: `${filteredDeals.length} Kayıt` })}</span>
+                            <span className="text-xs text-slate-400 font-mono font-bold uppercase">{t('performance.listingDetails_short', { count: sortedDeals.length, defaultValue: `${sortedDeals.length} Kayıt` })}</span>
                         </div>
                         <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
-                            {['Lead', 'Qualified', 'Proposal', 'Negotiation', 'Order', 'Lost'].map(stage => {
+                            {['Lead', 'Qualified', 'Proposal', 'Negotiation'].map(stage => {
                                 const stageDeals = sortedDeals.filter(d => d.stage === stage || (stage === 'Order' && d.stage === 'Kazanıldı') || (stage === 'Lost' && d.stage === 'Kaybedildi'));
                                 const totalVal = stageDeals.reduce((s, d) => s + d.value, 0);
 

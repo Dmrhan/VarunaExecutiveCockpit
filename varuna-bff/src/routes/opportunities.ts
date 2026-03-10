@@ -258,7 +258,7 @@ router.get('/:id', (req: Request, res: Response) => {
         id: row.Id,
         title: row.Name || '',
         customer_name: row.AccountTitle || row.AccountName || row.AccountId || 'Bilinmiyor',
-        product: row.ProductGroupName || row.ProductGroupId || 'EnRoute',
+        product: row.ProductGroupName || row.ProductGroupId || 'Bilinmiyor',
         value: row.Amount_Value || 0,
         stage: row.OpportunityStageNameTr || 'Lead',
         probability: row.Probability || 0,

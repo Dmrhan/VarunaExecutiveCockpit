@@ -93,7 +93,7 @@ router.get('/', (req: Request, res: Response) => {
             || row.ProductGroupName
             || primaryStockName
             || PRODUCT_GROUP_NAMES[productGroupId]
-            || 'EnRoute';
+            || 'Bilinmiyor';
 
         // Amount: VAT-included total
         const amount = row.TotalNetAmountLocalCurrency_Amount || 0;

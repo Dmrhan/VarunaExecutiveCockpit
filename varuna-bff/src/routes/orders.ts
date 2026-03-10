@@ -34,8 +34,8 @@ router.get('/', (req: Request, res: Response) => {
 
     // Subquery: first order line item's stock name list (for display)
     const productNamesSub = db.driver === 'mssql'
-        ? `(SELECT STRING_AGG(s.Name, ', ') FROM (SELECT TOP 3 s2.Name FROM CrmOrderProducts cop2 LEFT JOIN Stock s2 ON cop2.StockId = s2.Id WHERE cop2.CrmOrderId = o.Id) AS sub)`
-        : `(SELECT GROUP_CONCAT(s.Name, ', ') FROM CrmOrderProducts cop2 LEFT JOIN Stock s2 ON cop2.StockId = s2.Id WHERE cop2.CrmOrderId = o.Id LIMIT 3)`;
+        ? `(SELECT STRING_AGG(Name, ', ') FROM (SELECT TOP 3 s2.Name FROM CrmOrderProducts cop2 LEFT JOIN Stock s2 ON cop2.StockId = s2.Id WHERE cop2.CrmOrderId = o.Id) AS sub)`
+        : `(SELECT GROUP_CONCAT(s2.Name, ', ') FROM CrmOrderProducts cop2 LEFT JOIN Stock s2 ON cop2.StockId = s2.Id WHERE cop2.CrmOrderId = o.Id LIMIT 3)`;
 
     // Subquery: parent product group name from first order line item
     // CrmOrderProducts → Stock → ProductGroup (child) → ProductGroup (parent)

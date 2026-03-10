@@ -384,7 +384,8 @@ const InteractiveKPICard = ({ metric, onClick }: { metric: DashboardMetric, onCl
     </motion.div>
 );
 
-const PipelineStep = ({ title, count, value, index, total, icon, iconColorClass = "text-slate-400", unit, trend, conversion, subMetric, onClick }: any) => {
+const PipelineStep = ({ title, count, value, index, total, icon, iconColorClass = "text-slate-400", unit, trend, conversion, subMetric, onClick, absoluteCount, absoluteValue }: any) => {
+    const { t } = useTranslation();
     return (
         <div
             onClick={onClick}
@@ -399,9 +400,16 @@ const PipelineStep = ({ title, count, value, index, total, icon, iconColorClass 
             {/* Content */}
             <div className="flex flex-col h-full justify-start relative z-10 gap-2">
                 <div className="flex items-center justify-between w-full mb-1">
-                    <p className="text-[11px] font-bold tracking-wide text-slate-400 capitalize">
-                        {title}
-                    </p>
+                    <div className="flex items-center gap-2">
+                        <p className="text-[11px] font-bold tracking-wide text-slate-400 capitalize">
+                            {title}
+                        </p>
+                        {absoluteValue && (
+                            <div className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[9px] font-bold text-slate-500 border border-slate-200 dark:border-slate-700 whitespace-nowrap" title={t('common.total')}>
+                                {absoluteValue}
+                            </div>
+                        )}
+                    </div>
                     {icon && (
                         <div className={cn("p-1", iconColorClass)}>
                             {icon}
@@ -433,9 +441,16 @@ const PipelineStep = ({ title, count, value, index, total, icon, iconColorClass 
                 </div>
 
                 <div className="flex justify-between items-center mt-auto w-full pt-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-                        {count} {unit || 'KAYIT'}
-                    </span>
+                    <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                            {count} {unit || 'KAYIT'}
+                        </span>
+                        {absoluteCount !== undefined && (
+                            <span className="text-[9px] font-medium text-slate-400 bg-slate-50 dark:bg-slate-800/50 px-1 rounded border border-slate-100 dark:border-slate-800" title={t('common.total')}>
+                                / {absoluteCount}
+                            </span>
+                        )}
+                    </div>
 
                     {trend !== undefined && (
                         <div className={cn(
@@ -612,6 +627,33 @@ export function ExecutiveDashboardPageV2() {
             baseOrders
         };
     }, [deals, quotes, orders, contracts, dateFilter, customRange, selectedOwner, selectedProduct, selectedCustomer, users, selectedTeam, teamMembers]);
+
+    // --- Absolute Totals for Reference ---
+    const absoluteTotals = useMemo(() => {
+        const fmt = (v: number) => `${(v / 1000000).toFixed(1)}M \u20ba`;
+
+        const openDeals = deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi', 'Order', 'Onaylandı'].includes(d.stage));
+        const sentQuotes = quotes.filter(q => !['1', '2', '3'].includes(String(q.status)));
+        const openOrders = orders.filter(o => o.status === 'Open');
+        const closedOrders = orders.filter(o => o.status === 'Closed');
+
+        return {
+            deals: {
+                count: openDeals.length,
+                value: fmt(openDeals.reduce((s, d) => s + d.value, 0))
+            },
+            quotes: {
+                count: sentQuotes.length,
+                value: fmt(sentQuotes.reduce((s, q) => s + q.amount, 0))
+            },
+            orders: {
+                openCount: openOrders.length,
+                openValue: fmt(openOrders.reduce((s, o) => s + o.amount, 0)),
+                closedCount: closedOrders.length,
+                closedValue: fmt(closedOrders.reduce((s, o) => s + o.amount, 0))
+            }
+        };
+    }, [deals, quotes, orders]);
 
     // --- Derived Metrics after filtering ---
     const { delayedOrders, collections } = useMemo(() => {
@@ -979,6 +1021,8 @@ export function ExecutiveDashboardPageV2() {
                             unit={t('dashboardV2.pipeline.oppUnit')}
                             trend={12}
                             onClick={() => setDrilldownType('deals')}
+                            absoluteCount={absoluteTotals.deals.count}
+                            absoluteValue={absoluteTotals.deals.value}
                         />
                         <PipelineStep
                             title={t('dashboardV2.pipeline.quotesSent')}
@@ -990,6 +1034,8 @@ export function ExecutiveDashboardPageV2() {
                             unit={t('dashboardV2.pipeline.quoteUnit')}
                             trend={8}
                             onClick={() => setDrilldownType('quotes')}
+                            absoluteCount={absoluteTotals.quotes.count}
+                            absoluteValue={absoluteTotals.quotes.value}
                         />
                         <PipelineStep
                             title={t('dashboardV2.pipeline.conversionRate')}
@@ -1037,6 +1083,8 @@ export function ExecutiveDashboardPageV2() {
                             unit={t('dashboardV2.pipeline.orderUnit')}
                             trend={15}
                             onClick={() => setDrilldownType('orders_open')}
+                            absoluteCount={absoluteTotals.orders.openCount}
+                            absoluteValue={absoluteTotals.orders.openValue}
                         />
                         <PipelineStep
                             title={t('dashboardV2.pipeline.invoiced')}
@@ -1048,6 +1096,8 @@ export function ExecutiveDashboardPageV2() {
                             unit={t('dashboardV2.pipeline.orderUnit')}
                             trend={2}
                             onClick={() => setDrilldownType('orders_closed')}
+                            absoluteCount={absoluteTotals.orders.closedCount}
+                            absoluteValue={absoluteTotals.orders.closedValue}
                         />
                     </div>
                 </div>

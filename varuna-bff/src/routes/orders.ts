@@ -32,34 +32,39 @@ router.get('/', (req: Request, res: Response) => {
     const top = parseInt(req.query.$top as string) || 5000;
     const skip = parseInt(req.query.$skip as string) || 0;
 
-    // Subqueries: SQLite uses GROUP_CONCAT and LIMIT, MSSQL uses STRING_AGG and TOP
+    // Subquery: first order line item's stock name list (for display)
     const productNamesSub = db.driver === 'mssql'
-        ? `(SELECT STRING_AGG(Name, ', ') FROM (SELECT TOP 3 s.Name FROM CrmOrderProducts cop2 LEFT JOIN Stock s ON cop2.StockId = s.Id WHERE cop2.CrmOrderId = o.Id) AS sub)`
-        : `(SELECT GROUP_CONCAT(s.Name, ', ') FROM CrmOrderProducts cop2 LEFT JOIN Stock s ON cop2.StockId = s.Id WHERE cop2.CrmOrderId = o.Id LIMIT 3)`;
+        ? `(SELECT STRING_AGG(s.Name, ', ') FROM (SELECT TOP 3 s2.Name FROM CrmOrderProducts cop2 LEFT JOIN Stock s2 ON cop2.StockId = s2.Id WHERE cop2.CrmOrderId = o.Id) AS sub)`
+        : `(SELECT GROUP_CONCAT(s.Name, ', ') FROM CrmOrderProducts cop2 LEFT JOIN Stock s2 ON cop2.StockId = s2.Id WHERE cop2.CrmOrderId = o.Id LIMIT 3)`;
 
-    const primaryStockSub = db.driver === 'mssql'
-        ? `(SELECT TOP 1 cop2.StockId FROM CrmOrderProducts cop2 WHERE cop2.CrmOrderId = o.Id)`
-        : `(SELECT cop2.StockId FROM CrmOrderProducts cop2 WHERE cop2.CrmOrderId = o.Id LIMIT 1)`;
+    // Subquery: parent product group name from first order line item
+    // CrmOrderProducts → Stock → ProductGroup (child) → ProductGroup (parent)
+    const stockProductGroupSub = db.driver === 'mssql'
+        ? `(SELECT TOP 1 COALESCE(tpg.Name, spg.Name)
+             FROM CrmOrderProducts cop2
+             LEFT JOIN Stock s2      ON cop2.StockId = s2.Id
+             LEFT JOIN ProductGroup spg ON s2.ProductGroupId = spg.Id
+             LEFT JOIN ProductGroup tpg ON spg.ParentGroupId = tpg.Id
+             WHERE cop2.CrmOrderId = o.Id)`
+        : `(SELECT COALESCE(tpg.Name, spg.Name)
+             FROM CrmOrderProducts cop2
+             LEFT JOIN Stock s2      ON cop2.StockId = s2.Id
+             LEFT JOIN ProductGroup spg ON s2.ProductGroupId = spg.Id
+             LEFT JOIN ProductGroup tpg ON spg.ParentGroupId = tpg.Id
+             WHERE cop2.CrmOrderId = o.Id
+             LIMIT 1)`;
 
-    // Join Account by AccountId (not CompanyId), Person for owner
     let querySql = `
         SELECT
             o.*,
             a.Name              AS AccountName,
             a.Title             AS AccountTitle,
             p.PersonNameSurname AS OwnerName,
-            op.ProductGroupId   AS OppProductGroupId,
-            pg.Name             AS ProductGroupName,
-            ppg.Name            AS ParentGroupName,
-            ${productNamesSub} AS ProductNames,
-            ${primaryStockSub} AS PrimaryStockId
+            ${productNamesSub}     AS ProductNames,
+            ${stockProductGroupSub} AS StockProductGroupName
         FROM CrmOrder o
-        LEFT JOIN Account     a  ON o.AccountId      = a.Id
-        LEFT JOIN Person      p  ON o.ProposalOwnerId = p.Id
-        LEFT JOIN Quote       q  ON o.QuoteId         = q.Id
-        LEFT JOIN Opportunity op ON q.OpportunityId   = op.Id
-        LEFT JOIN ProductGroup pg ON op.ProductGroupId = pg.Id
-        LEFT JOIN ProductGroup ppg ON pg.ParentGroupId = ppg.Id
+        LEFT JOIN Account a ON o.AccountId      = a.Id
+        LEFT JOIN Person  p ON o.ProposalOwnerId = p.Id
         ORDER BY o.CreateOrderDate DESC
     `;
 
@@ -76,11 +81,9 @@ router.get('/', (req: Request, res: Response) => {
 
     const mapped = rows.map(row => {
         const statusCode: number = row.Status ?? 0;
-        // Product group: comes from the Opportunity via Quote join (same as opportunities route)
-        // ParentGroupName = top-level group (e.g. 'EnRoute'), ProductGroupName = sub-group
-        const productName = row.ParentGroupName
-            || row.ProductGroupName
-            || 'Bilinmiyor';
+        // Product group: derived from CrmOrderProducts → Stock → ProductGroup → ParentProductGroup
+        // StockProductGroupName is COALESCE(parent group name, child group name) from the first order line
+        const productName = row.StockProductGroupName || 'Bilinmiyor';
 
         // Amount: VAT-included total
         const amount = row.TotalNetAmountLocalCurrency_Amount || 0;

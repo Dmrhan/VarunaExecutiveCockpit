@@ -103,7 +103,12 @@ export function QuoteProductPerformance({ quotes: propQuotes }: QuoteProductPerf
         }, {} as Record<string, { value: number, count: number }>);
 
         const statusData = Object.entries(byStatus)
-            .map(([name, stats]) => ({ name, value: stats.value, count: stats.count }))
+            .map(([statusCode, stats]) => ({
+                name: t(`quotes.status.${statusCode}`, { defaultValue: statusCode }),
+                statusCode,
+                value: stats.value,
+                count: stats.count
+            }))
             .sort((a, b) => b.value - a.value);
 
         // Trend Data (Last 6 Months)
@@ -296,7 +301,7 @@ export function QuoteProductPerformance({ quotes: propQuotes }: QuoteProductPerf
                                                 {t('performance.listingDetails', { count: filteredQuotes.length })}
                                                 {selectedStatus && (
                                                     <span className="ml-2 px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold dark:bg-indigo-500/20 dark:text-indigo-400 flex inline-flex items-center gap-1 cursor-pointer hover:bg-indigo-200 transition-colors" onClick={() => setSelectedStatus(null)}>
-                                                        {selectedStatus} <X size={10} />
+                                                        {t(`quotes.status.${selectedStatus}`, { defaultValue: selectedStatus })} <X size={10} />
                                                     </span>
                                                 )}
                                             </p>
@@ -381,7 +386,7 @@ export function QuoteProductPerformance({ quotes: propQuotes }: QuoteProductPerf
                                             <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">{t('performance.distributionTitle')}</h3>
                                             {selectedStatus && (
                                                 <span className="text-[10px] text-slate-400 ml-auto">
-                                                    {t('common.filter')}: <span className="font-bold text-indigo-500">{selectedStatus}</span>
+                                                    {t('common.filter')}: <span className="font-bold text-indigo-500">{t(`quotes.status.${selectedStatus}`, { defaultValue: selectedStatus })}</span>
                                                 </span>
                                             )}
                                         </div>
@@ -404,7 +409,7 @@ export function QuoteProductPerformance({ quotes: propQuotes }: QuoteProductPerf
                                                                 stroke={selectedStatus === entry.name ? "#000" : "none"}
                                                                 strokeWidth={2}
                                                                 className="cursor-pointer hover:opacity-80 transition-opacity"
-                                                                onClick={() => setSelectedStatus(selectedStatus === entry.name ? null : entry.name)}
+                                                                onClick={() => setSelectedStatus(selectedStatus === entry.statusCode ? null : entry.statusCode)}
                                                             />
                                                         ))}
                                                     </Pie>

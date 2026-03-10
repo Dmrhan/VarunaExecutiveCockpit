@@ -26,16 +26,6 @@ const PRODUCT_GROUP_NAMES: Record<string, string> = {
     'PG-UDX': 'Unidox',
 };
 
-const STOCK_ID_TO_NAME: Record<string, string> = {
-    'STK-ENROUTE': 'EnRoute',
-    'STK-QUEST': 'Quest',
-    'STK-STOKBAR': 'Stokbar',
-    'STK-SVCCORE': 'ServiceCore',
-    'STK-VARUNA': 'Varuna',
-    'STK-HOSTING': 'Hosting',
-    'STK-UNIDOX': 'Unidox',
-};
-
 router.get('/', (req: Request, res: Response) => {
     const db = getDb();
 
@@ -86,13 +76,10 @@ router.get('/', (req: Request, res: Response) => {
 
     const mapped = rows.map(row => {
         const statusCode: number = row.Status ?? 0;
-        // Derive product from: order products list → opp product group → fallback
-        const productGroupId: string = row.OppProductGroupId || '';
-        const primaryStockName = row.PrimaryStockId ? (STOCK_ID_TO_NAME[row.PrimaryStockId] || '') : '';
+        // Product group: comes from the Opportunity via Quote join (same as opportunities route)
+        // ParentGroupName = top-level group (e.g. 'EnRoute'), ProductGroupName = sub-group
         const productName = row.ParentGroupName
             || row.ProductGroupName
-            || primaryStockName
-            || PRODUCT_GROUP_NAMES[productGroupId]
             || 'Bilinmiyor';
 
         // Amount: VAT-included total

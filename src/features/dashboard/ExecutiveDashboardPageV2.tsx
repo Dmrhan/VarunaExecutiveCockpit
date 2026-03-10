@@ -405,7 +405,7 @@ const PipelineStep = ({ title, count, value, index, total, icon, iconColorClass 
                             {title}
                         </p>
                         {absoluteValue && (
-                            <div className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[11px] font-bold text-slate-500 border border-slate-200 dark:border-slate-700 whitespace-nowrap" title={t('common.total')}>
+                            <div className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[13px] font-bold text-slate-500 border border-slate-200 dark:border-slate-700 whitespace-nowrap" title={t('common.total')}>
                                 {absoluteValue}
                             </div>
                         )}
@@ -446,7 +446,7 @@ const PipelineStep = ({ title, count, value, index, total, icon, iconColorClass 
                             {count} {unit || 'KAYIT'}
                         </span>
                         {absoluteCount !== undefined && (
-                            <span className="text-[11px] font-medium text-slate-400 bg-slate-50 dark:bg-slate-800/50 px-1.5 rounded border border-slate-100 dark:border-slate-800" title={t('common.total')}>
+                            <span className="text-[13px] font-medium text-slate-400 bg-slate-50 dark:bg-slate-800/50 px-1.5 rounded border border-slate-100 dark:border-slate-800" title={t('common.total')}>
                                 / {absoluteCount}
                             </span>
                         )}

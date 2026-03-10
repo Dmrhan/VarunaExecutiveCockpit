@@ -575,7 +575,7 @@ export function QuotesDashboard() {
                                                     >
                                                         <option value="all">All</option>
                                                         {uniqueStatuses.map(status => (
-                                                            <option key={status} value={status}>{status}</option>
+                                                            <option key={status} value={status}>{t(`quotes.status.${status}`, { defaultValue: status })}</option>
                                                         ))}
                                                     </select>
                                                 </th>
@@ -649,7 +649,7 @@ export function QuotesDashboard() {
                                                                 "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border",
                                                                 statusColors[quote.status as keyof typeof statusColors] || "bg-slate-100 text-slate-500 border-slate-200"
                                                             )}>
-                                                                {t(`quotes.status.${quote.status} `, { defaultValue: quote.status })}
+                                                                {t(`quotes.status.${quote.status}`, { defaultValue: quote.status })}
                                                             </span>
                                                         </div>
                                                     </td>
@@ -760,7 +760,7 @@ export function QuotesDashboard() {
                                                     <div className="flex items-center gap-2">
                                                         <div className={cn("w-2 h-2 rounded-full", statusSolidColors[status as keyof typeof statusSolidColors] || 'bg-slate-400')} />
                                                         <span className="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-300">
-                                                            {t(`quotes.status.${status} `, { defaultValue: status })}
+                                                            {t(`quotes.status.${status}`, { defaultValue: status })}
                                                         </span>
                                                     </div>
                                                     <span className="text-[10px] font-mono text-slate-400">{statusQuotes.length}</span>

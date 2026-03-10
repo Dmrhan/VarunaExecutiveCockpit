@@ -1034,8 +1034,6 @@ export function ExecutiveDashboardPageV2() {
                             unit={t('dashboardV2.pipeline.quoteUnit')}
                             trend={8}
                             onClick={() => setDrilldownType('quotes')}
-                            absoluteCount={absoluteTotals.quotes.count}
-                            absoluteValue={absoluteTotals.quotes.value}
                         />
                         <PipelineStep
                             title={t('dashboardV2.pipeline.conversionRate')}
@@ -1083,8 +1081,6 @@ export function ExecutiveDashboardPageV2() {
                             unit={t('dashboardV2.pipeline.orderUnit')}
                             trend={15}
                             onClick={() => setDrilldownType('orders_open')}
-                            absoluteCount={absoluteTotals.orders.openCount}
-                            absoluteValue={absoluteTotals.orders.openValue}
                         />
                         <PipelineStep
                             title={t('dashboardV2.pipeline.invoiced')}
@@ -1096,8 +1092,6 @@ export function ExecutiveDashboardPageV2() {
                             unit={t('dashboardV2.pipeline.orderUnit')}
                             trend={2}
                             onClick={() => setDrilldownType('orders_closed')}
-                            absoluteCount={absoluteTotals.orders.closedCount}
-                            absoluteValue={absoluteTotals.orders.closedValue}
                         />
                     </div>
                 </div>

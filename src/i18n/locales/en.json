@@ -144,7 +144,18 @@
         },
         "expectations": "Forecast",
         "kanbanTitle": "Opportunity Kanban Board",
-        "noRecords": "No Records"
+        "noRecords": "No Records",
+        "aiResponseLabel": "AI Response",
+        "aiNarrative": {
+            "title": "AI Executive Brief",
+            "pipelineIncrease": "Pipeline increased by {{percent}}%. ",
+            "pipelineDecrease": "Pipeline is down by {{percent}}%. ",
+            "primaryEngine": "\"{{source}}\" is the primary engine. ",
+            "stalledDeals": "{{count}} deals are stalling.",
+            "revenueChange": "Revenue Change",
+            "mainSource": "Main Source",
+            "stalledDealsLabel": "Stalled Deals"
+        }
     },
     "performance": {
         "activeDeals": "active deals",

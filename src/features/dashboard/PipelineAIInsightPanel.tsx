@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Sparkles, TrendingUp, TrendingDown, Target, AlertCircle } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import type { Deal } from '../../types/crm';
@@ -12,9 +13,9 @@ interface PipelineAIInsightPanelProps {
     className?: string;
 }
 
-
-
 export function PipelineAIInsightPanel({ currentDeals, allDeals, dateFilter, customRange, className }: PipelineAIInsightPanelProps) {
+    const { t } = useTranslation();
+
     const insights = useMemo(() => {
         // Calculation for previous period
         let prevDeals: Deal[] = [];
@@ -27,7 +28,7 @@ export function PipelineAIInsightPanel({ currentDeals, allDeals, dateFilter, cus
                 const dt = new Date(d.createdAt).getTime();
                 return dt >= yesterday && dt < today;
             });
-        } else if (dateFilter === 'this_month') {
+        } else if (dateFilter === 'this_month' || dateFilter === 'mtd') {
             const lm = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
             const ly = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
             prevDeals = allDeals.filter(d => {
@@ -43,17 +44,17 @@ export function PipelineAIInsightPanel({ currentDeals, allDeals, dateFilter, cus
                 return dt >= prevStart && dt < prevEnd;
             });
         } else {
-            // For others, just use as if 10% less for mock effect
-            prevDeals = currentDeals.slice(0, Math.floor(currentDeals.length * 0.9));
+            // For others, just use as if 10% less for mock effect or better logic
+            prevDeals = allDeals.filter(d => {
+                const dt = new Date(d.createdAt).getTime();
+                // Simple heuristic for "previous" if not explicitly handled
+                return dt < (customRange.start?.getTime() || today);
+            }).slice(-Math.max(1, Math.floor(currentDeals.length * 0.9)));
         }
 
         const currentRev = currentDeals.reduce((s, d) => s + d.value, 0);
-        const prevRev = prevDeals.reduce((s, d) => s + d.value, 0);
-        const revChange = prevRev === 0 ? 100 : ((currentRev - prevRev) / prevRev) * 100;
-
-        const currentCount = currentDeals.length;
-        const prevCount = prevDeals.length;
-        const countChange = prevCount === 0 ? 100 : ((currentCount - prevCount) / prevCount) * 100;
+        const prevRev = prevDeals.length > 0 ? prevDeals.reduce((s, d) => s + d.value, 0) : 0;
+        const revChange = prevRev === 0 ? (currentRev > 0 ? 100 : 0) : ((currentRev - prevRev) / prevRev) * 100;
 
         // Findings
         const topSource = currentDeals.reduce((acc, d) => {
@@ -63,25 +64,28 @@ export function PipelineAIInsightPanel({ currentDeals, allDeals, dateFilter, cus
 
         const bestSource = Object.entries(topSource).sort((a, b) => b[1] - a[1])[0];
 
-        const stalledCount = currentDeals.filter(d => d.aging > 30 && !['Kazanıldı', 'Kaybedildi', 'Lost', 'Order'].includes(d.stage)).length;
+        const stalledCount = currentDeals.filter(d =>
+            d.aging > 30 &&
+            !['Kazanıldı', 'Kaybedildi', 'Lost', 'Order'].includes(d.stage)
+        ).length;
 
         let narrative = "";
-        if (revChange > 0) {
-            narrative = `Pipeline increased by ${revChange.toFixed(0)}%. `;
+        if (revChange >= 0) {
+            narrative = t('opportunities.aiNarrative.pipelineIncrease', { percent: Math.abs(revChange).toFixed(0) });
         } else {
-            narrative = `Pipeline is down by ${Math.abs(revChange).toFixed(0)}%. `;
+            narrative = t('opportunities.aiNarrative.pipelineDecrease', { percent: Math.abs(revChange).toFixed(0) });
         }
 
         if (bestSource) {
-            narrative += `"${bestSource[0]}" is the primary engine. `;
+            narrative += t('opportunities.aiNarrative.primaryEngine', { source: bestSource[0] });
         }
 
-        if (stalledCount > 5) {
-            narrative += `${stalledCount} deals are stalling.`;
+        if (stalledCount > 0) {
+            narrative += t('opportunities.aiNarrative.stalledDeals', { count: stalledCount });
         }
 
-        return { narrative, revChange, countChange, stalledCount, bestSource };
-    }, [currentDeals, allDeals, dateFilter, customRange]);
+        return { narrative, revChange, stalledCount, bestSource };
+    }, [currentDeals, allDeals, dateFilter, customRange, t]);
 
     return (
         <Card className={cn(
@@ -92,7 +96,7 @@ export function PipelineAIInsightPanel({ currentDeals, allDeals, dateFilter, cus
             <CardHeader className="relative z-10 pb-2">
                 <div className="flex items-center gap-2 text-indigo-100 mb-2">
                     <Sparkles size={14} className="text-yellow-300" />
-                    <span className="text-[9px] font-bold uppercase tracking-[0.2em]">AI Executive Brief</span>
+                    <span className="text-[9px] font-bold uppercase tracking-[0.2em]">{t('opportunities.aiNarrative.title')}</span>
                 </div>
                 <CardTitle className="text-lg md:text-xl text-white font-light leading-tight">
                     {insights.narrative}
@@ -102,7 +106,7 @@ export function PipelineAIInsightPanel({ currentDeals, allDeals, dateFilter, cus
                 <div className="flex items-center gap-3 bg-white/10 px-3 py-2 rounded-xl border border-white/10 backdrop-blur-md">
                     {insights.revChange >= 0 ? <TrendingUp size={14} className="text-emerald-400" /> : <TrendingDown size={14} className="text-rose-400" />}
                     <div className="flex flex-col">
-                        <span className="text-[8px] uppercase font-bold text-white/50 tracking-wider">Ciro Değişimi</span>
+                        <span className="text-[8px] uppercase font-bold text-white/50 tracking-wider font-mono">{t('opportunities.aiNarrative.revenueChange')}</span>
                         <span className="text-xs font-semibold">{insights.revChange >= 0 ? '+' : ''}{insights.revChange.toFixed(1)}%</span>
                     </div>
                 </div>
@@ -110,7 +114,7 @@ export function PipelineAIInsightPanel({ currentDeals, allDeals, dateFilter, cus
                 <div className="flex items-center gap-3 bg-white/10 px-3 py-2 rounded-xl border border-white/10 backdrop-blur-md">
                     <Target size={14} className="text-indigo-300" />
                     <div className="flex flex-col">
-                        <span className="text-[8px] uppercase font-bold text-white/50 tracking-wider">Ana Kaynak</span>
+                        <span className="text-[8px] uppercase font-bold text-white/50 tracking-wider font-mono">{t('opportunities.aiNarrative.mainSource')}</span>
                         <span className="text-xs font-semibold truncate max-w-[120px]">{insights.bestSource?.[0] || '---'}</span>
                     </div>
                 </div>
@@ -119,7 +123,7 @@ export function PipelineAIInsightPanel({ currentDeals, allDeals, dateFilter, cus
                     <div className="flex items-center gap-3 bg-rose-500/20 px-3 py-2 rounded-xl border border-rose-500/20 backdrop-blur-md">
                         <AlertCircle size={14} className="text-rose-400" />
                         <div className="flex flex-col">
-                            <span className="text-[8px] uppercase font-bold text-white/50 tracking-wider">Stalled Deals</span>
+                            <span className="text-[8px] uppercase font-bold text-white/50 tracking-wider font-mono">{t('opportunities.aiNarrative.stalledDealsLabel')}</span>
                             <span className="text-xs font-semibold">{insights.stalledCount} Adet</span>
                         </div>
                     </div>
@@ -128,3 +132,4 @@ export function PipelineAIInsightPanel({ currentDeals, allDeals, dateFilter, cus
         </Card>
     );
 }
+

@@ -65,6 +65,7 @@ router.get('/', (req: Request, res: Response) => {
         FROM CrmOrder o
         LEFT JOIN Account a ON o.AccountId      = a.Id
         LEFT JOIN Person  p ON o.ProposalOwnerId = p.Id
+        WHERE (o.IsDeletedFromBackend = 0 OR o.IsDeletedFromBackend IS NULL)
         ORDER BY o.CreateOrderDate DESC
     `;
 

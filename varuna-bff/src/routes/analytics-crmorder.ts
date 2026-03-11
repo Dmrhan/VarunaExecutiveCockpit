@@ -9,7 +9,7 @@ const router = Router();
 router.get('/', (_req: Request, res: Response) => {
     try {
         const db = getDb();
-        const activeOrderCond = 'Status != 5 AND IsDeletedFromBackend = 0'; // Assuming 5 is Cancelled
+        const activeOrderCond = 'Status != 2 AND IsDeletedFromBackend = 0'; // Assuming 2 is Cancelled
 
         // 1. Total Revenue (Local Currency)
         const totalRevenue = (db.queryOne(`SELECT SUM(TotalNetAmountLocalCurrency_Amount) as sum FROM CrmOrder WHERE ${activeOrderCond}`) as { sum: number }).sum || 0;

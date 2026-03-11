@@ -448,6 +448,7 @@ export function OpportunitiesDashboard() {
                 sourceCount: backendStats.charts.sourceCount,
                 sourceRev: backendStats.charts.sourceRev,
                 customerRev: backendStats.charts.customerRev,
+                dealTypeRev: backendStats.charts.dealTypeRev || [],
                 // Fallback for types not yet in backend
                 ownerRev: [],
                 topicRev: [],
@@ -481,6 +482,7 @@ export function OpportunitiesDashboard() {
             ownerRev: sortAndLimit(dataMaps.ownerRev, 'revenue'),
             topicRev: sortAndLimit(dataMaps.topicRev, 'revenue'),
             statusRev: sortAndLimit(dataMaps.statusRev, 'revenue'),
+            dealTypeRev: [] as { name: string; count: number; revenue: number }[],
         };
     }, [filteredDeals, users]);
 
@@ -656,7 +658,7 @@ export function OpportunitiesDashboard() {
                     <ProductPerformance deals={filteredDeals} />
                 </div>
 
-                <div className="w-full">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                     <HorizontalBarChart
                         title={t('opportunities.charts.customerPotentialTitle')}
                         data={chartData.customerRev.map((item: any) => ({
@@ -670,6 +672,19 @@ export function OpportunitiesDashboard() {
                         insight={t('opportunities.charts.customerPotentialInsight')}
                         activeId={selectedTopCustomer}
                         onBarClick={(item) => setSelectedTopCustomer(prev => prev === item.id ? null : item.id)}
+                    />
+                    <HorizontalBarChart
+                        title={t('opportunities.charts.dealTypeTitle', 'Fırsat Tipine Göre Dağılım')}
+                        data={(chartData.dealTypeRev || []).map((item: any) => ({
+                            id: item.name,
+                            name: item.name,
+                            value: item.revenue,
+                            count: item.count,
+                            formattedValue: formatCurrency(item.revenue) + '₺'
+                        }))}
+                        color="#8b5cf6"
+                        icon={Share2}
+                        insight={t('opportunities.charts.dealTypeInsight', 'Hangi fırsat tipinin daha fazla gelir getirdiğini inceleyin.')}
                     />
                 </div>
             </div>

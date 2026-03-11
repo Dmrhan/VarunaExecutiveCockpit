@@ -100,6 +100,7 @@ router.get('/', (req: Request, res: Response) => {
         owner_name: row.OwnerName || row.OwnerId || 'Unknown',
         ownerName: row.OwnerName || row.OwnerId || 'Unknown',
         source: row.Source?.toString() || 'Diğer',
+        dealType: row.DealType?.toString() || null,
         topic: row.Name || '',
         created_at: row.FirstCreatedDate || new Date().toISOString(),
         createdAt: row.FirstCreatedDate || new Date().toISOString(),
@@ -224,12 +225,23 @@ router.get('/stats', (req: Request, res: Response) => {
             ${db.driver === 'mssql' ? 'OFFSET 0 ROWS FETCH NEXT 8 ROWS ONLY' : 'LIMIT 8'}
         `, params);
 
+        // 5. Revenue by DealType (Top 10)
+        const dealTypeRev = db.query(`
+            SELECT o.DealType as name, COUNT(*) as count, SUM(o.Amount_Value) as revenue
+            FROM Opportunity o
+            ${dateFilter} ${dateFilter ? 'AND' : 'WHERE'} o.DealType IS NOT NULL AND o.DealType != ''
+            GROUP BY o.DealType
+            ORDER BY revenue DESC
+            ${db.driver === 'mssql' ? 'OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY' : 'LIMIT 10'}
+        `, params);
+
         res.json({
             metrics,
             charts: {
                 sourceRev,
                 customerRev,
-                sourceCount
+                sourceCount,
+                dealTypeRev
             }
         });
     } catch (e: any) {

@@ -8,6 +8,7 @@ export interface HorizontalBarData {
     id: string;
     name: string;
     value: number;
+    count?: number;
     formattedValue?: string;
 }
 
@@ -101,6 +102,11 @@ export function HorizontalBarChart({
                                     )}>
                                         {item.formattedValue || item.value}
                                     </span>
+                                    {item.count !== undefined && (
+                                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 min-w-[30px] text-right">
+                                            {item.count} adet
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         );

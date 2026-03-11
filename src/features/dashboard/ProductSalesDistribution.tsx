@@ -47,7 +47,6 @@ export function ProductSalesDistribution({ orders, selectedProduct, onProductSel
                 data={chartData}
                 color="#10b981"
                 icon={Package}
-                insight={t('dashboardV2.productBalance.subtitle')}
                 activeId={selectedProduct}
                 onBarClick={(item) => onProductSelect && onProductSelect(selectedProduct === item.id ? null : item.id)}
             />

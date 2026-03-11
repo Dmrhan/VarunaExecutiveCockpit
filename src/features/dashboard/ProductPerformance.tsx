@@ -225,7 +225,7 @@ export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps
                 users.find(u => u.id === d.ownerId)?.name || d.ownerId,
                 d.topic,
                 new Date(d.createdAt).toLocaleDateString('tr-TR'),
-                `$${d.value.toLocaleString()}`,
+                `₺${d.value.toLocaleString('tr-TR')}`,
                 `${d.aging}`
             ]);
 
@@ -289,7 +289,7 @@ export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps
                                     </h3>
                                 </div>
                                 <div className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                                    ${(stat.revenue / 1000000).toFixed(1)}M
+                                    ₺{(stat.revenue / 1000000).toFixed(1)}M
                                 </div>
                                 <div className="text-xs text-slate-400 mt-1">
                                     {stat.count} {t('performance.activeDeals')}
@@ -420,11 +420,11 @@ export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps
                                                     </defs>
                                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" opacity={0.5} />
                                                     <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} />
-                                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} tickFormatter={(value) => `$${value / 1000}k`} />
+                                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} tickFormatter={(value) => `₺${(value / 1000000).toFixed(1)}M`} />
                                                     <Tooltip
                                                         contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
                                                         itemStyle={{ color: '#fff' }}
-                                                        formatter={(value: any) => [`$${value?.toLocaleString() ?? 0}`, t('productPerformance.expectedRevenue')]}
+                                                        formatter={(value: any) => [`₺${value?.toLocaleString('tr-TR') ?? 0}`, t('productPerformance.expectedRevenue')]}
                                                     />
                                                     <Area type="monotone" dataKey="value" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
                                                 </AreaChart>
@@ -470,7 +470,7 @@ export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps
                                                     </Pie>
                                                     <Tooltip
                                                         formatter={(value: any, name: any, props: any) => [
-                                                            `$${value?.toLocaleString() ?? 0} (${props.payload.count} ${t('common.unit')})`,
+                                                            `₺${value?.toLocaleString('tr-TR') ?? 0} (${props.payload.count} ${t('common.unit')})`,
                                                             name
                                                         ]}
                                                     />
@@ -533,7 +533,7 @@ export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps
                                                         </td>
 
                                                         <td className="bg-white dark:bg-white/5 p-4 border-y border-slate-200 dark:border-white/10 text-right shadow-sm">
-                                                            <span className="text-xs md:text-sm font-bold text-indigo-600 dark:text-indigo-400">${(deal.value / 1000).toFixed(0)}k</span>
+                                                            <span className="text-xs md:text-sm font-bold text-indigo-600 dark:text-indigo-400">₺{(deal.value / 1000000).toFixed(2)}M</span>
                                                         </td>
                                                         <td className="bg-white dark:bg-white/5 p-4 last:rounded-r-2xl border-y border-r border-slate-200 dark:border-white/10 text-right shadow-sm">
                                                             <span className={cn(

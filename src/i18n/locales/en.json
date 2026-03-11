@@ -583,7 +583,17 @@
             "Accepted": "Accepted",
             "Approved": "Approved",
             "Rejected": "Rejected",
-            "Denied": "Denied"
+            "Denied": "Denied",
+            "1": "Draft",
+            "2": "Needs Review",
+            "3": "Under Review",
+            "4": "Approved",
+            "5": "Rejected",
+            "6": "Sent (Active)",
+            "7": "Accepted",
+            "8": "Cancelled",
+            "9": "Lost",
+            "10": "Partially Ordered"
         },
         "list": {
             "title": "Quote List",

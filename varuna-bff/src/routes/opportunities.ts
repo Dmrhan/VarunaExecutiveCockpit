@@ -4,16 +4,17 @@ import { getDb } from '../db/database';
 const router = Router();
 
 const DEAL_TYPE_KEYS: Record<string, string> = {
-    '1': 'opportunities.dealTypes.newSale',
-    '2': 'opportunities.dealTypes.renovation',
-    '3': 'opportunities.dealTypes.crossSelling',
-    '4': 'opportunities.dealTypes.upSellSale',
-    '5': 'opportunities.dealTypes.additionalUsage',
-    '6': 'opportunities.dealTypes.financialInstitute',
-    '7': 'opportunities.dealTypes.newExistingReference',
-    '8': 'opportunities.dealTypes.changesRequestForm',
-    '9': 'opportunities.dealTypes.winBack',
+    '1': 'opportunities.charts.dealTypes.newSale',
+    '2': 'opportunities.charts.dealTypes.renovation',
+    '3': 'opportunities.charts.dealTypes.crossSelling',
+    '4': 'opportunities.charts.dealTypes.upSellSale',
+    '5': 'opportunities.charts.dealTypes.additionalUsage',
+    '6': 'opportunities.charts.dealTypes.financialInstitute',
+    '7': 'opportunities.charts.dealTypes.newExistingReference',
+    '8': 'opportunities.charts.dealTypes.changesRequestForm',
+    '9': 'opportunities.charts.dealTypes.winBack',
 };
+
 
 
 /**

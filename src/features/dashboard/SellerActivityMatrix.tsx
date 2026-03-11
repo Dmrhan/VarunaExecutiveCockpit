@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useData } from '../../context/DataContext';
 import { cn } from '../../lib/utils';
 import { useTranslation } from 'react-i18next';
+import { UserAvatar } from '../../components/ui/UserAvatar';
 
 interface SellerActivityMatrixProps {
     filteredActivities: any[];
@@ -109,7 +110,7 @@ export function SellerActivityMatrix({ filteredActivities }: SellerActivityMatri
                             <tr key={row.user.id} className="group hover:bg-slate-50/80 dark:hover:bg-slate-700/30 transition-colors">
                                 <td className="p-2 pl-4 font-medium text-slate-700 dark:text-slate-300 sticky left-0 bg-white dark:bg-slate-800 z-10 border-r border-slate-200 dark:border-slate-700 group-hover:bg-indigo-50/30 dark:group-hover:bg-slate-800">
                                     <div className="flex items-center gap-2">
-                                        <img src={row.user.avatar} className="w-6 h-6 rounded-full" alt="" />
+                                        <UserAvatar name={row.user.name} size="sm" />
                                         <span className="truncate">{row.user.name}</span>
                                     </div>
                                 </td>

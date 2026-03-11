@@ -2,12 +2,12 @@
 import { ThemeToggle } from './ThemeToggle';
 import { LanguageSwitcher } from '../ui/LanguageSwitcher';
 import { useData } from '../../context/DataContext';
+import { UserAvatar } from '../ui/UserAvatar';
 
 export function Header() {
     const { users } = useData();
     const currentUser = users.find(u => u.role === 'executive') || users[0] || {
         name: 'Guest User',
-        avatar: 'https://i.pravatar.cc/150?u=guest',
         role: 'sales_rep'
     };
 
@@ -34,10 +34,10 @@ export function Header() {
                         <div className="text-sm font-medium text-slate-900 dark:text-slate-100">{currentUser?.name}</div>
                         <div className="text-xs text-slate-500">Sales Leader</div>
                     </div>
-                    <img
-                        src={currentUser?.avatar}
-                        alt={currentUser?.name}
-                        className="w-9 h-9 rounded-full ring-2 ring-white dark:ring-slate-800"
+                    <UserAvatar
+                        name={currentUser?.name || 'Guest'}
+                        size="lg"
+                        className="ring-2 ring-white dark:ring-slate-800"
                     />
                 </div>
             </div>

@@ -9,6 +9,7 @@ import { fetchPersonScorecard } from '../../services/ScorecardService';
 import type { ScorecardResponse } from '../../services/ScorecardService';
 import { DateRangePicker } from '../../components/ui/DateRangePicker';
 import { useTranslation } from 'react-i18next';
+import { UserAvatar } from '../../components/ui/UserAvatar';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
 
 const StatCard = ({ label, value, colorClass, subtitle, icon: Icon }: any) => (
@@ -117,12 +118,8 @@ export const PersonScorecardPage = () => {
             <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
                 <div>
                     <h1 className="text-3xl font-light tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
-                        {selectedUser?.avatar ? (
-                            <img
-                                src={selectedUser.avatar}
-                                alt={selectedUser.name}
-                                className="w-8 h-8 rounded-xl object-cover ring-2 ring-indigo-50 dark:ring-indigo-500/20 shadow-sm"
-                            />
+                        {selectedUser ? (
+                            <UserAvatar name={selectedUser.name} size="md" className="rounded-xl" />
                         ) : (
                             <Users className="text-indigo-500" size={32} />
                         )}
@@ -136,8 +133,8 @@ export const PersonScorecardPage = () => {
                 <div className="flex flex-col sm:flex-row gap-3 items-center bg-white/60 dark:bg-slate-800/60 p-2 rounded-2xl backdrop-blur-md border border-white/40 dark:border-slate-700/50 shadow-sm w-full xl:w-auto">
                     {/* Person Selector */}
                     <div className="flex items-center gap-2 px-3">
-                        {selectedUser?.avatar ? (
-                            <img src={selectedUser.avatar} alt="avatar" className="w-5 h-5 rounded-full object-cover" />
+                        {selectedUser ? (
+                            <UserAvatar name={selectedUser.name} size="xs" />
                         ) : (
                             <Users size={16} className="text-slate-400" />
                         )}

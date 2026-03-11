@@ -6,6 +6,7 @@ import { Trophy, Medal, Flame, Target, Crown, Star, ChevronDown, ChevronUp, Zap,
 import { cn } from '../../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
+import { UserAvatar } from '../../components/ui/UserAvatar';
 
 const formatCurrency = (value: number) => {
     if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
@@ -89,7 +90,6 @@ export function GamifiedLeaderboard({ dateRange, teamId, ownerId }: GamifiedLead
             return {
                 id: rep.PersonId,
                 name: fullName,
-                avatar: user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=random`,
                 revenue: invoicedAmount,
                 invoicedAmount,
                 winRate,
@@ -123,7 +123,6 @@ export function GamifiedLeaderboard({ dateRange, teamId, ownerId }: GamifiedLead
             return {
                 id: stat.id,
                 name: stat.name,
-                avatar: stat.avatar,
                 revenue: stat.invoicedAmount, // We use invoiced as the primary revenue metric for the leaderboard
                 invoicedAmount: stat.invoicedAmount,
                 winRate: stat.winRate,
@@ -222,9 +221,7 @@ export function GamifiedLeaderboard({ dateRange, teamId, ownerId }: GamifiedLead
                                         {/* Avatar & Basic Info */}
                                         <div className="flex-1 min-w-0 flex items-center gap-3">
                                             <div className="relative">
-                                                <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 border-2 border-white dark:border-slate-600 overflow-hidden shadow-sm">
-                                                    <img src={performer.avatar} alt={performer.name} className="w-full h-full object-cover" />
-                                                </div>
+                                                <UserAvatar name={performer.name} size="lg" className="border-2 border-white dark:border-slate-600 shadow-sm" />
                                             </div>
                                             <div className="flex flex-col min-w-0">
                                                 <span className={cn(

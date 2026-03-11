@@ -475,6 +475,19 @@ export function OpportunitiesDashboard() {
                 .sort((a, b) => (b[key] as number) - (a[key] as number))
                 .slice(0, 8);
 
+        // Local calculation for Deal Type distribution
+        const dealTypeMap: Record<string, { count: number; revenue: number }> = {};
+        filteredDeals.forEach(d => {
+            const type = d.dealType || 'Diğer';
+            if (!dealTypeMap[type]) dealTypeMap[type] = { count: 0, revenue: 0 };
+            dealTypeMap[type].count += 1;
+            dealTypeMap[type].revenue += d.value;
+        });
+
+        const dealTypeRev = Object.entries(dealTypeMap)
+            .map(([name, stats]) => ({ name, ...stats }))
+            .sort((a, b) => b.revenue - a.revenue);
+
         return {
             sourceCount: sortAndLimit(dataMaps.sourceCount, 'count'),
             sourceRev: sortAndLimit(dataMaps.sourceRev, 'revenue'),
@@ -482,9 +495,9 @@ export function OpportunitiesDashboard() {
             ownerRev: sortAndLimit(dataMaps.ownerRev, 'revenue'),
             topicRev: sortAndLimit(dataMaps.topicRev, 'revenue'),
             statusRev: sortAndLimit(dataMaps.statusRev, 'revenue'),
-            dealTypeRev: [] as { name: string; count: number; revenue: number }[],
+            dealTypeRev,
         };
-    }, [filteredDeals, users]);
+    }, [filteredDeals, users, backendStats]);
 
     // Use filteredDeals for List/Kanban
     const sortedDeals = useMemo(() => {

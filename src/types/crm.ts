@@ -60,6 +60,7 @@ export type Deal = {
     updatedAt?: string;
     notes?: string;
     currency: 'TRY' | 'USD' | 'EUR';
+    dealType: string | null;
 
     // Computed fields
     weightedValue: number; // value * (probability / 100)

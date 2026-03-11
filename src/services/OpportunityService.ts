@@ -27,7 +27,8 @@ const mapToDeal = (data: any): Deal => ({
     weightedValue: data.weighted_value,
     aging: data.aging,
     velocity: data.velocity,
-    healthScore: data.health_score
+    healthScore: data.health_score,
+    dealType: data.deal_type || data.dealType || null
 });
 
 // Helper to map Frontend Model to API Payload

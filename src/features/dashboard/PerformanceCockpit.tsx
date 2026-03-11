@@ -17,8 +17,8 @@ export function PerformanceCockpit() {
     const [trendData, setTrendData] = useState<TrendDataPoint[]>([]);
     const [burnupData, setBurnupData] = useState<BurnupDataPoint[]>([]);
 
-    // Configurable targets (Excel'de 40M aylık, 600M yıllık gibi)
-    const monthlyTarget = 40000000;
+    // Configurable targets (Excel'de 50M aylık, 600M yıllık gibi)
+    const monthlyTarget = 50000000;
     const yearlyTarget = 600000000;
 
     const fetchData = async () => {
@@ -630,6 +630,14 @@ export function PerformanceCockpit() {
                                         dataKey="cumulativeContract"
                                         name={t('performanceCockpit.cumulativeContract')}
                                         stroke="#3b82f6"
+                                        strokeWidth={2}
+                                        dot={false}
+                                    />
+                                    <Line
+                                        type="stepAfter"
+                                        dataKey="cumulativeCollection"
+                                        name={t('performanceCockpit.cumulativeCollection')}
+                                        stroke="#a855f7"
                                         strokeWidth={2}
                                         dot={false}
                                     />

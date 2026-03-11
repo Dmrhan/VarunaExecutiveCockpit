@@ -5,6 +5,7 @@ import { Trophy, TrendingUp, Users } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import type { Deal, User } from '../../types/crm';
 import { formatCurrency } from '../../utils/formatters';
+import { UserAvatar } from '../../components/ui/UserAvatar';
 
 interface SalesRepListProps {
     dateRange: { start: string | null; end: string | null };
@@ -55,7 +56,6 @@ export const SalesRepList = ({ dateRange, users, teamId, ownerId }: SalesRepList
             return {
                 userId: rep.PersonId,
                 name: fullName,
-                avatar: user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=random`,
                 totalRevenue: Number(rep.TotalAmount) || 0,
                 wonDeals: Number(rep.WonDealsCount) || 0,
                 totalDeals: Number(rep.WonDealsCount) || 0 // Currently backend only returns won deals
@@ -145,7 +145,7 @@ export const SalesRepList = ({ dateRange, users, teamId, ownerId }: SalesRepList
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <img src={rep.avatar} alt={rep.name} className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-600" />
+                                                <UserAvatar name={rep.name} size="md" />
                                                 <span className={cn("font-medium", isTop3 ? "text-slate-900 dark:text-white font-bold" : "text-slate-700 dark:text-slate-300")}>
                                                     {rep.name}
                                                 </span>

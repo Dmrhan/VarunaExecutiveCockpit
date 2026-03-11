@@ -5,6 +5,7 @@ import { useData } from '../../context/DataContext';
 import { Trophy, Medal, Flame, TrendingUp, Target, Crown, Star } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { motion } from 'framer-motion';
+import { UserAvatar } from '../../components/ui/UserAvatar';
 
 const formatCurrency = (value: number) => {
     if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
@@ -30,7 +31,6 @@ export function TopPerformerLeaderboard() {
                 return {
                     id: user.id,
                     name: user.name,
-                    avatar: user.avatar,
                     revenue: totalRevenue,
                     winRate,
                     dealCount
@@ -95,9 +95,7 @@ export function TopPerformerLeaderboard() {
                             {/* Avatar & Info */}
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-3 mb-1">
-                                    <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 overflow-hidden flex-shrink-0">
-                                        <img src={performer.avatar} alt={performer.name} className="w-full h-full object-cover" />
-                                    </div>
+                                    <UserAvatar name={performer.name} size="md" className="border border-slate-200 dark:border-slate-600 flex-shrink-0" />
                                     <div className="flex flex-col min-w-0">
                                         <span className={cn(
                                             "text-sm font-bold truncate",

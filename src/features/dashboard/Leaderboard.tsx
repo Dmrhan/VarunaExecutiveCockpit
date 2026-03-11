@@ -6,6 +6,7 @@ import { UserCheck, Award } from 'lucide-react';
 import { Modal } from '../../components/ui/Modal';
 import { DealList } from './DealList';
 import { useTranslation } from 'react-i18next';
+import { UserAvatar } from '../../components/ui/UserAvatar';
 export function Leaderboard() {
     const { t } = useTranslation();
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -42,7 +43,7 @@ export function Leaderboard() {
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className="relative">
-                                            <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full bg-slate-100 object-cover" />
+                                            <UserAvatar name={user.name} size="lg" />
                                             <div className="absolute -top-1 -left-1 w-5 h-5 bg-slate-900 dark:bg-slate-100 text-slate-100 dark:text-slate-900 rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-white dark:border-slate-900">
                                                 {idx + 1}
                                             </div>

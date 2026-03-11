@@ -23,6 +23,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({ onClose }) => 
         probability: '20',
         expectedCloseDate: '',
         ownerId: users[0]?.id || '', // Default to first user found
+        dealType: 'newSale',
         notes: ''
     });
 
@@ -55,6 +56,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({ onClose }) => 
                 expectedCloseDate: new Date(formData.expectedCloseDate).toISOString(),
                 lastActivityDate: new Date().toISOString(),
                 currency: 'TRY',
+                dealType: formData.dealType,
                 weightedValue: calculateWeightedValue(),
                 notes: formData.notes,
             });
@@ -189,6 +191,30 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({ onClose }) => 
                                 </div>
                             </div>
 
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Fırsat Tipi</label>
+                                <div className="relative">
+                                    <select
+                                        name="dealType"
+                                        value={formData.dealType}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all appearance-none"
+                                    >
+                                        <option value="newSale">Yeni Satış</option>
+                                        <option value="renovation">Yenileme</option>
+                                        <option value="crossSelling">Çapraz Satış</option>
+                                        <option value="upSellSale">Up Sell Satış</option>
+                                        <option value="additionalUsage">Ek Kullanım</option>
+                                        <option value="financialInstitute">Finansal Kurum</option>
+                                        <option value="newExistingReference">Yeni Mevcut Referans</option>
+                                        <option value="changesRequestForm">Değişiklik İstek Formu</option>
+                                        <option value="winBack">Geri Kazanım</option>
+                                    </select>
+                                    <div className="absolute right-4 top-3 pointer-events-none text-slate-500">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

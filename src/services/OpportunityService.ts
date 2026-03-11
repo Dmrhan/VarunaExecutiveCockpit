@@ -44,6 +44,7 @@ const mapToPayload = (deal: Partial<Deal>) => ({
     topic: deal.topic,
     expected_close_date: deal.expectedCloseDate,
     currency: deal.currency,
+    deal_type: deal.dealType,
     notes: deal.notes
 });
 

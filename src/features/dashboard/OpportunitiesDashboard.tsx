@@ -674,18 +674,19 @@ export function OpportunitiesDashboard() {
                         onBarClick={(item) => setSelectedTopCustomer(prev => prev === item.id ? null : item.id)}
                     />
                     <HorizontalBarChart
-                        title={t('opportunities.charts.dealTypeTitle', 'Fırsat Tipine Göre Dağılım')}
+                        title={t('opportunities.charts.dealTypeTitle')}
                         data={(chartData.dealTypeRev || []).map((item: any) => ({
                             id: item.name,
-                            name: item.name,
+                            name: t(item.name),
                             value: item.revenue,
                             count: item.count,
                             formattedValue: formatCurrency(item.revenue) + '₺'
                         }))}
                         color="#8b5cf6"
                         icon={Share2}
-                        insight={t('opportunities.charts.dealTypeInsight', 'Hangi fırsat tipinin daha fazla gelir getirdiğini inceleyin.')}
+                        insight={t('opportunities.charts.dealTypeInsight')}
                     />
+
                 </div>
             </div>
 

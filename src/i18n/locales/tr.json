@@ -124,7 +124,20 @@
             "sourceTitle": "Fırsat Kaynağı",
             "sourceInsight": "Müşteri referansları ve doğrudan satış kanalı, %42 oranla en büyük fırsat havuzunu oluşturuyor.",
             "customerPotentialTitle": "Müşteri Potansiyeli",
-            "customerPotentialInsight": "En büyük hacimli 3 müşteri, toplam pipeline değerinin %28'ini temsil ediyor. Portföy çeşitlendirmesi önerilir."
+            "customerPotentialInsight": "En büyük hacimli 3 müşteri, toplam pipeline değerinin %28'ini temsil ediyor. Portföy çeşitlendirmesi önerilir.",
+            "dealTypeTitle": "Fırsat Tipine Göre Dağılım",
+            "dealTypeInsight": "Hangi fırsat tipinin daha fazla gelir getirdiğini inceleyin.",
+            "dealTypes": {
+                "newSale": "Yeni Satış",
+                "renovation": "Yenileme",
+                "crossSelling": "Çapraz Satış",
+                "upSellSale": "Up Sell Satış",
+                "additionalUsage": "Ek Kullanım",
+                "financialInstitute": "Finansal Kurumlar",
+                "newExistingReference": "Yeni Mevcut Referans",
+                "changesRequestForm": "Değişiklik İstek Formu",
+                "winBack": "Geri Kazanım"
+            }
         },
         "forecast": {
             "title": "Tahmini Kapanış Öngörüsü",

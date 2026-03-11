@@ -3,6 +3,19 @@ import { getDb } from '../db/database';
 
 const router = Router();
 
+const DEAL_TYPE_KEYS: Record<string, string> = {
+    '1': 'opportunities.dealTypes.newSale',
+    '2': 'opportunities.dealTypes.renovation',
+    '3': 'opportunities.dealTypes.crossSelling',
+    '4': 'opportunities.dealTypes.upSellSale',
+    '5': 'opportunities.dealTypes.additionalUsage',
+    '6': 'opportunities.dealTypes.financialInstitute',
+    '7': 'opportunities.dealTypes.newExistingReference',
+    '8': 'opportunities.dealTypes.changesRequestForm',
+    '9': 'opportunities.dealTypes.winBack',
+};
+
+
 /**
  * GET /api/opportunities
  *
@@ -100,8 +113,9 @@ router.get('/', (req: Request, res: Response) => {
         owner_name: row.OwnerName || row.OwnerId || 'Unknown',
         ownerName: row.OwnerName || row.OwnerId || 'Unknown',
         source: row.Source?.toString() || 'Diğer',
-        dealType: row.DealType?.toString() || null,
+        dealType: row.DealType ? (DEAL_TYPE_KEYS[row.DealType.toString()] || row.DealType.toString()) : null,
         topic: row.Name || '',
+
         created_at: row.FirstCreatedDate || new Date().toISOString(),
         createdAt: row.FirstCreatedDate || new Date().toISOString(),
         expected_close_date: row.CloseDate || new Date().toISOString(),
@@ -226,7 +240,7 @@ router.get('/stats', (req: Request, res: Response) => {
         `, params);
 
         // 5. Revenue by DealType (Top 10)
-        const dealTypeRev = db.query(`
+        const dealTypeRevRaw = db.query(`
             SELECT o.DealType as name, COUNT(*) as count, SUM(o.Amount_Value) as revenue
             FROM Opportunity o
             ${dateFilter} ${dateFilter ? 'AND' : 'WHERE'} o.DealType IS NOT NULL AND o.DealType != ''
@@ -235,7 +249,13 @@ router.get('/stats', (req: Request, res: Response) => {
             ${db.driver === 'mssql' ? 'OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY' : 'LIMIT 10'}
         `, params);
 
+        const dealTypeRev = dealTypeRevRaw.map((row: any) => ({
+            ...row,
+            name: DEAL_TYPE_KEYS[row.name.toString()] || row.name.toString()
+        }));
+
         res.json({
+
             metrics,
             charts: {
                 sourceRev,

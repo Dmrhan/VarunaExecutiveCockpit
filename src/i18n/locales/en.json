@@ -131,7 +131,20 @@
             "sourceTitle": "Opportunity Source",
             "sourceInsight": "Customer referrals and direct sales channels represent the largest opportunity pool at 42%.",
             "customerPotentialTitle": "Customer Potential",
-            "customerPotentialInsight": "The top 3 high-volume customers represent 28% of total pipeline value. Portfolio diversification is recommended."
+            "customerPotentialInsight": "The top 3 high-volume customers represent 28% of total pipeline value. Portfolio diversification is recommended.",
+            "dealTypeTitle": "Deal Type Distribution",
+            "dealTypeInsight": "Examine index which deal type generates more revenue.",
+            "dealTypes": {
+                "newSale": "New Sale",
+                "renovation": "Renewal",
+                "crossSelling": "Cross Selling",
+                "upSellSale": "Up Sell",
+                "additionalUsage": "Additional Usage",
+                "financialInstitute": "Financial Institute",
+                "newExistingReference": "New Existing Reference",
+                "changesRequestForm": "Changes Request Form",
+                "winBack": "Win-Back"
+            }
         },
         "forecast": {
             "title": "Closing Forecast",

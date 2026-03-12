@@ -63,7 +63,7 @@ export const USERS: User[] = [
     { id: 'u10', name: 'Eren Oral', avatar: 'https://i.pravatar.cc/150?u=u10', role: 'sales_rep', department: 'Quest PY' },
     { id: 'u12', name: 'Deniz Korkmaz', avatar: 'https://i.pravatar.cc/150?u=u12', role: 'sales_rep', department: 'Quest PY' },
     // ─── Stokbar PY ────────────────────────────────────────────────────────────
-    { id: 'u9', name: 'Gülçin Erçebi', avatar: 'https://i.pravatar.cc/150?u=u9', role: 'sales_rep', department: 'Stokbar PY' },
+    { id: 'u9', name: 'Dilara Boğu', avatar: 'https://i.pravatar.cc/150?u=u9', role: 'sales_rep', department: 'Stokbar PY' },
     { id: 'u13', name: 'Hasan Polat', avatar: 'https://i.pravatar.cc/150?u=u13', role: 'sales_rep', department: 'Stokbar PY' },
     // ─── İş Ortakları ──────────────────────────────────────────────────────────
     { id: 'u3', name: 'Mehmet Kaya', avatar: 'https://i.pravatar.cc/150?u=u3', role: 'sales_rep', department: 'İş Ortakları' },

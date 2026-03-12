@@ -31,15 +31,27 @@ export class CronManager {
     private pool: any = null;
 
     constructor() {
-        this.settingsPath = path.join(process.cwd(), 'cronjob-settings.json');
-        this.scriptsDir = path.join(process.cwd(), 'cronjob-scripts');
+        // Try to find files in the current working directory first (for dev)
+        // Then fallback to the directory of the script (for compiled/dist)
+        const cwdSettings = path.join(process.cwd(), 'cronjob-settings.json');
+        const scriptSettings = path.join(__dirname, '..', '..', 'cronjob-settings.json');
+
+        if (fs.existsSync(cwdSettings)) {
+            this.settingsPath = cwdSettings;
+            this.scriptsDir = path.join(process.cwd(), 'cronjob-scripts');
+        } else {
+            this.settingsPath = scriptSettings;
+            this.scriptsDir = path.join(__dirname, '..', '..', 'cronjob-scripts');
+        }
     }
 
     public async initialize(): Promise<void> {
         console.log('[CronManager] Initializing...');
+        console.log(`[CronManager] Settings path: ${this.settingsPath}`);
+        console.log(`[CronManager] Scripts dir: ${this.scriptsDir}`);
 
         if (!fs.existsSync(this.settingsPath)) {
-            console.warn('[CronManager] settings file not found. Skipping cron initialization.');
+            console.warn('[CronManager] Settings file not found. Skipping cron initialization.');
             return;
         }
 

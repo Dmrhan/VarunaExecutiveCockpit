@@ -42,8 +42,16 @@ import activitiesRouter from './routes/activities';
 import productGroupsRouter from './routes/product-groups';
 import teamsRouter from './routes/teams';
 
+import { CronManager } from './lib/cron-manager';
+
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// ─── Cron Jobs ────────────────────────────────────────────────────────────────
+const cronManager = new CronManager();
+cronManager.initialize().catch(err => {
+    console.error('[BFF] Failed to initialize CronManager:', err);
+});
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(cors());

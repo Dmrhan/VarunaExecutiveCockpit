@@ -10,11 +10,13 @@
     "migrate": "ts-node src/db/database.ts"
   },
   "dependencies": {
+    "@types/node-cron": "^3.0.11",
     "better-sqlite3": "^12.6.2",
     "cors": "^2.8.5",
     "deasync": "^0.1.29",
     "express": "^4.18.3",
     "mssql": "^10.0.2",
+    "node-cron": "^4.2.1",
     "zod": "^3.22.4"
   },
   "devDependencies": {

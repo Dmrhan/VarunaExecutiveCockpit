@@ -57,17 +57,22 @@ export function PipelineAIInsightPanel({ currentDeals, allDeals, dateFilter, cus
         const revChange = prevRev === 0 ? (currentRev > 0 ? 100 : 0) : ((currentRev - prevRev) / prevRev) * 100;
 
         // Findings
-        const topSource = currentDeals.reduce((acc, d) => {
-            acc[d.source] = (acc[d.source] || 0) + d.value;
+        const topProductData = currentDeals.reduce((acc, d) => {
+            if (d.product) {
+                acc[d.product] = (acc[d.product] || 0) + d.value;
+            }
             return acc;
         }, {} as Record<string, number>);
 
-        const bestSource = Object.entries(topSource).sort((a, b) => b[1] - a[1])[0];
+        const bestProductPair = Object.entries(topProductData).sort((a, b) => b[1] - a[1])[0];
+        const bestSource = bestProductPair ? bestProductPair[0] : null;
 
-        const stalledCount = currentDeals.filter(d =>
+        const stalledDealsList = currentDeals.filter(d =>
             d.aging > 30 &&
             !['Kazanıldı', 'Kaybedildi', 'Lost', 'Order'].includes(d.stage)
-        ).length;
+        );
+        const stalledCount = stalledDealsList.length;
+        const stalledValue = stalledDealsList.reduce((s, d) => s + d.value, 0);
 
         let narrative = "";
         if (revChange >= 0) {
@@ -77,11 +82,11 @@ export function PipelineAIInsightPanel({ currentDeals, allDeals, dateFilter, cus
         }
 
         if (bestSource) {
-            narrative += t('opportunities.aiNarrative.primaryEngine', { source: bestSource[0] });
+            narrative += t('opportunities.aiNarrative.primaryEngine', { source: bestSource });
         }
 
         if (stalledCount > 0) {
-            narrative += t('opportunities.aiNarrative.stalledDeals', { count: stalledCount });
+            narrative += t('opportunities.aiNarrative.stalledDeals', { count: stalledCount, value: (stalledValue / 1000000).toFixed(1) });
         }
 
         return { narrative, revChange, stalledCount, bestSource };
@@ -115,7 +120,7 @@ export function PipelineAIInsightPanel({ currentDeals, allDeals, dateFilter, cus
                     <Target size={14} className="text-indigo-300" />
                     <div className="flex flex-col">
                         <span className="text-[8px] uppercase font-bold text-white/50 tracking-wider font-mono">{t('opportunities.aiNarrative.mainSource')}</span>
-                        <span className="text-xs font-semibold truncate max-w-[120px]">{insights.bestSource?.[0] || '---'}</span>
+                        <span className="text-xs font-semibold truncate max-w-[120px]">{insights.bestSource || '---'}</span>
                     </div>
                 </div>
 

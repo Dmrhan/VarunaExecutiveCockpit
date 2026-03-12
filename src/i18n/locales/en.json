@@ -163,11 +163,11 @@
             "title": "AI Executive Brief",
             "pipelineIncrease": "Pipeline increased by {{percent}}%. ",
             "pipelineDecrease": "Pipeline is down by {{percent}}%. ",
-            "primaryEngine": "\"{{source}}\" is the primary engine. ",
-            "stalledDeals": "{{count}} deals are stalling.",
-            "revenueChange": "Revenue Change",
-            "mainSource": "Main Source",
-            "stalledDealsLabel": "Stalled Deals"
+            "primaryEngine": "The \"{{source}}\" product leads growth. ",
+            "stalledDeals": "{{count}} deals ({{value}}M ₺) are stalling. Intervention needed.",
+            "revenueChange": "Growth",
+            "mainSource": "Top Product",
+            "stalledDealsLabel": "Deals at Risk"
         }
     },
     "performance": {

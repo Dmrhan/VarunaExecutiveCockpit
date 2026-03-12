@@ -156,11 +156,11 @@
             "title": "AI Yönetici Özeti",
             "pipelineIncrease": "Pipeline %{{percent}} oranında arttı. ",
             "pipelineDecrease": "Pipeline %{{percent}} oranında azaldı. ",
-            "primaryEngine": "\"{{source}}\" ana lokomotif durumunda. ",
-            "stalledDeals": "{{count}} fırsat durağanlaşmış durumda.",
-            "revenueChange": "Ciro Değişimi",
-            "mainSource": "Ana Kaynak",
-            "stalledDealsLabel": "Durağan Fırsatlar"
+            "primaryEngine": "\"{{source}}\" ürünü büyümeyi sürüklüyor. ",
+            "stalledDeals": "{{count}} fırsat ({{value}}M ₺) ilerlemiyor. Müdahale gerekebilir.",
+            "revenueChange": "Gelişim",
+            "mainSource": "Lider Ürün",
+            "stalledDealsLabel": "Riskli Fırsatlar"
         }
     },
     "performance": {

@@ -163,10 +163,10 @@ export function PerformanceCockpit() {
                         </div>
 
                         <div className="flex flex-col flex-1 border-t md:border-t-0 md:border-l border-slate-200 dark:border-slate-700/50 pt-3 md:pt-0 md:pl-8 relative overflow-hidden">
-                            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-16 h-16 bg-red-50 dark:bg-red-500/10 rounded-full blur-xl"></div>
+                            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-16 h-16 bg-slate-100 dark:bg-slate-700/20 rounded-full blur-xl"></div>
                             <span className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 relative z-10">{t('performanceCockpit.revenueGap')}</span>
                             <div className="flex items-center gap-2 relative z-10">
-                                <span className="text-2xl font-black text-red-600 dark:text-red-500 tracking-tight">-{formatCurrency(dailyMetrics.RevenueGap)}</span>
+                                <span className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{formatCurrency(dailyMetrics.RevenueGap)}</span>
                             </div>
                         </div>
                     </div>

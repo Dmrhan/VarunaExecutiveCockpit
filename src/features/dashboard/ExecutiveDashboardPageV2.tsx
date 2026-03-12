@@ -1033,43 +1033,46 @@ export function ExecutiveDashboardPageV2() {
                             iconColorClass="text-blue-500"
                             unit={t('dashboardV2.pipeline.quoteUnit')}
                             trend={8}
-                            onClick={() => setDrilldownType('quotes')}
-                        />
-                        <PipelineStep
-                            title={t('dashboardV2.pipeline.conversionRate')}
-                            count=""
-                            value={`%${bffKpis?.quotes.proposalConversionRate ?? ((filteredData.quotes.filter(q => !['1', '2', '3'].includes(String(q.status))).reduce((s, q) => s + q.amount, 0) / (filteredData.deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi', 'Order', 'Onaylandı'].includes(d.stage)).reduce((s, d) => s + d.value, 0) || 1)) * 100).toFixed(1)}`}
-                            index={2} total={6}
-                            icon={<Activity size={16} strokeWidth={2.5} />}
-                            iconColorClass="text-emerald-500"
-                            unit={t('dashboardV2.pipeline.revenueBased')}
-                            trend={5}
                             subMetric={
                                 <div className="mt-1 flex flex-col gap-0.5 w-fit">
+                                    <div className="text-[11px] font-medium text-slate-400 flex items-center gap-1">
+                                        <span>{t('dashboardV2.pipeline.conversionRate')} :</span>
+                                        <span className="text-slate-600 dark:text-slate-300 font-bold">%{(bffKpis?.quotes.proposalConversionRate ?? ((filteredData.quotes.filter(q => !['1', '2', '3'].includes(String(q.status))).reduce((s, q) => s + q.amount, 0) / (filteredData.deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi', 'Order', 'Onaylandı'].includes(d.stage)).reduce((s, d) => s + d.value, 0) || 1)) * 100).toFixed(1))}</span>
+                                    </div>
                                     <div className="text-[11px] font-medium text-slate-400 mt-1">
                                         {t('dashboardV2.pipeline.countConversion')}: <span className="text-slate-500 font-bold">%{(filteredData.quotes.filter(q => !['1', '2', '3'].includes(String(q.status))).length / (filteredData.deals.filter(d => !['Won', 'Lost', 'Kazanıldı', 'Kaybedildi', 'Order', 'Onaylandı'].includes(d.stage)).length || 1) * 100).toFixed(1)}</span>
                                     </div>
                                 </div>
                             }
+                            onClick={() => setDrilldownType('quotes')}
                         />
                         <PipelineStep
                             title={t('dashboardV2.pipeline.acceptedQuotes')}
                             count={filteredData.quotes.filter(q => ['4', '7', '10'].includes(String(q.status))).length}
                             value={`${(filteredData.quotes.filter(q => ['4', '7', '10'].includes(String(q.status))).reduce((s, q) => s + q.amount, 0) / 1000000).toFixed(1)}M ₺`}
-                            index={3} total={6}
+                            index={2} total={6}
                             icon={<AlertCircle size={16} strokeWidth={2.5} />}
                             iconColorClass="text-indigo-500"
                             unit={t('dashboardV2.pipeline.quoteUnit')}
                             trend={-3}
+                            onClick={() => setDrilldownType('quotes_accepted')}
+                        />
+                        <PipelineStep
+                            title={t('dashboardV2.pipeline.winRate', { defaultValue: 'Kazanım Oranı' })}
+                            count=""
+                            value={`%${((filteredData.quotes.filter(q => ['4', '7', '10'].includes(String(q.status))).reduce((s, q) => s + q.amount, 0) / (filteredData.quotes.filter(q => !['1', '2', '3'].includes(String(q.status))).reduce((s, q) => s + q.amount, 0) || 1)) * 100).toFixed(1)}`}
+                            index={3} total={6}
+                            icon={<Activity size={16} strokeWidth={2.5} />}
+                            iconColorClass="text-emerald-500"
+                            unit={t('dashboardV2.pipeline.revenueBased', { defaultValue: 'CİRO BAZLI' })}
+                            trend={5}
                             subMetric={
                                 <div className="mt-1 flex flex-col gap-0.5 w-fit">
-                                    <div className="text-[11px] font-medium text-slate-400 flex items-center gap-1">
-                                        <span>{t('dashboardV2.pipeline.winRate')} :</span>
-                                        <span className="text-slate-600 dark:text-slate-300 font-bold">%{((filteredData.quotes.filter(q => ['4', '7', '10'].includes(String(q.status))).reduce((s, q) => s + q.amount, 0) / (filteredData.quotes.filter(q => !['1', '2', '3'].includes(String(q.status))).reduce((s, q) => s + q.amount, 0) || 1)) * 100).toFixed(1)}</span>
+                                    <div className="text-[11px] font-medium text-slate-400 mt-1">
+                                        Adet Kazanımı: <span className="text-slate-500 font-bold">%{(filteredData.quotes.filter(q => ['4', '7', '10'].includes(String(q.status))).length / (filteredData.quotes.filter(q => !['1', '2', '3'].includes(String(q.status))).length || 1) * 100).toFixed(1)}</span>
                                     </div>
                                 </div>
                             }
-                            onClick={() => setDrilldownType('quotes_accepted')}
                         />
                         <PipelineStep
                             title={t('dashboardV2.pipeline.openOrders')}

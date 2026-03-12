@@ -11,6 +11,9 @@ RUN npm ci
 
 COPY tsconfig.json ./
 COPY src ./src
+COPY scripts ./scripts
+COPY cronjob-scripts ./cronjob-scripts
+COPY cronjob-settings.json ./
 RUN npm run build
 
 # ─── Stage 2: Production Runner (MSSQL) ────────────────────────────────────────

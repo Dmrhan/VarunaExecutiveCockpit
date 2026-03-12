@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-    "build": "tsc && xcopy /E /I /Y cronjob-scripts dist\\cronjob-scripts && xcopy /Y cronjob-settings.json dist\\",
+    "build": "tsc && node scripts/copy-resources.js",
     "start": "node dist/index.js",
     "migrate": "ts-node src/db/database.ts"
   },

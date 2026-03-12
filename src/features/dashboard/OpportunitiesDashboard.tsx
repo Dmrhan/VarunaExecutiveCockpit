@@ -852,7 +852,7 @@ export function OpportunitiesDashboard() {
                                                     </div>
                                                 </td>
                                                 <td className="p-4 font-mono font-medium text-slate-700 dark:text-slate-300">
-                                                    ${(deal.value).toLocaleString()}
+                                                    ₺{(deal.value).toLocaleString()}
                                                 </td>
                                                 <td className="p-4">
                                                     <div className="flex flex-col">
@@ -939,7 +939,7 @@ export function OpportunitiesDashboard() {
                                                 </div>
                                                 <span className="bg-white dark:bg-slate-700 px-2 py-0.5 rounded-full text-[10px] font-bold text-slate-500 shadow-sm border border-slate-100 dark:border-white/5">{stageDeals.length}</span>
                                             </div>
-                                            <div className="text-[11px] font-mono font-bold" style={{ color: STAGE_COLORS[stage] }}>${totalVal.toLocaleString()}</div>
+                                            <div className="text-[11px] font-mono font-bold" style={{ color: STAGE_COLORS[stage] }}>₺{totalVal.toLocaleString()}</div>
                                         </div>
 
                                         <div className="space-y-3 h-[500px] overflow-y-auto pr-1">
@@ -964,7 +964,7 @@ export function OpportunitiesDashboard() {
                                                                 <span className="text-[10px] text-slate-500 truncate max-w-[80px]">{deal.ownerName || users.find(u => u.id === deal.ownerId)?.name || deal.ownerId}</span>
                                                             </div>
                                                             <div className="flex items-center gap-2">
-                                                                <div className="font-mono text-xs font-medium text-slate-700 dark:text-slate-300">${(deal.value / 1000).toFixed(0)}k</div>
+                                                                <div className="font-mono text-xs font-medium text-slate-700 dark:text-slate-300">₺{(deal.value / 1000).toFixed(0)}k</div>
                                                                 <div className="text-[10px] bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-slate-500">{deal.probability}%</div>
                                                             </div>
                                                         </div>

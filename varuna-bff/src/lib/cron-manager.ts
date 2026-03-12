@@ -89,8 +89,21 @@ export class CronManager {
 
         try {
             console.log(`[CronManager] Connecting to target database: ${this.settings.database.server}/${this.settings.database.database}`);
-            this.pool = await new mssql.ConnectionPool(this.settings.database).connect();
-            console.log('[CronManager] Connected to target database.');
+            
+            // Set default timeouts if not provided in settings
+            const dbConfig = {
+                ...this.settings.database,
+                requestTimeout: this.settings.database.requestTimeout || 300000, // 5 minutes default
+                connectionTimeout: this.settings.database.connectionTimeout || 30000, // 30 seconds default
+                options: {
+                    ...this.settings.database.options,
+                    encrypt: this.settings.database.options?.encrypt !== false,
+                    trustServerCertificate: this.settings.database.options?.trustServerCertificate !== false
+                }
+            };
+
+            this.pool = await new mssql.ConnectionPool(dbConfig).connect();
+            console.log('[CronManager] Connected to target database with timeout:', dbConfig.requestTimeout);
         } catch (error) {
             console.error('[CronManager] Failed to connect to target database:', error);
             return;

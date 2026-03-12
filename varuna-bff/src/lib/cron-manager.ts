@@ -31,29 +31,48 @@ export class CronManager {
     private pool: any = null;
 
     constructor() {
-        // Try to find files in the current working directory first (for dev)
-        // Then fallback to the directory of the script (for compiled/dist)
-        const cwdSettings = path.join(process.cwd(), 'cronjob-settings.json');
-        const scriptSettings = path.join(__dirname, '..', '..', 'cronjob-settings.json');
+        this.settingsPath = '';
+        this.scriptsDir = '';
 
-        if (fs.existsSync(cwdSettings)) {
-            this.settingsPath = cwdSettings;
+        // Try multiple potential locations for the settings file
+        const candidates = [
+            path.join(process.cwd(), 'cronjob-settings.json'),
+            path.join(process.cwd(), 'varuna-bff', 'cronjob-settings.json'),
+            path.join(__dirname, '..', 'cronjob-settings.json'),
+            path.join(__dirname, '..', '..', 'cronjob-settings.json'),
+            path.join(__dirname, '..', '..', '..', 'cronjob-settings.json')
+        ];
+
+        console.log('[CronManager] Searching for settings file...');
+        let found = false;
+        for (const candidate of candidates) {
+            console.log(`[CronManager] Checking: ${candidate}`);
+            if (fs.existsSync(candidate)) {
+                this.settingsPath = candidate;
+                this.scriptsDir = path.join(path.dirname(candidate), 'cronjob-scripts');
+                console.log(`[CronManager] Found settings at: ${candidate}`);
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            // Default fallbacks if nothing found
+            this.settingsPath = candidates[0];
             this.scriptsDir = path.join(process.cwd(), 'cronjob-scripts');
-        } else {
-            this.settingsPath = scriptSettings;
-            this.scriptsDir = path.join(__dirname, '..', '..', 'cronjob-scripts');
         }
     }
 
     public async initialize(): Promise<void> {
         console.log('[CronManager] Initializing...');
-        console.log(`[CronManager] Settings path: ${this.settingsPath}`);
-        console.log(`[CronManager] Scripts dir: ${this.scriptsDir}`);
-
+        
         if (!fs.existsSync(this.settingsPath)) {
-            console.warn('[CronManager] Settings file not found. Skipping cron initialization.');
+            console.warn(`[CronManager] Settings file not found at ${this.settingsPath}. Skipping cron initialization.`);
             return;
         }
+
+        console.log(`[CronManager] Loading settings from: ${this.settingsPath}`);
+        console.log(`[CronManager] Using scripts from: ${this.scriptsDir}`);
 
         try {
             const rawSettings = fs.readFileSync(this.settingsPath, 'utf-8');

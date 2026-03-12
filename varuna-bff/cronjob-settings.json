@@ -1,0 +1,21 @@
+{
+  "database": {
+    "server": "10.135.18.27",
+    "database": "ParamCrm_Cockpit",
+    "user": "cockpitadm",
+    "password": "YOa1b858Z9zhprQA",
+    "port": 1433,
+    "options": {
+      "encrypt": true,
+      "trustServerCertificate": true
+    }
+  },
+  "jobs": [
+    {
+      "name": "Example Minutely Job",
+      "schedule": "* * * * *",
+      "script": "example.sql",
+      "enabled": true
+    }
+  ]
+}

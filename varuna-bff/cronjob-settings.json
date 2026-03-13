@@ -13,79 +13,79 @@
   "jobs": [
     {
       "name": "Sync Accounts",
-      "schedule": "1 * * * *",
+      "schedule": "01 00 * * *",
       "script": "Accounts.sql",
       "enabled": true
     },
     {
       "name": "Sync Contract",
-      "schedule": "2 * * * *",
+      "schedule": "02 00 * * *",
       "script": "Contract.sql",
       "enabled": true
     },
     {
       "name": "Sync CrmOrder",
-      "schedule": "3 * * * *",
+      "schedule": "03 00 * * *",
       "script": "CrmOrder.sql",
       "enabled": true
     },
     {
       "name": "Sync CrmOrderProduct",
-      "schedule": "4 * * * *",
+      "schedule": "04 00 * * *",
       "script": "CrmOrderProduct.sql",
       "enabled": true
     },
     {
       "name": "Sync Opportunity",
-      "schedule": "5 * * * *",
+      "schedule": "05 00 * * *",
       "script": "Opportunity.sql",
       "enabled": true
     },
     {
       "name": "Sync Quote",
-      "schedule": "6 * * * *",
+      "schedule": "06 00 * * *",
       "script": "Quote.sql",
       "enabled": true
     },
     {
       "name": "Sync Stock",
-      "schedule": "7 * * * *",
+      "schedule": "07 00 * * *",
       "script": "Stock.sql",
       "enabled": true
     },
     {
       "name": "Sync TeamDefinition",
-      "schedule": "8 * * * *",
+      "schedule": "08 00 * * *",
       "script": "TeamDefiniton.sql",
       "enabled": true
     },
     {
       "name": "Sync Calendar",
-      "schedule": "9 * * * *",
+      "schedule": "09 00 * * *",
       "script": "calendar.sql",
       "enabled": true
     },
     {
       "name": "Sync Contract Licence",
-      "schedule": "10 * * * *",
+      "schedule": "10 00 * * *",
       "script": "contract_licence.sql",
       "enabled": true
     },
     {
       "name": "Sync Contract PaymentPlans",
-      "schedule": "11 * * * *",
+      "schedule": "11 00 * * *",
       "script": "contract_paymentplans.sql",
       "enabled": true
     },
     {
       "name": "Sync Person",
-      "schedule": "12 * * * *",
+      "schedule": "12 00 * * *",
       "script": "person.sql",
       "enabled": true
     },
     {
       "name": "Sync Product Group",
-      "schedule": "13 * * * *",
+      "schedule": "13 00 * * *",
       "script": "productgroup.sql",
       "enabled": true
     }

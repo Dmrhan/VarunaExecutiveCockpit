@@ -12,6 +12,16 @@ const formatCurrency = (value: number) => {
 };
 
 const STATUS_COLORS: Record<string, string> = {
+    '1': '#94a3b8', // Draft
+    '2': '#818cf8', // Review
+    '3': '#818cf8', // Review
+    '4': '#059669', // Approved
+    '5': '#f43f5e', // Rejected
+    '6': '#3b82f6', // Sent
+    '7': '#10b981', // Accepted
+    '8': '#e11d48', // Canceled
+    '9': '#475569', // Unknown
+    '10': '#10b981', // Order
     Draft: '#94a3b8',
     Review: '#818cf8',
     Sent: '#60a5fa',
@@ -89,19 +99,20 @@ export function QuotePoolAnalysis({ data, countData, onStatusSelect, selectedSta
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                         data={chartData}
-                        margin={{ top: 20, right: 16, left: 0, bottom: 8 }}
+                        margin={{ top: 25, right: 16, left: 0, bottom: 20 }}
                         barCategoryGap="30%"
                     >
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.15)" vertical={false} />
                         <XAxis
                             dataKey="name"
-                            tick={{ fontSize: 10, fill: '#94a3b8' }}
+                            tick={{ fontSize: 9, fill: '#94a3b8' }}
                             axisLine={false}
                             tickLine={false}
                             interval={0}
-                            angle={-25}
+                            angle={-30}
                             textAnchor="end"
-                            dy={5}
+                            dy={10}
+                            height={70}
                         />
                         <YAxis
                             tickFormatter={formatCurrency}

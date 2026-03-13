@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import {
     BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-    Legend, LabelList
+    LabelList, Cell
 } from 'recharts';
 import { formatCurrency } from '../../utils/formatters';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
@@ -237,128 +237,141 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
     };
 
 
+
+    // Status color map
+    const STATUS_COLORS: Record<string, string> = {
+        'İmzalandi': '#10b981',
+        'Signed': '#10b981',
+        'İptal': '#f43f5e',
+        'Cancelled': '#f43f5e',
+        'Süresi Doldu': '#f59e0b',
+        'Expired': '#f59e0b',
+        'Hazırlanmakta': '#94a3b8',
+        'InPreparation': '#94a3b8',
+        'Müzakere': '#818cf8',
+        'PriceNegotiation': '#818cf8',
+        'TextNegotiation': '#818cf8',
+        'Aşatidı': '#60a5fa',
+        'AwaitingLegalApproval': '#60a5fa',
+        'AwaitingSalesApproval': '#60a5fa',
+        'Onaylandı': '#34d399',
+        'ApprovedByLegalAndSales': '#34d399',
+        'Müşteriye Gönderildi': '#a78bfa',
+        'SentToCustomer': '#a78bfa',
+        'AwaitingCustomerSignature': '#f472b6',
+        'AwaitingUniveraSignature': '#f472b6',
+        'Beklemede': '#9ca3af',
+        'OnHold': '#9ca3af',
+    };
+
+    const formatBarCurrency = (v: number) => {
+        if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
+        if (v >= 1_000) return `${(v / 1_000).toFixed(0)}k`;
+        return String(v);
+    };
+
+    // Color palette for customer / rep bars
+    const PALETTE = ['#6366f1','#10b981','#f59e0b','#3b82f6','#f43f5e','#a78bfa','#34d399','#60a5fa','#fb923c','#e879f9'];
+
     return (
-        <div className="space-y-6 animate-in fade-in duration-700">
-            {/* Header & Filter Bar */}
-            <div className="flex flex-col gap-4">
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-light tracking-tight text-slate-900 dark:text-white">
-                            {t('contracts.title', { defaultValue: 'Gelir Güvencesi & Sözleşmeler' })}
-                        </h1>
-                        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-                            {t('contracts.subtitle', { defaultValue: 'Sözleşme portföyü, risk analizi ve gelir projeksiyonları.' })}
-                        </p>
-                    </div>
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10">
+
+            {/* ── Header ─────────────────────────────────────────── */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 px-1">
+                <div>
+                    <h2 className="text-3xl font-light tracking-tight text-slate-900 dark:text-white">
+                        {t('contracts.title', { defaultValue: 'Gelir Güvencesi & Sözleşmeler' })}
+                    </h2>
+                    <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm font-medium">
+                        {t('contracts.subtitle', { defaultValue: 'Sözleşme portföyü, risk analizi ve gelir projeksiyonları.' })}
+                    </p>
                 </div>
 
-                {/* Filters */}
-                <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-slate-200 dark:border-slate-700 shadow-sm">
-                    <CardContent className="p-4 flex flex-wrap items-center gap-4">
-                        <div className="flex flex-col gap-1">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase">{t('contracts.statusDate', 'Durum Tarihi')}</label>
+                {/* ── Filters ─────────────────────────────────────── */}
+                <div className="flex flex-wrap items-center gap-3">
+
+                    {/* As-Of Date */}
+                    <div className="bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-sm p-1 rounded-xl flex items-center border border-slate-200 dark:border-white/5">
+                        <div className="flex items-center gap-2 px-3 py-1.5">
+                            <Clock size={12} className="text-indigo-500" />
+                            <span className="text-[10px] font-bold uppercase text-indigo-600 dark:text-indigo-400">{t('contracts.statusDate', 'As-Of')}:</span>
                             <input
                                 type="date"
-                                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500 outline-none"
                                 value={filters.asOfDate}
                                 onChange={(e) => setFilters({ ...filters, asOfDate: e.target.value })}
+                                className="bg-transparent text-[11px] font-mono font-bold border-none focus:ring-0 outline-none text-slate-700 dark:text-slate-200 cursor-pointer"
                             />
                         </div>
-                        <div className="flex flex-col gap-1">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase">{t('contracts.filters.salesOwner', 'Satış Temsilcisi')}</label>
+                    </div>
+
+                    {/* Sales Rep */}
+                    <div className="bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-sm p-1 rounded-xl flex items-center border border-slate-200 dark:border-white/5">
+                        <div className="flex items-center gap-2 px-3 py-1.5">
+                            <span className="text-[10px] font-bold uppercase text-slate-500">{t('contracts.filters.salesOwner', 'Temsilci')}</span>
                             <select
-                                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500 outline-none min-w-[150px]"
+                                className="bg-transparent text-xs font-bold text-slate-700 dark:text-slate-200 border-none focus:ring-0 cursor-pointer outline-none min-w-[100px] truncate"
                                 value={filters.salesRepId}
                                 onChange={(e) => setFilters({ ...filters, salesRepId: e.target.value })}
                             >
                                 <option value="">{t('common.all', 'Tümü')}</option>
-                                {/* We would ideally fetch these from a user list, but for now we'll use active selection */}
                                 {repBreakdown?.map((rep: any) => (
                                     <option key={rep.repId} value={rep.repId}>{rep.repName}</option>
                                 ))}
                             </select>
                         </div>
-                        <div className="flex flex-col gap-1 relative" ref={accountDropdownRef}>
-                            <label className="text-[10px] font-bold text-slate-400 uppercase">{t('contracts.filters.customer', 'Müşteri')}</label>
-                            <div
-                                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500 outline-none min-w-[150px] cursor-pointer relative"
-                                onClick={() => setIsAccountDropdownOpen(!isAccountDropdownOpen)}
-                            >
-                                <span className="truncate block pr-4">
-                                    {filters.accountId ? (accounts.find(a => a.Id === filters.accountId)?.Title || accounts.find(a => a.Id === filters.accountId)?.Name || filters.accountId) : t('common.all', 'Tümü')}
-                                </span>
-                                <div className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                                    <ChevronRight size={14} className={cn("transition-transform", isAccountDropdownOpen ? "rotate-90" : "")} />
+                    </div>
+
+                    {/* Customer searchable dropdown */}
+                    <div className="bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-sm p-1 rounded-xl flex items-center border border-slate-200 dark:border-white/5 relative" ref={accountDropdownRef}>
+                        <div
+                            className="flex items-center gap-2 px-3 py-1.5 cursor-pointer min-w-[120px]"
+                            onClick={() => setIsAccountDropdownOpen(!isAccountDropdownOpen)}
+                        >
+                            <span className="text-[10px] font-bold uppercase text-slate-500">{t('contracts.filters.customer', 'Müşteri')}</span>
+                            <span className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate max-w-[120px]">
+                                {filters.accountId ? (accounts.find(a => a.Id === filters.accountId)?.Title || accounts.find(a => a.Id === filters.accountId)?.Name || t('common.all','Tümü')) : t('common.all', 'Tümü')}
+                            </span>
+                            <ChevronRight size={12} className={cn('text-slate-400 transition-transform', isAccountDropdownOpen ? 'rotate-90' : '')} />
+                        </div>
+                        {isAccountDropdownOpen && (
+                            <div className="absolute z-50 top-full left-0 mt-1.5 w-56 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl py-1 flex flex-col">
+                                <div className="px-2 pb-2 pt-1 border-b border-slate-100 dark:border-slate-700/50">
+                                    <div className="relative">
+                                        <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+                                        <input
+                                            type="text"
+                                            className="w-full pl-6 pr-2 py-1.5 text-xs bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500/50 dark:text-slate-200"
+                                            placeholder={t('common.search', 'Ara...')}
+                                            value={accountSearch}
+                                            onChange={(e) => setAccountSearch(e.target.value)}
+                                            onClick={(e) => e.stopPropagation()}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="max-h-52 overflow-y-auto" onScroll={handleAccountScroll}>
+                                    <div className="px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer text-xs font-medium" onClick={() => { setFilters({ ...filters, accountId: '' }); setIsAccountDropdownOpen(false); setAccountSearch(''); }}>
+                                        {t('common.all', 'Tümü')}
+                                    </div>
+                                    {accounts.map((acc: any) => (
+                                        <div
+                                            key={acc.Id}
+                                            className={cn('px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer text-xs truncate', filters.accountId === acc.Id && 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-medium')}
+                                            onClick={() => { setFilters({ ...filters, accountId: acc.Id }); setIsAccountDropdownOpen(false); setAccountSearch(''); }}
+                                            title={acc.Title || acc.Name}
+                                        >{acc.Title || acc.Name}</div>
+                                    ))}
+                                    {isFetchingAccounts && <div className="px-3 py-1.5 text-center text-[10px] text-slate-400 italic">{t('common.loading', 'Yükleniyor...')}</div>}
                                 </div>
                             </div>
+                        )}
+                    </div>
 
-                            {isAccountDropdownOpen && (
-                                <div
-                                    className="absolute z-[60] top-full left-0 mt-1 w-full min-w-[200px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl py-1 flex flex-col"
-                                >
-                                    <div className="p-2 border-b border-slate-100 dark:border-slate-700">
-                                        <div className="relative">
-                                            <input
-                                                type="text"
-                                                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-7 py-1 text-[10px] outline-none focus:ring-1 focus:ring-indigo-500"
-                                                placeholder={t('common.search', 'Ara...')}
-                                                value={accountSearch}
-                                                onChange={(e) => setAccountSearch(e.target.value)}
-                                                onClick={(e) => e.stopPropagation()}
-                                            />
-                                            <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
-                                        </div>
-                                    </div>
-
-                                    <div
-                                        className="max-h-60 overflow-y-auto"
-                                        onScroll={handleAccountScroll}
-                                    >
-                                        <div
-                                            className="px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer text-xs"
-                                            onClick={() => {
-                                                setFilters({ ...filters, accountId: '' });
-                                                setIsAccountDropdownOpen(false);
-                                                setAccountSearch('');
-                                            }}
-                                        >
-                                            {t('common.all', 'Tümü')}
-                                        </div>
-                                        {accounts.map((acc: any) => (
-                                            <div
-                                                key={acc.Id}
-                                                className={cn(
-                                                    "px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer text-xs truncate",
-                                                    filters.accountId === acc.Id && "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-medium"
-                                                )}
-                                                onClick={() => {
-                                                    setFilters({ ...filters, accountId: acc.Id });
-                                                    setIsAccountDropdownOpen(false);
-                                                    setAccountSearch('');
-                                                }}
-                                                title={acc.Title || acc.Name}
-                                            >
-                                                {acc.Title || acc.Name}
-                                            </div>
-                                        ))}
-                                        {isFetchingAccounts && (
-                                            <div className="px-3 py-1.5 text-center text-[10px] text-slate-400 italic">
-                                                {t('common.loading', 'Yükleniyor...')}
-                                            </div>
-                                        )}
-                                        {!isFetchingAccounts && accounts.length === 0 && (
-                                            <div className="px-3 py-4 text-center text-xs text-slate-400">
-                                                {t('common.noResults', 'Sonuç bulunamadı')}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                        <div className="flex flex-col gap-1">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase">{t('contracts.filters.status', 'Sözleşme Durumu')}</label>
+                    {/* Status */}
+                    <div className="bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-sm p-1 rounded-xl flex items-center border border-slate-200 dark:border-white/5">
+                        <div className="flex items-center gap-2 px-3 py-1.5">
+                            <span className="text-[10px] font-bold uppercase text-slate-500">{t('contracts.filters.status', 'Durum')}</span>
                             <select
-                                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500 outline-none min-w-[150px]"
+                                className="bg-transparent text-xs font-bold text-slate-700 dark:text-slate-200 border-none focus:ring-0 cursor-pointer outline-none min-w-[100px]"
                                 value={filters.status}
                                 onChange={(e) => setFilters({ ...filters, status: e.target.value })}
                             >
@@ -375,374 +388,351 @@ const DashboardOverview = ({ onSelectContract }: { onSelectContract: (id: string
                                 <option value="10">{t('contracts.status.renewedExpired', 'Yenilendi / Süresi Doldu')}</option>
                             </select>
                         </div>
-                        <button
-                            onClick={fetchDashboard}
-                            className="mt-auto p-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
-                        >
-                            <Search size={16} />
-                        </button>
-                    </CardContent>
-                </Card>
+                    </div>
+
+                    {/* Refresh */}
+                    <button
+                        onClick={fetchDashboard}
+                        className="bg-indigo-500 hover:bg-indigo-600 text-white text-[11px] font-bold uppercase tracking-wider px-4 py-2 rounded-xl transition-all shadow-sm"
+                    >
+                        {t('common.refresh', 'Güncelle')}
+                    </button>
+                </div>
             </div>
 
-            {/* KPI Cards - Grid 3x2 for GM balance */}
+            {/* ── KPI Strip ──────────────────────────────────────── */}
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
-                <StatCard
-                    label={t('contracts.kpis.totalContracts', 'Toplam Sözleşme')}
-                    value={kpis?.totalCount?.toString() || '0'}
-                    delta={getDelta(kpis?.totalCount, deltaKpis?.totalCount)}
-                    colorClass="text-slate-900 dark:text-white"
-                    subtext={formatCurrency(kpis?.totalAmount || 0)}
-                />
-                <StatCard
-                    label={t('contracts.kpis.activePortfolio', 'Aktif Portföy')}
-                    value={kpis?.activeCount?.toString() || '0'}
-                    delta={getDelta(kpis?.activeCount, deltaKpis?.activeCount)}
-                    colorClass="text-emerald-600 dark:text-emerald-400"
-                    subtext={formatCurrency(kpis?.activeAmount || 0)}
-                />
-                <StatCard
-                    label={t('contracts.kpis.riskNegotiation', 'Riskli / Müzakere')}
-                    value={kpis?.riskCount?.toString() || '0'}
-                    delta={getDelta(kpis?.riskCount, deltaKpis?.riskCount)}
-                    colorClass="text-amber-600 dark:text-amber-400"
-                    subtext={formatCurrency(kpis?.riskAmount || 0)}
-                />
-                <StatCard
-                    label={t('contracts.kpis.archivedCancelled', 'Arşivlendi / İptal')}
-                    value={kpis?.archiveCount?.toString() || '0'}
-                    delta={getDelta(kpis?.archiveCount, deltaKpis?.archiveCount)}
-                    colorClass="text-slate-500"
-                    subtext={formatCurrency(kpis?.archiveAmount || 0)}
-                />
-                <StatCard
-                    label={t('contracts.kpis.expired', 'Süresi Dolan')}
-                    value={kpis?.expiredCount?.toString() || '0'}
-                    delta={getDelta(kpis?.expiredCount, deltaKpis?.expiredCount)}
-                    colorClass="text-red-500"
-                    subtext={formatCurrency(kpis?.expiredAmount || 0)}
-                />
-                <StatCard
-                    label={t('contracts.kpis.totalValue', 'Toplam Bedel (TL)')}
-                    value={formatCurrency(kpis?.totalAmount || 0)}
-                    delta={0}
-                    colorClass="text-indigo-600 dark:text-indigo-400"
-                    subtext={t('contracts.kpis.allContracts', 'Tüm sözleşmeler')}
-                />
+                <StatCard label={t('contracts.kpis.totalContracts', 'Toplam Sözleşme')} value={kpis?.totalCount?.toString() || '0'} delta={getDelta(kpis?.totalCount, deltaKpis?.totalCount)} colorClass="text-slate-900 dark:text-white" subtext={formatCurrency(kpis?.totalAmount || 0)} />
+                <StatCard label={t('contracts.kpis.activePortfolio', 'Aktif Portföy')} value={kpis?.activeCount?.toString() || '0'} delta={getDelta(kpis?.activeCount, deltaKpis?.activeCount)} colorClass="text-emerald-600 dark:text-emerald-400" subtext={formatCurrency(kpis?.activeAmount || 0)} />
+                <StatCard label={t('contracts.kpis.riskNegotiation', 'Riskli / Müzakere')} value={kpis?.riskCount?.toString() || '0'} delta={getDelta(kpis?.riskCount, deltaKpis?.riskCount)} colorClass="text-amber-600 dark:text-amber-400" subtext={formatCurrency(kpis?.riskAmount || 0)} />
+                <StatCard label={t('contracts.kpis.archivedCancelled', 'Arşivlendi / İptal')} value={kpis?.archiveCount?.toString() || '0'} delta={getDelta(kpis?.archiveCount, deltaKpis?.archiveCount)} colorClass="text-slate-500" subtext={formatCurrency(kpis?.archiveAmount || 0)} />
+                <StatCard label={t('contracts.kpis.expired', 'Süresi Dolan')} value={kpis?.expiredCount?.toString() || '0'} delta={getDelta(kpis?.expiredCount, deltaKpis?.expiredCount)} colorClass="text-red-500" subtext={formatCurrency(kpis?.expiredAmount || 0)} />
+                <StatCard label={t('contracts.kpis.totalValue', 'Toplam Bedel')} value={formatCurrency(kpis?.totalAmount || 0)} delta={0} colorClass="text-indigo-600 dark:text-indigo-400" subtext={t('contracts.kpis.allContracts', 'Tüm sözleşmeler')} />
             </div>
 
-            {/* Breakdown Sections (3rd Row Idea - Tabs or Side-by-Side) */}
+            {/* ── Breakdown Charts Row ────────────────────────────── */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* 1. Status Breakdown */}
-                <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 h-full flex flex-col">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                            <BarChartIcon size={14} /> {t('contracts.charts.statusDistribution', 'Durum Dağılımı')}
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        <div className="divide-y divide-slate-100 dark:divide-slate-700">
-                            {statusBreakdown?.map((item: any) => (
-                                <div key={item.statusLabel} className="px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
-                                    <div className="flex flex-col">
-                                        <span className="text-xs font-medium text-slate-700 dark:text-slate-200">{item.statusLabel}</span>
-                                        <span className="text-[10px] text-slate-400">{item.count} {t('common.unit', { defaultValue: 'Adet' })}</span>
-                                    </div>
-                                    <span className="text-xs font-mono font-bold text-slate-600 dark:text-slate-400">
-                                        {formatCurrency(item.amount)}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
 
-                {/* 2. Customer Breakdown */}
-                <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 h-full flex flex-col">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                            <Users size={14} /> {t('contracts.charts.top10Customers', 'En Büyük 10 Müşteri')}
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        <div className="divide-y divide-slate-100 dark:divide-slate-700">
-                            {accountBreakdown?.map((item: any) => (
-                                <div key={item.accountId} className="px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
-                                    <div className="flex flex-col">
-                                        <span className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate max-w-[150px]">{item.accountName}</span>
-                                        <span className="text-[10px] text-slate-400">{item.count} {t('navigation.contracts')} / {item.activeCount} {t('status.Signed', 'Signed')}</span>
-                                    </div>
-                                    <span className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400">
-                                        {formatCurrency(item.amount)}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
+                {/* 1. Status Breakdown - Horizontal BarChart */}
+                <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-2xl p-6 shadow-sm flex flex-col">
+                    <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
+                        {t('contracts.charts.statusDistribution', 'Durum Dağılımı')}
+                    </h3>
+                    <div className="flex-1" style={{ minHeight: '280px' }}>
+                        <ResponsiveContainer width="100%" height={Math.max(280, (statusBreakdown?.length || 6) * 38)}>
+                            <BarChart
+                                data={statusBreakdown?.map((s: any) => ({ ...s, label: s.statusLabel?.length > 14 ? s.statusLabel.substring(0, 14) + '…' : s.statusLabel }))} 
+                                layout="vertical"
+                                margin={{ top: 0, right: 60, left: 4, bottom: 0 }}
+                                barCategoryGap="20%"
+                            >
+                                <XAxis type="number" hide />
+                                <YAxis type="category" dataKey="label" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} width={110} />
+                                <Tooltip
+                                    cursor={{ fill: 'rgba(148,163,184,0.08)' }}
+                                    content={({ active, payload }) => {
+                                        if (active && payload?.length) {
+                                            const d = payload[0].payload;
+                                            return (
+                                                <div className="bg-slate-900 text-white text-xs rounded-xl px-3 py-2 shadow-lg space-y-1">
+                                                    <p className="font-bold text-slate-200 uppercase tracking-wide">{d.statusLabel}</p>
+                                                    <p>{t('common.count','Adet')}: <span className="font-semibold text-indigo-300">{d.count}</span></p>
+                                                    <p>{t('common.amount','Tutar')}: <span className="font-semibold text-emerald-400">{formatCurrency(d.amount)}</span></p>
+                                                </div>
+                                            );
+                                        }
+                                        return null;
+                                    }}
+                                />
+                                <Bar dataKey="amount" radius={[0, 4, 4, 0]} maxBarSize={22}>
+                                    {statusBreakdown?.map((s: any, i: number) => (
+                                        <Cell key={s.statusLabel} fill={STATUS_COLORS[s.statusLabel] || PALETTE[i % PALETTE.length]} />
+                                    ))}
+                                    <LabelList dataKey="amount" position="right" formatter={(v: any) => formatBarCurrency(Number(v))} style={{ fontSize: 9, fontWeight: 700, fill: '#64748b' }} />
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
 
-                {/* 3. Sales Rep Breakdown */}
-                <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 h-full flex flex-col">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                            <Search size={14} /> {t('gamification.title', 'Satış Temsilcisi Performansı')}
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        <div className="divide-y divide-slate-100 dark:divide-slate-700">
-                            {repBreakdown?.map((item: any) => (
-                                <div key={item.repId} className="px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
-                                    <div className="flex flex-col">
-                                        <span className="text-xs font-medium text-slate-700 dark:text-slate-200">{item.repName}</span>
-                                        <span className="text-[10px] text-slate-400">{item.count} {t('activities.charts_extended.activity')} / {item.riskCount} {t('common.risk')}</span>
-                                    </div>
-                                    <div className="text-right">
-                                        <div className="text-xs font-mono font-bold text-slate-600 dark:text-slate-400">
-                                            {formatCurrency(item.amount)}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
+                {/* 2. Top Customers - Horizontal BarChart (clickable → filter) */}
+                <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-2xl p-6 shadow-sm flex flex-col">
+                    <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">
+                        {t('contracts.charts.top10Customers', 'En Büyük 10 Müşteri')}
+                    </h3>
+                    <p className="text-[10px] text-slate-400 mb-4">{t('common.clickToFilter', 'Bara tıklayarak filtreleyin')}</p>
+                    <div className="flex-1" style={{ minHeight: '280px' }}>
+                        <ResponsiveContainer width="100%" height={Math.max(280, (accountBreakdown?.length || 8) * 30)}>
+                            <BarChart
+                                data={accountBreakdown?.slice(0, 10).map((a: any) => ({ ...a, label: a.accountName?.length > 16 ? a.accountName.substring(0, 16) + '…' : a.accountName }))}
+                                layout="vertical"
+                                margin={{ top: 0, right: 60, left: 4, bottom: 0 }}
+                                barCategoryGap="20%"
+                            >
+                                <XAxis type="number" hide />
+                                <YAxis type="category" dataKey="label" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} width={120} />
+                                <Tooltip
+                                    cursor={{ fill: 'rgba(148,163,184,0.08)' }}
+                                    content={({ active, payload }) => {
+                                        if (active && payload?.length) {
+                                            const d = payload[0].payload;
+                                            return (
+                                                <div className="bg-slate-900 text-white text-xs rounded-xl px-3 py-2 shadow-lg space-y-1">
+                                                    <p className="font-bold text-slate-200">{d.accountName}</p>
+                                                    <p>{t('common.count','Adet')}: <span className="font-semibold text-indigo-300">{d.count}</span></p>
+                                                    <p>{t('common.amount','Tutar')}: <span className="font-semibold text-emerald-400">{formatCurrency(d.amount)}</span></p>
+                                                </div>
+                                            );
+                                        }
+                                        return null;
+                                    }}
+                                />
+                                <Bar
+                                    dataKey="amount"
+                                    radius={[0, 4, 4, 0]}
+                                    maxBarSize={22}
+                                    cursor="pointer"
+                                    onClick={(data: any) => {
+                                        const id = data?.payload?.accountId;
+                                        setFilters(prev => ({ ...prev, accountId: prev.accountId === id ? '' : id }));
+                                    }}
+                                >
+                                    {accountBreakdown?.slice(0, 10).map((a: any, i: number) => (
+                                        <Cell
+                                            key={a.accountId}
+                                            fill={PALETTE[i % PALETTE.length]}
+                                            opacity={filters.accountId && filters.accountId !== a.accountId ? 0.3 : 1}
+                                        />
+                                    ))}
+                                    <LabelList dataKey="amount" position="right" formatter={(v: any) => formatBarCurrency(Number(v))} style={{ fontSize: 9, fontWeight: 700, fill: '#64748b' }} />
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                {/* 3. Sales Rep - Horizontal BarChart (clickable → filter) */}
+                <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-2xl p-6 shadow-sm flex flex-col">
+                    <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">
+                        {t('gamification.title', 'Satış Temsilcisi Performansı')}
+                    </h3>
+                    <p className="text-[10px] text-slate-400 mb-4">{t('common.clickToFilter', 'Bara tıklayarak filtreleyin')}</p>
+                    <div className="flex-1" style={{ minHeight: '280px' }}>
+                        <ResponsiveContainer width="100%" height={Math.max(280, (repBreakdown?.length || 5) * 38)}>
+                            <BarChart
+                                data={repBreakdown?.map((r: any) => ({ ...r, label: r.repName?.length > 14 ? r.repName.substring(0, 14) + '…' : r.repName }))}
+                                layout="vertical"
+                                margin={{ top: 0, right: 60, left: 4, bottom: 0 }}
+                                barCategoryGap="20%"
+                            >
+                                <XAxis type="number" hide />
+                                <YAxis type="category" dataKey="label" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} width={110} />
+                                <Tooltip
+                                    cursor={{ fill: 'rgba(148,163,184,0.08)' }}
+                                    content={({ active, payload }) => {
+                                        if (active && payload?.length) {
+                                            const d = payload[0].payload;
+                                            return (
+                                                <div className="bg-slate-900 text-white text-xs rounded-xl px-3 py-2 shadow-lg space-y-1">
+                                                    <p className="font-bold text-slate-200">{d.repName}</p>
+                                                    <p>{t('common.count','Adet')}: <span className="font-semibold text-indigo-300">{d.count}</span></p>
+                                                    <p>{t('contracts.kpis.riskNegotiation','Risk')}: <span className="font-semibold text-amber-300">{d.riskCount}</span></p>
+                                                    <p>{t('common.amount','Tutar')}: <span className="font-semibold text-emerald-400">{formatCurrency(d.amount)}</span></p>
+                                                </div>
+                                            );
+                                        }
+                                        return null;
+                                    }}
+                                />
+                                <Bar
+                                    dataKey="amount"
+                                    radius={[0, 4, 4, 0]}
+                                    maxBarSize={22}
+                                    cursor="pointer"
+                                    onClick={(data: any) => {
+                                        const id = data?.payload?.repId;
+                                        setFilters(prev => ({ ...prev, salesRepId: prev.salesRepId === id ? '' : id }));
+                                    }}
+                                >
+                                    {repBreakdown?.map((r: any, i: number) => (
+                                        <Cell
+                                            key={r.repId}
+                                            fill={PALETTE[i % PALETTE.length]}
+                                            opacity={filters.salesRepId && filters.salesRepId !== r.repId ? 0.3 : 1}
+                                        />
+                                    ))}
+                                    <LabelList dataKey="amount" position="right" formatter={(v: any) => formatBarCurrency(Number(v))} style={{ fontSize: 9, fontWeight: 700, fill: '#64748b' }} />
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
             </div>
 
-            {/* Insights Row 1 - Product & Ownership Side-by-Side */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 pt-4 items-stretch min-h-[440px]">
-                <div className="flex flex-col h-full">
-                    <ProductContractHealth />
-                </div>
-                <div className="flex flex-col h-full">
-                    <ContractOwnershipPanel />
-                </div>
+            {/* ── Insights Row 1 ────────────────────────────────── */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-stretch min-h-[440px]">
+                <div className="flex flex-col h-full"><ProductContractHealth /></div>
+                <div className="flex flex-col h-full"><ContractOwnershipPanel /></div>
             </div>
 
-            {/* Insights Row 2 - Charts & Distributions */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 pt-4 items-stretch min-h-[380px]">
+            {/* ── Trend & Status Distribution ───────────────────── */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-stretch min-h-[380px]">
                 <div className="xl:col-span-2">
-                    <Card className="bg-white/40 dark:bg-slate-700/40 backdrop-blur-md border border-slate-200 dark:border-white/10 shadow-sm h-full flex flex-col">
-                        <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-white/5 bg-white/5">
-                            <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm h-full flex flex-col overflow-hidden">
+                        <div className="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
+                            <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                                 {t('contracts.charts.trendTitle', 'Sözleşme Trendi (Son 12 Ay)')}
-                            </CardTitle>
-                            <div className="flex gap-2">
+                            </h3>
+                            <div className="bg-slate-100/80 dark:bg-slate-800/80 p-0.5 rounded-lg flex items-center border border-slate-200 dark:border-white/5">
                                 <button
                                     onClick={() => setTrendMetric('amount')}
-                                    className={`px-2 py-1 rounded text-[10px] font-bold transition-colors ${trendMetric === 'amount' ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' : 'text-slate-400 hover:text-slate-600'}`}
-                                >
-                                    {t('common.amount', 'TUTAR')}
-                                </button>
+                                    className={cn('px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all', trendMetric === 'amount' ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-indigo-400' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300')}
+                                >{t('common.amount', 'Tutar')}</button>
                                 <button
                                     onClick={() => setTrendMetric('count')}
-                                    className={`px-2 py-1 rounded text-[10px] font-bold transition-colors ${trendMetric === 'count' ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' : 'text-slate-400 hover:text-slate-600'}`}
-                                >
-                                    {t('common.count', 'ADET')}
-                                </button>
+                                    className={cn('px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all', trendMetric === 'count' ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-indigo-400' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300')}
+                                >{t('common.count', 'Adet')}</button>
                             </div>
-                        </CardHeader>
-                        <CardContent className="pt-6 h-[300px]">
+                        </div>
+                        <div className="p-6 h-[300px]">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={trendData} margin={{ top: 25, right: 10, left: 10, bottom: 20 }}>
-                                    <XAxis
-                                        dataKey="name"
-                                        axisLine={false}
-                                        tickLine={false}
-                                        tick={{ fill: '#94a3b8', fontSize: 10 }}
-                                        dy={10}
-                                        interval={0}
-                                        angle={-25}
-                                        textAnchor="end"
-                                    />
-                                    <YAxis
-                                        hide
-                                    />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} dy={10} interval={0} angle={-30} textAnchor="end" height={70} />
+                                    <YAxis hide />
                                     <Tooltip
-                                        contentStyle={{
-                                            backgroundColor: '#1e293b',
-                                            borderRadius: '12px',
-                                            border: 'none',
-                                            color: '#fff',
-                                            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'
+                                        cursor={{ fill: 'rgba(148,163,184,0.08)' }}
+                                        content={({ active, payload, label }) => {
+                                            if (active && payload?.length) {
+                                                return (
+                                                    <div className="bg-slate-900 text-white text-xs rounded-xl px-3 py-2 shadow-lg space-y-1">
+                                                        <p className="font-bold text-slate-200 uppercase tracking-wide">{label}</p>
+                                                        <p>{trendMetric === 'amount' ? formatCurrency(payload[0].value as number) : payload[0].value}</p>
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
                                         }}
-                                        itemStyle={{ color: '#fff', fontSize: '11px' }}
-                                        formatter={(value: any) => trendMetric === 'amount' ? formatCurrency(value) : value}
                                     />
-                                    <Bar
-                                        dataKey={trendMetric}
-                                        fill={trendMetric === 'amount' ? '#6366f1' : '#10b981'}
-                                        radius={[4, 4, 0, 0]}
-                                        maxBarSize={40}
-                                    >
+                                    <Bar dataKey={trendMetric} fill={trendMetric === 'amount' ? '#6366f1' : '#10b981'} radius={[6, 6, 0, 0]} maxBarSize={40}>
                                         <LabelList dataKey={trendMetric} content={renderCustomBarLabel} />
                                     </Bar>
                                 </BarChart>
                             </ResponsiveContainer>
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </div>
                 </div>
-                <div className="xl:col-span-1">
-                    <ContractStatusDistribution />
-                </div>
+                <div className="xl:col-span-1"><ContractStatusDistribution /></div>
             </div>
 
-            {/* Insights Row 3 - Risk & Planning */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 pt-4 items-stretch min-h-[380px]">
+            {/* ── Risk & Renewal ────────────────────────────────── */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-stretch min-h-[380px]">
                 <RenewalRiskAnalysis />
                 <RenewalCalendar />
             </div>
 
-
-            {/* Intelligent Contract List */}
-            <Card className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
-                <CardHeader className="py-3 border-b border-slate-100 dark:border-white/5">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                            <CardTitle className="text-sm font-bold text-slate-700 uppercase tracking-wider">
-                                {t('contracts.list.header.customerTitle')}
-                            </CardTitle>
+            {/* ── Contract List Table ───────────────────────────── */}
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                        {t('contracts.list.header.customerTitle')}
+                    </h3>
+                    <div className="flex items-center gap-3">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                            <input
+                                type="text"
+                                placeholder={t('contracts.list.filters.searchPlaceholder')}
+                                className="pl-9 pr-4 py-1.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-white/10 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 w-full sm:w-48"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
                         </div>
-
-                        <div className="flex items-center gap-2">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-                                <input
-                                    type="text"
-                                    placeholder={t('contracts.list.filters.searchPlaceholder')}
-                                    className="pl-9 pr-4 py-1.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 w-full sm:w-48"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Filter className="text-slate-400" size={14} />
-                                <select
-                                    className="bg-transparent border-none text-xs font-medium text-slate-600 dark:text-slate-300 focus:ring-0 cursor-pointer"
-                                    value={statusFilter}
-                                    onChange={(e) => setStatusFilter(e.target.value as any)}
-                                >
-                                    <option value="All">{t('contracts.list.filters.allStatuses')}</option>
-                                    <option value="Signed">{t('status.Signed', 'Signed')}</option>
-                                    <option value="PriceNegotiation">{t('status.PriceNegotiation', 'Price Negotiation')}</option>
-                                    <option value="InPreparation">{t('status.InPreparation', 'In Preparation')}</option>
-                                </select>
-                            </div>
+                        <div className="bg-slate-100/80 dark:bg-slate-800/80 p-0.5 rounded-lg flex items-center border border-slate-200 dark:border-white/5">
+                            <select
+                                className="bg-transparent text-xs font-medium text-slate-600 dark:text-slate-300 focus:ring-0 cursor-pointer outline-none px-2 py-1"
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value as any)}
+                            >
+                                <option value="All">{t('contracts.list.filters.allStatuses')}</option>
+                                <option value="Signed">{t('status.Signed', 'Signed')}</option>
+                                <option value="PriceNegotiation">{t('status.PriceNegotiation', 'Price Negotiation')}</option>
+                                <option value="InPreparation">{t('status.InPreparation', 'In Preparation')}</option>
+                            </select>
                         </div>
                     </div>
-                </CardHeader>
+                </div>
 
-                <CardContent className="p-0 overflow-auto">
+                <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs">
-                        <thead className="bg-slate-50 dark:bg-slate-700/50 sticky top-0 z-10 border-b border-slate-200 dark:border-white/5">
+                        <thead className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-white/5">
                             <tr>
-                                <th className="px-4 py-3 font-medium text-slate-500 uppercase tracking-wider">{t('contracts.list.header.customerTitle')}</th>
-                                <th className="px-4 py-3 font-medium text-slate-500 uppercase tracking-wider">{t('contracts.list.header.product')}</th>
-                                <th className="px-4 py-3 font-medium text-slate-500 uppercase tracking-wider">{t('contracts.list.header.status')}</th>
-                                <th className="px-4 py-3 font-medium text-slate-500 uppercase tracking-wider">{t('contracts.list.header.salesOwner', { defaultValue: 'Sorumlu' })}</th> {/* New Column */}
-                                <th className="px-4 py-3 text-right font-medium text-slate-500 uppercase tracking-wider">{t('contracts.list.header.value')}</th>
-                                <th className="px-4 py-3 text-center font-medium text-slate-500 uppercase tracking-wider">{t('contracts.list.header.renewalIn')}</th>
-                                <th className="px-4 py-3 font-medium text-slate-500 uppercase tracking-wider">{t('contracts.list.header.risk')}</th>
+                                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-500">{t('contracts.list.header.customerTitle')}</th>
+                                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-500">{t('contracts.list.header.product')}</th>
+                                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-500">{t('contracts.list.header.status')}</th>
+                                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-500">{t('contracts.list.header.salesOwner', { defaultValue: 'Sorumlu' })}</th>
+                                <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-wider text-slate-500">{t('contracts.list.header.value')}</th>
+                                <th className="px-4 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-slate-500">{t('contracts.list.header.renewalIn')}</th>
+                                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-500">{t('contracts.list.header.risk')}</th>
                                 <th className="px-4 py-3"></th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                        <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                             {filteredContracts.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((contract: Contract) => (
                                 <tr
                                     key={contract.id}
                                     onClick={() => onSelectContract(contract.id)}
-                                    className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group cursor-pointer"
+                                    className="hover:bg-indigo-50/30 dark:hover:bg-indigo-500/5 transition-colors group cursor-pointer"
                                 >
                                     <td className="px-4 py-3">
                                         <div className="font-bold text-slate-800 dark:text-slate-200">{contract.customerName}</div>
                                         <div className="text-[10px] text-slate-500 truncate max-w-[200px]">{contract.title}</div>
                                     </td>
                                     <td className="px-4 py-3">
-                                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] uppercase font-bold border ${getProductBadgeColor(contract.productGroup)}`}>
-                                            {contract.productGroup}
-                                        </span>
+                                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] uppercase font-bold border ${getProductBadgeColor(contract.productGroup)}`}>{contract.productGroup}</span>
                                     </td>
-                                    <td className="px-4 py-3">
-                                        <StatusBadge status={contract.status} />
-                                    </td>
+                                    <td className="px-4 py-3"><StatusBadge status={contract.status} /></td>
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-[9px] font-bold text-slate-500 border border-slate-200">
+                                            <div className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-[9px] font-bold text-slate-500 border border-slate-200 dark:border-white/10">
                                                 {contract.ownerName ? contract.ownerName.charAt(0) : '?'}
                                             </div>
                                             <span className="text-slate-600 dark:text-slate-400 font-medium">{contract.ownerName || t('common.unassigned', 'Atanmamış')}</span>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-3 text-right font-mono font-medium text-slate-700 dark:text-slate-300">
-                                        {formatCurrency(contract.totalValueTL)}
-                                    </td>
+                                    <td className="px-4 py-3 text-right font-mono font-bold text-slate-700 dark:text-slate-300">{formatCurrency(contract.totalValueTL)}</td>
                                     <td className="px-4 py-3 text-center">
-                                        <div className={`font-mono font-bold ${contract.daysToRenewal < 90 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-600 dark:text-slate-400'}`}>
-                                            {contract.daysToRenewal}d
-                                        </div>
+                                        <div className={`font-mono font-bold text-xs ${ contract.daysToRenewal < 90 ? 'text-amber-500 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400'}`}>{contract.daysToRenewal}d</div>
                                     </td>
-                                    <td className="px-4 py-3">
-                                        <RiskBadge level={contract.riskLevel} />
-                                    </td>
+                                    <td className="px-4 py-3"><RiskBadge level={contract.riskLevel} /></td>
                                     <td className="px-4 py-3 text-right">
-                                        <button className="text-slate-400 hover:text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded">
-                                            <MoreHorizontal size={16} />
-                                        </button>
+                                        <button className="text-slate-300 hover:text-indigo-500 opacity-0 group-hover:opacity-100 transition-all p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded"><MoreHorizontal size={16} /></button>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
-                </CardContent>
+                </div>
 
-                {/* Pagination Controls */}
-                <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-slate-700/30">
-                    <div className="flex-1 text-xs text-slate-500 dark:text-slate-400">
-                        {t('contracts.pagination.showing')} <span className="font-medium">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> {t('contracts.pagination.to')} <span className="font-medium">{Math.min(currentPage * ITEMS_PER_PAGE, filteredContracts.length)}</span> {t('contracts.pagination.of')} <span className="font-medium">{filteredContracts.length}</span> {t('contracts.pagination.results')}
+                {/* Pagination */}
+                <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 dark:border-white/5">
+                    <div className="text-[10px] text-slate-500">
+                        {t('contracts.pagination.showing')} <span className="font-bold">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> {t('contracts.pagination.to')} <span className="font-bold">{Math.min(currentPage * ITEMS_PER_PAGE, filteredContracts.length)}</span> {t('contracts.pagination.of')} <span className="font-bold">{filteredContracts.length}</span> {t('contracts.pagination.results')}
                     </div>
                     <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => setCurrentPage(1)}
-                            disabled={currentPage === 1}
-                            className="p-1 rounded-md text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            title="First Page"
-                        >
-                            <ChevronsLeft size={16} />
-                        </button>
-                        <button
-                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                            disabled={currentPage === 1}
-                            className="p-1 rounded-md text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            title="Previous Page"
-                        >
-                            <ChevronLeft size={16} />
-                        </button>
-
-                        <div className="text-xs font-medium text-slate-700 dark:text-slate-300 px-2">
-                            {t('contracts.pagination.page')} {currentPage} / {Math.ceil(filteredContracts.length / ITEMS_PER_PAGE)}
-                        </div>
-
-                        <button
-                            onClick={() => setCurrentPage(p => Math.min(Math.ceil(filteredContracts.length / ITEMS_PER_PAGE), p + 1))}
-                            disabled={currentPage >= Math.ceil(filteredContracts.length / ITEMS_PER_PAGE)}
-                            className="p-1 rounded-md text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            title="Next Page"
-                        >
-                            <ChevronRight size={16} />
-                        </button>
-                        <button
-                            onClick={() => setCurrentPage(Math.ceil(filteredContracts.length / ITEMS_PER_PAGE))}
-                            disabled={currentPage >= Math.ceil(filteredContracts.length / ITEMS_PER_PAGE)}
-                            className="p-1 rounded-md text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            title="Last Page"
-                        >
-                            <ChevronsRight size={16} />
-                        </button>
+                        <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 disabled:opacity-50 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"><ChevronsLeft size={14} /></button>
+                        <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 disabled:opacity-50 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"><ChevronLeft size={14} /></button>
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300 px-2">{currentPage} / {Math.ceil(filteredContracts.length / ITEMS_PER_PAGE)}</span>
+                        <button onClick={() => setCurrentPage(p => Math.min(Math.ceil(filteredContracts.length / ITEMS_PER_PAGE), p + 1))} disabled={currentPage >= Math.ceil(filteredContracts.length / ITEMS_PER_PAGE)} className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 disabled:opacity-50 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"><ChevronRight size={14} /></button>
+                        <button onClick={() => setCurrentPage(Math.ceil(filteredContracts.length / ITEMS_PER_PAGE))} disabled={currentPage >= Math.ceil(filteredContracts.length / ITEMS_PER_PAGE)} className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 disabled:opacity-50 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"><ChevronsRight size={14} /></button>
                     </div>
                 </div>
-            </Card>
-        </div >
+            </div>
+        </div>
     );
 };
+
+
+
 
 // --- Empty State Component ---
 const EmptyDetailView = () => {
@@ -924,18 +914,19 @@ export const ContractsDashboard = () => {
 
 // --- Subcomponents ---
 
-const StatCard = ({ label, value, colorClass, subtext }: { label: string; value: string; colorClass: string, subtext?: string }) => (
-    <div className="bg-white/60 dark:bg-slate-700/60 backdrop-blur-md border border-slate-200 dark:border-slate-600 p-5 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm h-full min-h-[100px]">
-        <span className="text-[10px] uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400 font-bold mb-2">
-            {label}
-        </span>
-        <span className={`text-xl lg:text-2xl font-light tracking-tight ${colorClass}`}>
-            {value}
-        </span>
+const StatCard = ({ label, value, colorClass, subtext, delta }: { label: string; value: string; colorClass: string; subtext?: string; delta?: number }) => (
+    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 p-5 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm h-full min-h-[100px]">
+        <span className="text-[10px] uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400 font-medium mb-2">{label}</span>
+        <div className="flex items-baseline justify-center gap-1.5">
+            <span className={`text-2xl font-normal tracking-tight ${colorClass}`}>{value}</span>
+            {delta !== undefined && delta !== 0 && (
+                <span className={cn('text-[10px] font-bold', delta > 0 ? 'text-emerald-500' : 'text-rose-500')}>
+                    {delta > 0 ? '▲' : '▼'} {Math.abs(delta).toFixed(1)}%
+                </span>
+            )}
+        </div>
         {subtext && (
-            <span className="text-[10px] text-slate-400 mt-2 font-medium">
-                {subtext}
-            </span>
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-medium">{subtext}</span>
         )}
     </div>
 );

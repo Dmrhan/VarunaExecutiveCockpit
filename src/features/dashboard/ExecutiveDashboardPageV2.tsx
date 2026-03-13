@@ -1103,8 +1103,16 @@ export function ExecutiveDashboardPageV2() {
                 <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <GamifiedLeaderboard
                         dateRange={{
-                            start: customRange.start ? customRange.start.toISOString().split('T')[0] : null,
-                            end: customRange.end ? customRange.end.toISOString().split('T')[0] : null
+                            start: dateFilter === 'custom' && customRange.start ? customRange.start.toISOString().split('T')[0] :
+                                dateFilter === 'ytd' ? new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0] :
+                                    dateFilter === 'this_month' ? new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0] :
+                                        dateFilter === 'this_week' ? (() => {
+                                            const d = new Date();
+                                            const day = d.getDay() || 7;
+                                            d.setDate(d.getDate() - day + 1);
+                                            return d.toISOString().split('T')[0];
+                                        })() : null,
+                            end: dateFilter === 'custom' && customRange.end ? customRange.end.toISOString().split('T')[0] : null
                         }}
                         teamId={selectedTeam.includes('all') ? undefined : selectedTeam[0]}
                         ownerId={selectedOwner.includes('all') ? undefined : selectedOwner[0]}

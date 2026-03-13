@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Calendar, AlertCircle, ArrowUpRight, ArrowDownRight, Briefcase, FileText, CheckCircle2, ShoppingCart, Clock } from 'lucide-react';
+import { Users, Calendar, AlertCircle, ArrowUpRight, ArrowDownRight, Briefcase, FileText, CheckCircle2, ShoppingCart } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { useData } from '../../context/DataContext';
 import { ScorecardFunnel } from './ScorecardFunnel';
@@ -32,7 +32,6 @@ export const PersonScorecardPage = () => {
     const { t } = useTranslation();
     const { users } = useData();
     const [selectedPersonId, setSelectedPersonId] = useState<string>('');
-    const [asOfDate, setAsOfDate] = useState(new Date().toISOString().split('T')[0]);
     const [dateFilter, setDateFilter] = useState('all');
     const [customRange, setCustomRange] = useState({ start: '', end: '' });
     const [data, setData] = useState<ScorecardResponse | null>(null);
@@ -72,12 +71,7 @@ export const PersonScorecardPage = () => {
                     }
                 }
 
-                // Backend expects EITHER (asOf) OR (from + to) – not both.
-                // When a date range is active we omit asOf; otherwise we send asOf only.
-                const hasRange = !!(from && to);
-
                 const res = await fetchPersonScorecard(selectedPersonId, {
-                    asOf: hasRange ? undefined : asOfDate,
                     from: from || undefined,
                     to: to || undefined,
                 });
@@ -90,7 +84,7 @@ export const PersonScorecardPage = () => {
         };
 
         loadData();
-    }, [selectedPersonId, asOfDate, dateFilter, customRange]);
+    }, [selectedPersonId, dateFilter, customRange]);
 
     const renderCustomBarLabel = (props: any) => {
         const { x, y, width, index, value } = props;
@@ -206,19 +200,7 @@ export const PersonScorecardPage = () => {
                         />
                     )}
 
-                    {/* As-Of Date Selector */}
-                    <div className="bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-sm p-1 rounded-xl flex items-center border border-slate-200 dark:border-white/5">
-                        <div className="flex items-center gap-2 px-3 py-1.5">
-                            <Clock size={12} className="text-indigo-500" />
-                            <span className="text-[10px] font-bold uppercase text-indigo-600 dark:text-indigo-400">{t('scorecard.asOfDate', 'As-Of')}:</span>
-                            <input
-                                type="date"
-                                value={asOfDate}
-                                onChange={e => setAsOfDate(e.target.value)}
-                                className="bg-transparent text-[11px] font-mono font-bold border-none focus:ring-0 outline-none text-slate-700 dark:text-slate-200 w-auto cursor-pointer"
-                            />
-                        </div>
-                    </div>
+
                 </div>
             </div>
 

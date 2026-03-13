@@ -66,19 +66,24 @@ export const PersonScorecardPage = () => {
                         to = `${now.getFullYear()}-12-31`;
                     } else if (dateFilter === 'this_month') {
                         from = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+                        // Use actual last day of the month
                         const ed = new Date(now.getFullYear(), now.getMonth() + 1, 0);
                         to = ed.toISOString().split('T')[0];
                     }
                 }
 
+                // Backend expects EITHER (asOf) OR (from + to) – not both.
+                // When a date range is active we omit asOf; otherwise we send asOf only.
+                const hasRange = !!(from && to);
+
                 const res = await fetchPersonScorecard(selectedPersonId, {
-                    asOf: asOfDate,
+                    asOf: hasRange ? undefined : asOfDate,
                     from: from || undefined,
                     to: to || undefined,
                 });
                 setData(res);
             } catch (err) {
-                console.error(err);
+                console.error('[Scorecard] fetch error:', err);
             } finally {
                 setLoading(false);
             }

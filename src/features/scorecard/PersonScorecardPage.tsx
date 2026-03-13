@@ -9,24 +9,23 @@ import { fetchPersonScorecard } from '../../services/ScorecardService';
 import type { ScorecardResponse } from '../../services/ScorecardService';
 import { DateRangePicker } from '../../components/ui/DateRangePicker';
 import { useTranslation } from 'react-i18next';
+import { cn } from '../../lib/utils';
 import { UserAvatar } from '../../components/ui/UserAvatar';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
 
 const StatCard = ({ label, value, colorClass, subtitle, icon: Icon }: any) => (
-    <Card className={`bg-white/60 dark:bg-slate-700/60 backdrop-blur-md border border-slate-200 dark:border-slate-600 overflow-hidden shadow-sm flex flex-col items-center justify-center p-4 min-h-[110px]`}>
-        <div className="flex items-center gap-2 mb-2 w-full justify-center text-slate-500 dark:text-slate-400">
+    <div className={`bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 p-5 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm h-full min-h-[100px]`}>
+        <div className="flex items-center justify-center gap-2 mb-2 text-slate-500 dark:text-slate-400">
             {Icon && <Icon size={14} className={colorClass} />}
-            <span className="text-[10px] uppercase font-bold tracking-[0.15em] text-center truncate">{label}</span>
+            <span className="text-[10px] uppercase tracking-[0.15em] font-medium truncate text-slate-500 dark:text-slate-400">{label}</span>
         </div>
-        <div className={`text-2xl font-light tracking-tight mb-1 ${colorClass}`}>
+        <span className={`text-2xl font-normal tracking-tight mb-1 ${colorClass}`}>
             {value}
-        </div>
+        </span>
         {subtitle && (
-            <div className="text-[10px] text-slate-400 dark:text-slate-500">
-                {subtitle}
-            </div>
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">{subtitle}</span>
         )}
-    </Card>
+    </div>
 );
 
 export const PersonScorecardPage = () => {
@@ -130,109 +129,120 @@ export const PersonScorecardPage = () => {
                     </p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-3 items-center bg-white/60 dark:bg-slate-800/60 p-2 rounded-2xl backdrop-blur-md border border-white/40 dark:border-slate-700/50 shadow-sm w-full xl:w-auto">
+                <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto mt-4 xl:mt-0">
                     {/* Person Selector */}
-                    <div className="flex items-center gap-2 px-3">
-                        {selectedUser ? (
-                            <UserAvatar name={selectedUser.name} size="xs" />
-                        ) : (
-                            <Users size={16} className="text-slate-400" />
-                        )}
-                        <select
-                            className="bg-transparent text-sm font-semibold border-none focus:ring-0 cursor-pointer min-w-[150px] outline-none"
-                            value={selectedPersonId}
-                            onChange={(e) => setSelectedPersonId(e.target.value)}
-                        >
-                            {users.map(u => (
-                                <option key={u.id} value={u.id} className="dark:bg-slate-800">{u.name}</option>
-                            ))}
-                        </select>
+                    <div className="bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-sm p-1 rounded-xl flex items-center border border-slate-200 dark:border-white/5">
+                        <div className="flex items-center gap-2 px-3 py-1">
+                            {selectedUser ? (
+                                <UserAvatar name={selectedUser.name} size="xs" />
+                            ) : (
+                                <Users size={16} className="text-slate-400 hidden sm:block" />
+                            )}
+                            <select
+                                className="bg-transparent text-xs font-bold text-slate-700 dark:text-slate-200 border-none focus:ring-0 cursor-pointer min-w-[120px] outline-none truncate"
+                                value={selectedPersonId}
+                                onChange={(e) => setSelectedPersonId(e.target.value)}
+                            >
+                                {users.map(u => (
+                                    <option key={u.id} value={u.id} className="dark:bg-slate-800">{u.name}</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
-
-                    <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 hidden sm:block" />
 
                     {/* Term Selector */}
-                    <div className="flex items-center gap-2 px-3">
-                        <Calendar size={16} className="text-slate-400" />
-                        <select
-                            className="bg-transparent text-sm font-semibold border-none focus:ring-0 cursor-pointer outline-none"
-                            value={dateFilter}
-                            onChange={(e) => setDateFilter(e.target.value)}
+                    <div className="bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-sm p-1 rounded-xl flex items-center border border-slate-200 dark:border-white/5">
+                        {[
+                            { label: t('dateFilters.thisMonth', 'Bu Ay'), value: 'this_month' },
+                            { label: t('dateFilters.ytd', 'YTD'), value: 'this_year' },
+                            { label: t('dateFilters.all', 'Tümü'), value: 'all' }
+                        ].map(f => (
+                            <button
+                                key={f.value}
+                                onClick={() => setDateFilter(f.value)}
+                                className={cn(
+                                    "px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all whitespace-nowrap",
+                                    dateFilter === f.value
+                                        ? "bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-indigo-400"
+                                        : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                                )}
+                            >
+                                {f.label}
+                            </button>
+                        ))}
+                        <button
+                            onClick={() => setShowPicker(true)}
+                            className={cn(
+                                "px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all whitespace-nowrap flex items-center gap-1",
+                                dateFilter === 'custom'
+                                    ? "bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-indigo-400"
+                                    : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                            )}
                         >
-                            <option value="all" className="dark:bg-slate-800">{t('dateFilters.all', 'Tüm Dönem')}</option>
-                            <option value="this_month" className="dark:bg-slate-800">{t('dateFilters.thisMonth', 'Bu Ay')}</option>
-                            <option value="this_year" className="dark:bg-slate-800">{t('dateFilters.ytd', 'YTD (Bu Yıl)')}</option>
-                            <option value="custom" className="dark:bg-slate-800">{t('dateFilters.custom', 'Özel Aralık')}</option>
-                        </select>
+                            <Calendar size={12} />
+                            {dateFilter === 'custom' && customRange.start && customRange.end 
+                                ? `${new Date(customRange.start).toLocaleDateString()} - ${new Date(customRange.end).toLocaleDateString()}`
+                                : t('dateFilters.custom', 'Özel')}
+                        </button>
                     </div>
 
-                    {dateFilter === 'custom' && (
-                        <>
-                            <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-2 hidden sm:block" />
-                            <button
-                                onClick={() => setShowPicker(true)}
-                                className="text-sm font-semibold text-slate-700 dark:text-slate-200 hover:text-indigo-600 transition-colors"
-                            >
-                                {customRange.start && customRange.end
-                                    ? `${new Date(customRange.start).toLocaleDateString()} - ${new Date(customRange.end).toLocaleDateString()}`
-                                    : t('scorecard.selectDate', 'Tarih Seçin')}
-                            </button>
-                            {showPicker && (
-                                <DateRangePicker
-                                    startDate={customRange.start ? new Date(customRange.start) : null}
-                                    endDate={customRange.end ? new Date(customRange.end) : null}
-                                    onChange={(start, end) => setCustomRange({
-                                        start: start ? start.toISOString().split('T')[0] : '',
-                                        end: end ? end.toISOString().split('T')[0] : ''
-                                    })}
-                                    onClose={() => setShowPicker(false)}
-                                />
-                            )}
-                        </>
+                    {showPicker && (
+                        <DateRangePicker
+                            startDate={customRange.start ? new Date(customRange.start) : null}
+                            endDate={customRange.end ? new Date(customRange.end) : null}
+                            onChange={(start, end) => {
+                                setDateFilter('custom');
+                                setCustomRange({
+                                    start: start ? start.toISOString().split('T')[0] : '',
+                                    end: end ? end.toISOString().split('T')[0] : ''
+                                });
+                            }}
+                            onClose={() => setShowPicker(false)}
+                        />
                     )}
 
-                    <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 hidden sm:block" />
-
                     {/* As-Of Date Selector */}
-                    <div className="flex items-center gap-2 px-3 py-1 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl border border-indigo-100 dark:border-indigo-500/20">
-                        <Clock size={16} className="text-indigo-500" />
-                        <span className="text-xs font-bold text-indigo-700 dark:text-indigo-400">{t('scorecard.asOfDate', 'As-Of')}:</span>
-                        <input
-                            type="date"
-                            value={asOfDate}
-                            onChange={e => setAsOfDate(e.target.value)}
-                            className="bg-transparent text-xs font-mono font-bold border-none focus:ring-0 outline-none text-indigo-900 dark:text-indigo-300 w-auto cursor-pointer"
-                        />
+                    <div className="bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-sm p-1 rounded-xl flex items-center border border-slate-200 dark:border-white/5">
+                        <div className="flex items-center gap-2 px-3 py-1.5">
+                            <Clock size={12} className="text-indigo-500" />
+                            <span className="text-[10px] font-bold uppercase text-indigo-600 dark:text-indigo-400">{t('scorecard.asOfDate', 'As-Of')}:</span>
+                            <input
+                                type="date"
+                                value={asOfDate}
+                                onChange={e => setAsOfDate(e.target.value)}
+                                className="bg-transparent text-[11px] font-mono font-bold border-none focus:ring-0 outline-none text-slate-700 dark:text-slate-200 w-auto cursor-pointer"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* Team Rank Tiny Panel Moved to Top */}
             {!loading && data && data.teamRank && (
-                <div className="bg-gradient-to-tr from-indigo-500/10 to-indigo-400/5 border border-indigo-500/20 backdrop-blur-md rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
                     <div className="flex items-center gap-3">
-                        <div className="bg-indigo-500 text-white rounded-xl w-10 h-10 flex items-center justify-center font-black text-lg shadow-inner">
+                        <div className="bg-slate-100 dark:bg-slate-800/50 text-indigo-600 dark:text-indigo-400 rounded-xl w-10 h-10 flex items-center justify-center font-black text-lg border border-slate-200 dark:border-white/10">
                             #{data.teamRank.rank}
                         </div>
                         <div>
-                            <h3 className="text-[10px] font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mb-0.5">{t('scorecard.teamRanking.title', 'Takım Sıralaması')}</h3>
-                            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-0.5">{t('scorecard.teamRanking.title', 'Takım Sıralaması')}</h3>
+                            <p className="text-sm font-medium text-slate-900 dark:text-white">
                                 {t('scorecard.teamRanking.subtitle', { defaultValue: 'Ekip içi ({{count}} Kişi Arasında)', count: data.teamRank.totalMembers })}
                             </p>
                         </div>
                     </div>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                         {data.teamRank.differenceToTop !== undefined && data.teamRank.differenceToTop > 0 && (
-                            <span className="text-xs text-rose-600 dark:text-rose-400 font-bold bg-rose-500/10 px-3 py-1.5 rounded-xl whitespace-nowrap">
-                                {t('scorecard.teamRanking.gapToLeader', '1. ile Fark')}: {formatCurr(data.teamRank.differenceToTop)}
+                            <span className="text-xs text-slate-600 dark:text-slate-300 font-medium whitespace-nowrap">
+                                {t('scorecard.teamRanking.gapToLeader', '1. ile Fark')}: <span className="font-bold text-slate-900 dark:text-white font-mono">{formatCurr(data.teamRank.differenceToTop)}</span>
                             </span>
                         )}
                         {data.teamRank.differenceToTop === 0 && data.teamRank.rank === 1 && (
-                            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-3 py-1.5 rounded-xl whitespace-nowrap">
+                            <span className="text-xs text-amber-500 dark:text-amber-400 font-bold bg-amber-50 dark:bg-amber-500/10 px-3 py-1.5 rounded-xl whitespace-nowrap">
                                 {t('scorecard.teamRanking.leader', '🏆 Lider')}
                             </span>
                         )}
-                        <span className="text-[10px] text-slate-500 border border-slate-200 px-2 py-0.5 rounded-full dark:border-slate-600 uppercase tracking-widest bg-white/50 dark:bg-slate-800/50 self-start sm:self-auto mt-1 sm:mt-0">
+                        <span className="text-[10px] text-slate-500 border border-slate-200 dark:border-white/10 px-2 py-0.5 rounded-full uppercase tracking-widest bg-slate-50 dark:bg-slate-800/50 self-start sm:self-auto mt-1 sm:mt-0 font-medium">
                             {t('scorecard.teamRanking.basedOn', 'Based on')}: {data.teamRank.metric}
                         </span>
                     </div>
@@ -321,7 +331,7 @@ export const PersonScorecardPage = () => {
                     {/* Tables */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <Card className="lg:col-span-2 overflow-hidden flex flex-col">
-                            <CardHeader className="py-4 border-b border-slate-100 dark:border-slate-700 bg-white/30 dark:bg-white/5">
+                            <CardHeader className="py-4 border-b border-slate-100 dark:border-white/5 bg-transparent">
                                 <CardTitle className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 font-bold">
                                     {t('scorecard.tables.topContracts', 'En Büyük 10 Kontrat (Müşteri Bazlı)')}
                                 </CardTitle>
@@ -329,10 +339,10 @@ export const PersonScorecardPage = () => {
                             <CardContent className="p-0 flex-1 overflow-x-auto">
                                 <table className="w-full text-left border-collapse min-w-[500px]">
                                     <thead>
-                                        <tr className="border-b border-slate-100 dark:border-slate-700">
-                                            <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 dark:bg-slate-800/50">{t('scorecard.tables.customer', 'Müşteri')}</th>
-                                            <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 dark:bg-slate-800/50 text-right">{t('scorecard.tables.contractCount', 'Kontrat Sayısı')}</th>
-                                            <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 dark:bg-slate-800/50 text-right">{t('scorecard.tables.contractValue', 'Pano Değeri')}</th>
+                                        <tr className="border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-slate-800/50">
+                                            <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-500">{t('scorecard.tables.customer', 'Müşteri')}</th>
+                                            <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-500 text-right">{t('scorecard.tables.contractCount', 'Kontrat Sayısı')}</th>
+                                            <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-500 text-right">{t('scorecard.tables.contractValue', 'Pano Değeri')}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-50 dark:divide-slate-800 text-sm font-medium">
@@ -354,13 +364,13 @@ export const PersonScorecardPage = () => {
                         </Card>
 
                         <Card className="flex flex-col overflow-hidden">
-                            <CardHeader className="py-4 border-b border-slate-100 dark:border-slate-700 bg-white/30 dark:bg-white/5">
+                            <CardHeader className="py-4 border-b border-slate-100 dark:border-white/5 bg-transparent">
                                 <CardTitle className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 font-bold">
                                     {t('scorecard.tables.contractStages', 'Kontrat Safhaları')}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="p-0 flex-1 overflow-y-auto max-h-[300px]">
-                                <ul className="divide-y divide-slate-50 dark:divide-slate-800">
+                                <ul className="divide-y divide-slate-100 dark:divide-white/5">
                                     {data.contractsByStatus.map(s => (
                                         <li key={s.statusCode} className="p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors flex justify-between items-center group">
                                             <div>
@@ -383,10 +393,10 @@ export const PersonScorecardPage = () => {
                     {/* Pending Opportunities */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
                         <Card className="flex flex-col overflow-hidden w-full min-h-[350px] lg:col-span-2">
-                            <CardHeader className="py-4 border-b border-slate-100 dark:border-slate-700 bg-white/30 dark:bg-white/5">
+                            <CardHeader className="py-4 border-b border-slate-100 dark:border-white/5 bg-transparent">
                                 <CardTitle className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 font-bold flex items-center justify-between">
                                     <span className="flex items-center gap-2">
-                                        <Briefcase size={14} className="text-amber-500" />
+                                        <Briefcase size={14} className="text-indigo-500" />
                                         {t('scorecard.expectations.title', 'Aylara Göre Fırsat Kapanış Beklentisi (TL)')}
                                     </span>
                                 </CardTitle>
@@ -399,27 +409,26 @@ export const PersonScorecardPage = () => {
                                                 dataKey="name"
                                                 axisLine={false}
                                                 tickLine={false}
-                                                tick={{ fontSize: 11, fill: '#8b949e' }}
+                                                tick={{ fontSize: 10, fill: '#94a3b8' }}
                                                 dy={10}
                                                 interval={0}
-                                                angle={-25}
+                                                angle={-30}
                                                 textAnchor="end"
+                                                height={70}
                                             />
                                             <YAxis
                                                 hide={true}
                                             />
                                             <Tooltip
-                                                cursor={{ fill: 'rgba(245, 158, 11, 0.05)' }}
+                                                cursor={{ fill: 'rgba(148,163,184,0.08)' }}
                                                 content={({ active, payload }) => {
                                                     if (active && payload && payload.length) {
                                                         const d = payload[0].payload;
                                                         return (
-                                                            <div className="bg-white dark:bg-slate-800 p-3 rounded-lg shadow-xl border border-slate-100 dark:border-slate-700">
-                                                                <p className="font-bold text-slate-800 dark:text-slate-200 mb-1">{d.name}</p>
-                                                                <div className="flex flex-col gap-1 text-sm">
-                                                                    <span className="text-amber-500 font-medium">{t('scorecard.expectations.revenue', 'Gelir')}: {formatCurr(d.expectedRevenue)}</span>
-                                                                    <span className="text-slate-500 dark:text-slate-400">{t('scorecard.funnel.count', 'Adet')}: {d.count} {t('scorecard.expectations.opportunityUnit', 'Fırsat')}</span>
-                                                                </div>
+                                                            <div className="bg-slate-900 text-white text-xs rounded-xl px-3 py-2 shadow-lg space-y-1">
+                                                                <p className="font-bold text-slate-200 uppercase tracking-wide mb-1">{d.name}</p>
+                                                                <p>{t('scorecard.expectations.revenue', 'Gelir')}: <span className="font-semibold text-emerald-400">{formatCurr(d.expectedRevenue)}</span></p>
+                                                                <p>{t('scorecard.funnel.count', 'Adet')}: <span className="font-semibold text-indigo-300">{d.count} {t('scorecard.expectations.opportunityUnit', 'Fırsat')}</span></p>
                                                             </div>
                                                         );
                                                     }
@@ -434,13 +443,12 @@ export const PersonScorecardPage = () => {
                                                 style={{ cursor: 'pointer' }}
                                             >
                                                 {data.opportunitiesByCloseMonth.map((entry, index) => {
-                                                    const isPastMonth = new Date(entry.monthKey + '-01') < new Date(new Date().getFullYear(), new Date().getMonth(), 1);
                                                     const isSelected = selectedMonthKey === entry.monthKey;
                                                     return (
                                                         <Cell
                                                             key={`cell-${index}`}
-                                                            fill={isSelected ? '#6366f1' : (isPastMonth ? '#f43f5e' : '#f59e0b')}
-                                                            opacity={(!selectedMonthKey || isSelected) ? (isPastMonth && !isSelected ? 0.7 : 1) : 0.4}
+                                                            fill={isSelected ? '#6366f1' : '#94a3b8'}
+                                                            opacity={(!selectedMonthKey || isSelected) ? 1 : 0.4}
                                                         />
                                                     );
                                                 })}
@@ -457,7 +465,7 @@ export const PersonScorecardPage = () => {
                         </Card>
 
                         <Card className="flex flex-col overflow-hidden w-full lg:col-span-1 min-h-[350px]">
-                            <CardHeader className="py-4 border-b border-slate-100 dark:border-slate-700 bg-white/30 dark:bg-white/5">
+                            <CardHeader className="py-4 border-b border-slate-100 dark:border-white/5 bg-transparent">
                                 <CardTitle className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 font-bold flex items-center justify-between">
                                     <span className="flex items-center gap-2 text-indigo-500">
                                         <FileText size={14} />
@@ -468,7 +476,7 @@ export const PersonScorecardPage = () => {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="p-0 flex-1 overflow-y-auto max-h-[350px]">
-                                <ul className="divide-y divide-slate-50 dark:divide-slate-800">
+                                <ul className="divide-y divide-slate-100 dark:divide-white/5">
                                     {data.openOpportunitiesList?.filter((o: any) => selectedMonthKey ? o.monthKey === selectedMonthKey : true).length === 0 && (
                                         <li className="p-8 text-center text-slate-400 text-xs italic">{t('scorecard.expectations.noOpportunities', 'Açık fırsat bulunamadı.')}</li>
                                     )}
@@ -500,12 +508,12 @@ export const PersonScorecardPage = () => {
 
                     {/* Activity List Timeline */}
                     <Card className="overflow-hidden flex flex-col">
-                        <CardHeader className="py-4 border-b border-slate-100 dark:border-slate-700 bg-white/30 dark:bg-white/5">
+                        <CardHeader className="py-4 border-b border-slate-100 dark:border-white/5 bg-transparent">
                             <CardTitle className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 font-bold">
                                 {t('scorecard.interactions.title', 'Son Etkileşimler (Top 10)')}
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-0 flex-1 flex flex-row w-full divide-x divide-slate-100 dark:divide-slate-800">
+                        <CardContent className="p-0 flex-1 flex flex-row w-full divide-x divide-slate-100 dark:divide-white/5">
                             {data.lastEvents.length > 0 ? data.lastEvents.map(e => (
                                 <div key={e.id} className="p-4 flex-1 min-w-[200px] hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                                     <div className="flex items-center gap-2 mb-2 text-slate-400">

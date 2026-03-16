@@ -66,45 +66,76 @@ export function OrdersDashboard() {
 
     // --- Data processing ---
 
+    const currentDateRangeStr = useMemo(() => {
+        const formatLocalDate = (d: Date) => {
+            return new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().substring(0, 10);
+        };
+        const now = new Date();
+        const todayStr = formatLocalDate(now);
+
+        let startStr = '';
+        let endStr = todayStr;
+
+        if (dateFilter !== 'all') {
+            switch (dateFilter) {
+                case 'today':
+                    startStr = todayStr;
+                    break;
+                case 'week': {
+                    const day = now.getDay() || 7;
+                    const monday = new Date(now);
+                    monday.setDate(monday.getDate() - (day - 1));
+                    startStr = formatLocalDate(monday);
+                    break;
+                }
+                case 'month':
+                case 'mtd': {
+                    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                    startStr = formatLocalDate(firstDayOfMonth);
+                    break;
+                }
+                case 'quarter': {
+                    const quarter = Math.floor(now.getMonth() / 3);
+                    const firstDayOfQuarter = new Date(now.getFullYear(), quarter * 3, 1);
+                    startStr = formatLocalDate(firstDayOfQuarter);
+                    break;
+                }
+                case 'ytd': {
+                    const firstDayOfYear = new Date(now.getFullYear(), 0, 1);
+                    startStr = formatLocalDate(firstDayOfYear);
+                    break;
+                }
+                case 'custom':
+                    if (customRange.start) startStr = formatLocalDate(customRange.start);
+                    if (customRange.end) endStr = formatLocalDate(customRange.end);
+                    break;
+            }
+        }
+
+        return { start: startStr || null, end: endStr || null };
+    }, [dateFilter, customRange.start, customRange.end]);
+
     const baseOrders = useMemo(() => {
         let result = orders;
 
         // 1. Date Filter
         if (dateFilter !== 'all') {
-            const now = new Date();
-            const todayAtMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+            const { start: startStr, end: endStr } = currentDateRangeStr;
 
-            result = result.filter(order => {
-                const orderDate = new Date(order.createdAt).getTime();
-                switch (dateFilter) {
-                    case 'today': return orderDate >= todayAtMidnight;
-                    case 'week': {
-                        const day = now.getDay() || 7;
-                        const monday = new Date(now);
-                        monday.setHours(-24 * (day - 1), 0, 0, 0);
-                        return orderDate >= monday.getTime();
+            if (startStr) {
+                result = result.filter(order => {
+                    const orderDateStr = order.createdAt ? order.createdAt.substring(0, 10) : '';
+                    if (!orderDateStr) return false;
+
+                    if (dateFilter === 'custom' && (!customRange.end || !endStr)) {
+                        return orderDateStr >= startStr;
                     }
-                    case 'month':
-                    case 'mtd':
-                        return new Date(order.createdAt).getMonth() === new Date().getMonth() && new Date(order.createdAt).getFullYear() === new Date().getFullYear();
-                    case 'quarter': {
-                        const currentMonth = now.getMonth();
-                        const quarterStartMonth = Math.floor(currentMonth / 3) * 3;
-                        const quarterStart = new Date(now.getFullYear(), quarterStartMonth, 1);
-                        return orderDate >= quarterStart.getTime();
+                    if (dateFilter === 'custom' && (!customRange.start || !startStr)) {
+                        return endStr ? orderDateStr <= endStr : false;
                     }
-                    case 'ytd':
-                        return new Date(order.createdAt).getFullYear() === new Date().getFullYear();
-                    case 'custom':
-                        if (!customRange.start || !customRange.end) return true;
-                        const start = new Date(customRange.start);
-                        start.setHours(0, 0, 0, 0);
-                        const end = new Date(customRange.end);
-                        end.setHours(23, 59, 59, 999);
-                        return orderDate >= start.getTime() && orderDate <= end.getTime();
-                    default: return true;
-                }
-            });
+                    return endStr ? (orderDateStr >= startStr && orderDateStr <= endStr) : orderDateStr >= startStr;
+                });
+            }
         }
 
         // 2. Column Filters (Except Status)

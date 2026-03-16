@@ -142,6 +142,133 @@ router.get('/', (req: Request, res: Response) => {
     return res.json(response);
 });
 
+router.get('/reports/lost-reasons', (req: Request, res: Response) => {
+    try {
+        const db = getDb();
+        
+        const reqFrom = req.query.from as string;
+        const reqTo = req.query.to as string;
+        
+        const from = reqFrom ? reqFrom.substring(0, 10) : undefined;
+        const to = reqTo ? reqTo.substring(0, 10) : undefined;
+        const ownerId = req.query.ownerId as string | string[] | undefined;
+        const companyId = req.query.companyId as string | undefined;
+        const pipelineId = req.query.pipelineId as string | undefined;
+        const teamId = req.query.teamId as string | string[] | undefined;
+        const mode = (req.query.mode as string) || 'revenue'; // 'revenue' | 'count'
+
+        const params: any = {};
+        const filterParts: string[] = [
+            `(o.DealStatus = 2 OR o.OpportunityStageNameTr IN ('Kaybedildi', 'Lost'))`
+        ];
+
+        if (from && to) {
+            filterParts.push(`o.FirstCreatedDate BETWEEN @from AND @to`);
+            params.from = from;
+            params.to = to;
+        } else if (from) {
+            filterParts.push(`o.FirstCreatedDate >= @from`);
+            params.from = from;
+        } else if (to) {
+            filterParts.push(`o.FirstCreatedDate <= @to`);
+            params.to = to;
+        }
+
+        if (companyId) {
+            filterParts.push(`o.CompanyId = @companyId`);
+            params.companyId = companyId;
+        }
+        
+        if (pipelineId) {
+            filterParts.push(`o.PipelineId = @pipelineId`);
+            params.pipelineId = pipelineId;
+        }
+
+        if (ownerId) {
+            const ownerIds = Array.isArray(ownerId) ? ownerId : [ownerId];
+            filterParts.push(`o.OwnerId IN (${ownerIds.map((_, i) => `@o${i}`).join(',')})`);
+            ownerIds.forEach((id, i) => params[`o${i}`] = id);
+        }
+
+        if (teamId) {
+            const teamIds = Array.isArray(teamId) ? teamId : [teamId];
+            filterParts.push(`o.OwnerId IN (SELECT PersonId FROM TeamMember WHERE TeamId IN (${teamIds.map((_, i) => `@t${i}`).join(',')}))`);
+            teamIds.forEach((id, i) => params[`t${i}`] = id);
+        }
+
+        const dateFilter = filterParts.length > 0 ? `WHERE ${filterParts.join(' AND ')}` : '';
+
+        const sql = `
+            SELECT 
+                o.ClosedLostReason as reasonKey,
+                MAX(e.EnumName) as rawReasonName,
+                COUNT(*) as count,
+                COALESCE(SUM(COALESCE(o.ExpectedRevenue_Value, o.Amount_Value, o.PotentialTurnover_Value, 0)), 0) as amount
+            FROM Opportunity o
+            LEFT JOIN SystemEnums e ON e.EnumType = 'EClosedLostReason' AND e.EnumValue = o.ClosedLostReason
+            ${dateFilter}
+            GROUP BY o.ClosedLostReason
+        `;
+
+        const rows = db.query(sql, params) as any[];
+
+        let totalCount = 0;
+        let totalAmount = 0;
+
+        // Process translations mapping (could be improved with a proper i18n map on BFF, but we resolve keys for FE)
+        const mappedItems = rows.map(r => {
+            totalCount += r.count;
+            totalAmount += r.amount;
+            const rKey = r.reasonKey != null ? r.reasonKey.toString() : 'Unknown';
+            return {
+                reasonKey: rKey,
+                reasonLabel: {
+                    en: r.rawReasonName || rKey,
+                    // we prefix for the frontend to translation
+                    tr: r.rawReasonName ? `Enum.EClosedLostReason.${r.rawReasonName}` : 'Bilinmiyor' 
+                },
+                count: r.count,
+                amount: r.amount,
+                share: 0 // Will calculate below
+            };
+        });
+
+        // Calculate share and sort
+        const sortedItems = mappedItems.map(item => ({
+            ...item,
+            share: mode === 'count' 
+                ? (totalCount > 0 ? item.count / totalCount : 0)
+                : (totalAmount > 0 ? item.amount / totalAmount : 0)
+        })).sort((a, b) => mode === 'count' ? b.count - a.count : b.amount - a.amount);
+
+        // Optional: limit to top 10 and group rest in 'other'
+        const limit = 10;
+        const topItems = sortedItems.slice(0, limit);
+        const restItems = sortedItems.slice(limit);
+
+        const otherItem = restItems.length > 0 ? {
+            reasonKey: 'Other',
+            reasonLabel: { en: 'Other', tr: 'Diğer' },
+            count: restItems.reduce((acc, curr) => acc + curr.count, 0),
+            amount: restItems.reduce((acc, curr) => acc + curr.amount, 0),
+            share: restItems.reduce((acc, curr) => acc + curr.share, 0)
+        } : null;
+
+        res.json({
+            mode,
+            items: topItems,
+            other: otherItem,
+            totals: {
+                count: totalCount,
+                amount: totalAmount
+            }
+        });
+
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 router.get('/stats', (req: Request, res: Response) => {
     try {
         const db = getDb();

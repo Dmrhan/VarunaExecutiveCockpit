@@ -30,6 +30,7 @@ import { ProductGroupService } from '../../services/ProductGroupService';
 import type { IProductGroup } from '../../types/crm';
 import { HorizontalBarChart } from '../../components/ui/HorizontalBarChart';
 import { SalesRepList } from './SalesRepList';
+import { LostReasonsDistribution } from './LostReasonsDistribution';
 
 import type { Deal } from '../../types/crm';
 
@@ -671,7 +672,7 @@ export function OpportunitiesDashboard() {
                     <ProductPerformance deals={filteredDeals} />
                 </div>
 
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                     <HorizontalBarChart
                         title={t('opportunities.charts.customerPotentialTitle')}
                         data={chartData.customerRev.map((item: any) => ({
@@ -686,6 +687,14 @@ export function OpportunitiesDashboard() {
                         activeId={selectedTopCustomer}
                         onBarClick={(item) => setSelectedTopCustomer(prev => prev === item.id ? null : item.id)}
                     />
+
+                    <LostReasonsDistribution
+                        dateFilter={dateFilter}
+                        customRange={customRange}
+                        selectedOwner={selectedOwner}
+                        selectedTeam={selectedTeam}
+                    />
+
                     <HorizontalBarChart
                         title={t('opportunities.charts.dealTypeTitle')}
                         data={(chartData.dealTypeRev || []).map((item: any) => ({

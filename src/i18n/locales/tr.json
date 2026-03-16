@@ -137,7 +137,9 @@
                 "newExistingReference": "Yeni Mevcut Referans",
                 "changesRequestForm": "Değişiklik İstek Formu",
                 "winBack": "Geri Kazanım"
-            }
+            },
+            "lostReasonsTitle": "Kaybetme Nedenleri Dağılımı",
+            "lostReasonsInsight": "En çok kayba neden olan etkenleri analiz edip aksiyon alın."
         },
         "forecast": {
             "title": "Tahmini Kapanış Öngörüsü",

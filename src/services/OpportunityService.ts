@@ -244,5 +244,24 @@ export const OpportunityService = {
         const response = await fetch(`${getOpportunityUrl()}/stats?${params.toString()}`);
         if (!response.ok) throw new Error('Failed to fetch opportunity stats');
         return await response.json();
+    },
+
+    getLostReasons: async (from?: string, to?: string, ownerId?: string[], teamId?: string[], mode: 'revenue' | 'count' = 'revenue'): Promise<any> => {
+        const params = new URLSearchParams();
+        if (from) params.append('from', from);
+        if (to) params.append('to', to);
+        if (ownerId && ownerId.length) ownerId.forEach(id => params.append('ownerId', id));
+        if (teamId && teamId.length) teamId.forEach(t => params.append('teamId', t));
+        params.append('mode', mode);
+
+        try {
+            const response = await fetch(`${getOpportunityUrl()}/reports/lost-reasons?${params.toString()}`);
+            if (!response.ok) throw new Error('Failed to fetch closed lost reasons');
+            return await response.json();
+        } catch (error) {
+            console.warn('API Error in getLostReasons:', error);
+            // Default empty state response
+            return { items: [], other: null, mode, totals: { count: 0, amount: 0 } };
+        }
     }
 };

@@ -144,7 +144,9 @@
                 "newExistingReference": "New Existing Reference",
                 "changesRequestForm": "Changes Request Form",
                 "winBack": "Win-Back"
-            }
+            },
+            "lostReasonsTitle": "Closed Lost Reasons",
+            "lostReasonsInsight": "Analyze top factors causing closed lost deals."
         },
         "forecast": {
             "title": "Closing Forecast",

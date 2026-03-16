@@ -48,6 +48,7 @@ export const OpportunitySchema = z.object({
     DealStatus: z.number().int().nullable().optional(),
     ProbabilityBand: z.number().int().nullable().optional(),
     OpportunityStageName: z.number().int().nullable().optional(),
+    ClosedLostReason: z.number().int().nullable().optional(),
 
     // Stage
     OpportunityStageId: z.string().nullable().optional(),

@@ -54,26 +54,31 @@ export const PersonScorecardPage = () => {
             try {
                 let from = '';
                 let to = '';
+                let asOf = '';
 
                 if (dateFilter !== 'all') {
                     const now = new Date();
                     if (dateFilter === 'custom' && customRange.start && customRange.end) {
                         from = customRange.start;
                         to = customRange.end;
+                        asOf = customRange.end;
                     } else if (dateFilter === 'this_year') {
                         from = `${now.getFullYear()}-01-01`;
                         to = `${now.getFullYear()}-12-31`;
+                        asOf = to;
                     } else if (dateFilter === 'this_month') {
                         from = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
                         // Use actual last day of the month
                         const ed = new Date(now.getFullYear(), now.getMonth() + 1, 0);
                         to = ed.toISOString().split('T')[0];
+                        asOf = to;
                     }
                 }
 
                 const res = await fetchPersonScorecard(selectedPersonId, {
                     from: from || undefined,
                     to: to || undefined,
+                    asOf: asOf || undefined,
                 });
                 setData(res);
             } catch (err) {

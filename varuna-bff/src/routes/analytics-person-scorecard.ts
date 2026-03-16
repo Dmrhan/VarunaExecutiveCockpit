@@ -33,7 +33,7 @@ router.get('/', (req: Request, res: Response) => {
         };
 
         const oppDates = getDateFilter('FirstCreatedDate');
-        const quoteDates = getDateFilter('FirstCreatedDate');
+        // Quote dates built directly where needed to add table prefix.
         const orderDates = getDateFilter('CreateOrderDate');
         const contractDates = getDateFilter('StartDate');
         const calDates = getDateFilter('StartDate');
@@ -52,9 +52,9 @@ router.get('/', (req: Request, res: Response) => {
         const oppQuery = `
             SELECT 
                 COUNT(Id) as count, 
-                COALESCE(SUM(ExpectedRevenue_Value), 0) as amount,
-                SUM(CASE WHEN (OpportunityStageNameTr NOT IN ('Kazanıldı', 'Order', 'Kaybedildi', 'Lost')) THEN 1 ELSE 0 END) as openCount,
-                COALESCE(SUM(CASE WHEN (OpportunityStageNameTr NOT IN ('Kazanıldı', 'Order', 'Kaybedildi', 'Lost')) THEN ExpectedRevenue_Value ELSE 0 END), 0) as openAmount
+                COALESCE(SUM(Amount_Value), 0) as amount,
+                SUM(CASE WHEN DealStatus = 0 THEN 1 ELSE 0 END) as openCount,
+                COALESCE(SUM(CASE WHEN DealStatus = 0 THEN Amount_Value ELSE 0 END), 0) as openAmount
             FROM Opportunity 
             WHERE OwnerId = ? ${companyFilterSql} ${oppDates.sql}
         `;
@@ -63,14 +63,16 @@ router.get('/', (req: Request, res: Response) => {
         ) || { count: 0, amount: 0, openCount: 0, openAmount: 0 };
 
         // Quote
+        const quoteDates = getDateFilter('q.FirstCreatedDate');
         const quoteQuery = `
             SELECT 
-                COUNT(Id) as count, 
-                COALESCE(SUM(TotalNetAmountLocalCurrency_Amount), 0) as amount,
-                SUM(CASE WHEN Status = 1 THEN 1 ELSE 0 END) as wonCount,
-                COALESCE(SUM(CASE WHEN Status = 1 THEN TotalNetAmountLocalCurrency_Amount ELSE 0 END), 0) as wonAmount
-            FROM Quote 
-            WHERE ProposalOwnerId = ? ${companyFilterSql} ${quoteDates.sql} AND Status != 5
+                COUNT(q.Id) as count, 
+                COALESCE(SUM(q.TotalNetAmountLocalCurrency_Amount), 0) as amount,
+                SUM(CASE WHEN q.Status = 1 AND (o.Status IS NULL OR o.Status != 3) THEN 1 ELSE 0 END) as wonCount,
+                COALESCE(SUM(CASE WHEN q.Status = 1 AND (o.Status IS NULL OR o.Status != 3) THEN q.TotalNetAmountLocalCurrency_Amount ELSE 0 END), 0) as wonAmount
+            FROM Quote q
+            LEFT JOIN CrmOrder o ON q.Id = o.QuoteId
+            WHERE q.ProposalOwnerId = ? ${companyFilterSql.replace('CompanyId', 'q.CompanyId')} ${quoteDates.sql} AND q.Status != 5
         `;
         const quoteRes = db.queryOne<{ count: number, amount: number, wonCount: number, wonAmount: number }>(
             quoteQuery, [personId, ...companyPrm, ...quoteDates.prm]
@@ -142,7 +144,7 @@ router.get('/', (req: Request, res: Response) => {
 
                 const iRow = db.queryOne<{ amount: number }>(`
                     SELECT COALESCE(SUM(TotalNetAmountLocalCurrency_Amount), 0) as amount
-                    FROM CrmOrder WHERE ProposalOwnerId = ? AND InvoiceDate <= ?
+                    FROM CrmOrder WHERE ProposalOwnerId = ? AND InvoiceDate <= ? AND Status != 3
                 `, [personId, eom]);
                 if (iRow) tInvoice.amount = iRow.amount;
 
@@ -231,9 +233,13 @@ router.get('/', (req: Request, res: Response) => {
             if (personRow && personRow.TeamId) {
                 teamRank.teamId = personRow.TeamId;
                 const teamMembers = db.query<{ id: string, amount: number }>(`
-                    SELECT p.Id as id, COALESCE(SUM(q.TotalNetAmountLocalCurrency_Amount), 0) as amount
+                    SELECT p.Id as id, COALESCE(SUM(
+                        CASE WHEN q.Status = 1 AND (o.Status IS NULL OR o.Status != 3)
+                        THEN q.TotalNetAmountLocalCurrency_Amount ELSE 0 END
+                    ), 0) as amount
                     FROM Person p
-                    LEFT JOIN Quote q ON p.Id = q.ProposalOwnerId AND q.Status = 1
+            LEFT JOIN Quote q ON p.Id = q.ProposalOwnerId
+            LEFT JOIN CrmOrder o ON q.Id = o.QuoteId
                     WHERE p.TeamId = ?
                 GROUP BY p.Id
                     ORDER BY amount DESC

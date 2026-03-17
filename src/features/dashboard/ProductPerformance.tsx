@@ -171,12 +171,14 @@ export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps
             .map(([name, stats]) => ({ name, value: stats.value, count: stats.count }))
             .sort((a, b) => b.value - a.value);
 
-        // Trend Data (Last 6 Months)
+        // Trend Data (Last 6 Months) — keyed by YYYY-MM to avoid cross-year bleed
         const now = new Date();
         const last6Months = Array.from({ length: 6 }, (_, i) => {
             const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, '0')}`;
             return {
                 date: d,
+                key,
                 label: d.toLocaleDateString(i18n.language, { month: 'short' }),
                 value: 0
             };
@@ -184,8 +186,8 @@ export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps
 
         productDeals.forEach(deal => {
             const d = new Date(deal.createdAt);
-            const monthLabel = d.toLocaleDateString(i18n.language, { month: 'short' });
-            const monthEntry = last6Months.find(m => m.label === monthLabel);
+            const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, '0')}`;
+            const monthEntry = last6Months.find(m => m.key === key);
             if (monthEntry) {
                 monthEntry.value += deal.value;
             }
@@ -445,38 +447,60 @@ export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps
                                                 </span>
                                             )}
                                         </div>
-                                        <div className="h-48 w-full flex items-center justify-center">
-                                            <ResponsiveContainer width="100%" height="100%">
-                                                <PieChart>
-                                                    <Pie
-                                                        data={analyticsData.stageData}
-                                                        cx="50%"
-                                                        cy="50%"
-                                                        innerRadius={40}
-                                                        outerRadius={60}
-                                                        paddingAngle={5}
-                                                        dataKey="value"
-                                                    >
-                                                        {analyticsData.stageData.map((entry, index) => (
-                                                            <Cell
-                                                                key={`cell-${index}`}
-                                                                fill={COLORS[index % COLORS.length]}
-                                                                stroke={selectedStage === entry.name ? "#000" : "none"}
-                                                                strokeWidth={2}
-                                                                className="cursor-pointer hover:opacity-80 transition-opacity"
-                                                                onClick={() => setSelectedStage(selectedStage === entry.name ? null : entry.name)}
-                                                            />
-                                                        ))}
-                                                    </Pie>
-                                                    <Tooltip
-                                                        formatter={(value: any, name: any, props: any) => [
-                                                            `₺${value?.toLocaleString('tr-TR') ?? 0} (${props.payload.count} ${t('common.unit')})`,
-                                                            name
-                                                        ]}
-                                                    />
-                                                    <Legend verticalAlign="middle" align="right" layout="vertical" iconSize={8} wrapperStyle={{ fontSize: '10px' }} />
-                                                </PieChart>
-                                            </ResponsiveContainer>
+                                        <div className="h-48 w-full flex items-center">
+                                            <div className="flex-shrink-0" style={{ width: '130px', height: '130px' }}>
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <PieChart>
+                                                        <Pie
+                                                            data={analyticsData.stageData}
+                                                            cx="50%"
+                                                            cy="50%"
+                                                            innerRadius={35}
+                                                            outerRadius={55}
+                                                            paddingAngle={3}
+                                                            dataKey="value"
+                                                            label={({ percent }) => (percent ?? 0) > 0.05 ? `${((percent ?? 0) * 100).toFixed(0)}%` : ''}
+                                                            labelLine={false}
+                                                        >
+                                                            {analyticsData.stageData.map((entry, index) => (
+                                                                <Cell
+                                                                    key={`cell-${index}`}
+                                                                    fill={COLORS[index % COLORS.length]}
+                                                                    stroke={selectedStage === entry.name ? '#1e293b' : 'none'}
+                                                                    strokeWidth={2}
+                                                                    className="cursor-pointer hover:opacity-80 transition-opacity"
+                                                                    onClick={() => setSelectedStage(selectedStage === entry.name ? null : entry.name)}
+                                                                />
+                                                            ))}
+                                                        </Pie>
+                                                        <Tooltip
+                                                            formatter={(value: any, name: any, props: any) => [
+                                                                `₺${value?.toLocaleString('tr-TR') ?? 0} (${props.payload.count} ${t('common.unit')})`,
+                                                                name
+                                                            ]}
+                                                        />
+                                                    </PieChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                            {/* Custom legend with values */}
+                                            <div className="flex-1 ml-4 space-y-1.5 overflow-y-auto max-h-40">
+                                                {analyticsData.stageData.map((entry, index) => {
+                                                    const total = analyticsData.stageData.reduce((s, d) => s + d.value, 0);
+                                                    const pct = total > 0 ? ((entry.value / total) * 100).toFixed(0) : '0';
+                                                    return (
+                                                        <div
+                                                            key={entry.name}
+                                                            className={`flex items-center gap-2 cursor-pointer rounded-lg px-2 py-1 transition-colors ${selectedStage === entry.name ? 'bg-slate-100 dark:bg-white/10' : 'hover:bg-slate-50 dark:hover:bg-white/5'}`}
+                                                            onClick={() => setSelectedStage(selectedStage === entry.name ? null : entry.name)}
+                                                        >
+                                                            <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                                                            <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 flex-1 truncate">{entry.name}</span>
+                                                            <span className="text-[10px] font-mono font-bold text-slate-800 dark:text-white">₺{(entry.value / 1000000).toFixed(1)}M</span>
+                                                            <span className="text-[9px] text-slate-400 font-bold">{pct}%</span>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

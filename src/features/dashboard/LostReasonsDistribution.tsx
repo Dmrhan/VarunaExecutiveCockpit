@@ -152,7 +152,7 @@ export function LostReasonsDistribution({ dateFilter, customRange, selectedOwner
                     </div>
                 )}
                 
-                <div className="space-y-4 overflow-y-auto pr-2 pb-2 h-full">
+                <div className="space-y-4 overflow-y-auto pr-2 pb-2 max-h-[280px]">
                     {renderedItems.map((item, idx) => {
                         const val = mode === 'count' ? item.count : item.amount;
                         const percentage = (val / maxValue) * 100;

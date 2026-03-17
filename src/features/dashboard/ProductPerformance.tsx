@@ -508,12 +508,12 @@ export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps
                                     <table className="w-full text-left border-separate border-spacing-y-2">
                                         <thead className="sticky top-0 bg-transparent z-10">
                                             <tr className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">
-                                                <th className="px-4 pb-4">{t('opportunities.customer')}</th>
-                                                <th className="px-4 pb-4">{t('productPerformance.seller')}</th>
-                                                <th className="px-4 pb-4">{t('productPerformance.opportunityName')}</th>
-                                                <th className="px-4 pb-4 text-center">{t('performance.aiAnalysis')}</th>
-                                                <th className="px-4 pb-4 text-right">{t('productPerformance.expectedRevenue')}</th>
-                                                <th className="px-4 pb-4 text-right">{t('productPerformance.daysOpen')}</th>
+                                                <th className="px-4 pb-4">{t('opportunities.customer', 'Müşteri')}</th>
+                                                <th className="px-4 pb-4">Satış Temsilcisi</th>
+                                                <th className="px-4 pb-4">Fırsat Adı</th>
+                                                <th className="px-4 pb-4 text-center">{t('performance.aiAnalysis', 'AI Analiz')}</th>
+                                                <th className="px-4 pb-4 text-right">Beklenen Gelir</th>
+                                                <th className="px-4 pb-4 text-right">Açık Gün</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -557,7 +557,7 @@ export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps
                                                         </td>
 
                                                         <td className="bg-white dark:bg-white/5 p-4 border-y border-slate-200 dark:border-white/10 text-right shadow-sm">
-                                                            <span className="text-xs md:text-sm font-bold text-indigo-600 dark:text-indigo-400">₺{(deal.value / 1000000).toFixed(2)}M</span>
+                                                            <span className="text-xs md:text-sm font-bold text-indigo-600 dark:text-indigo-400">₺{deal.value.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
                                                         </td>
                                                         <td className="bg-white dark:bg-white/5 p-4 last:rounded-r-2xl border-y border-r border-slate-200 dark:border-white/10 text-right shadow-sm">
                                                             <span className={cn(

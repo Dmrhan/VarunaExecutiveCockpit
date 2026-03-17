@@ -161,8 +161,14 @@ export function LostReasonsDistribution({ dateFilter, customRange, selectedOwner
                         // Sometimes the label strings need translation via t() if they come as raw Enums
                         let label = item.reasonLabel?.[lang] || item.reasonKey || 'Unknown';
                         // if label has "Enum.EClosedLostReason", translate it properly
+                        // If it's a raw key, try to translate with the enum prefix
                         if (label.startsWith('Enum.')) {
                             label = t(label, { defaultValue: item.reasonLabel?.en || item.reasonKey });
+                        } else if (!item.reasonLabel?.[lang] && item.reasonKey) {
+                            const translated = t(`Enum.EClosedLostReason.${item.reasonKey}`);
+                            if (translated !== `Enum.EClosedLostReason.${item.reasonKey}`) {
+                                label = translated;
+                            }
                         }
 
                         return (

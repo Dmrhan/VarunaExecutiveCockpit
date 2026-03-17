@@ -964,6 +964,17 @@
             "potential": "Potential",
             "dealCount": "Deal Count"
         },
+        "rootCause": {
+            "title": "Loss Analysis (Why are we losing?)",
+            "chartTitle": "Loss Reasons Distribution",
+            "impact": "Impact",
+            "reasons": {
+                "price": "Price",
+                "decision_time": "Decision Time",
+                "product_gap": "Product Gap",
+                "competitor": "Competitor"
+            }
+        },
         "productBalance": {
             "title": "Product Based Sales",
             "subtitle": "Revenue distribution by product groups"
@@ -1082,6 +1093,29 @@
             "contract": "Contract (ARR)",
             "invoice": "Invoiced",
             "collection": "Collection"
+        }
+    },
+    "Enum": {
+        "EClosedLostReason": {
+            "B2BPreferred": "B2B Preferred",
+            "NoERPIntegration": "No ERP Integration",
+            "ExpensivePrices": "Prices Are Expensive",
+            "CustomerDoesNotNeed": "Customer Does Not Need",
+            "UnableToReachCustomer": "Unable to Reach Customer",
+            "CompetitorOfferedBetterPrice": "Competitor Offered Better Price",
+            "CompetitorProductBetter": "Competitor Product is Better",
+            "ProductIsInsufficient": "Product is Insufficient",
+            "WeCouldNotExplainProductWell": "We Could Not Explain Product Well",
+            "CustomerDoNotConsiderToBuy": "Customer Does Not Consider to Buy",
+            "NegativeIntelligence": "Negative Intelligence",
+            "BKMCancellationRecord": "BKM Cancellation Record",
+            "FindexNote": "Findex Note",
+            "HighRiskSector": "High Risk Sector",
+            "ProhibitedSector": "Prohibited Sector",
+            "Other": "Other (Detailed confirmation could not be made)",
+            "CollectFromSupplier": "Will collect/continue to collect from supplier",
+            "ProjectIsCancelled": "Project is Cancelled",
+            "Suspended": "Suspended"
         }
     }
 }

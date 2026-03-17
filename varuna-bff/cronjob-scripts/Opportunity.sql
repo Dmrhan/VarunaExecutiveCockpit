@@ -30,7 +30,8 @@ USING (
         IsThereDelay,
         CAST(CloseDate AS date) AS CloseDate,
         CAST(DeliveryDate AS date) AS DeliveryDate,
-        CAST(CreatedOn AS date) AS FirstCreatedDate
+        CAST(CreatedOn AS date) AS FirstCreatedDate,
+		ClosedLostReason as ClosedLostReason
     FROM [1886662b0a1847a7973577f52892968fdb].[dbo].[Opportunity]
     WHERE DeletedOn IS NULL and CompanyId = '4f1687e4-f282-4601-a3cc-ef612e00c3e4'
 ) AS SOURCE
@@ -67,8 +68,8 @@ UPDATE SET
     TARGET.IsThereDelay = SOURCE.IsThereDelay,
     TARGET.CloseDate = SOURCE.CloseDate,
     TARGET.DeliveryDate = SOURCE.DeliveryDate,
-    TARGET.FirstCreatedDate = SOURCE.FirstCreatedDate
-
+    TARGET.FirstCreatedDate = SOURCE.FirstCreatedDate,
+	Target.ClosedLostReason = Source.ClosedLostReason
 WHEN NOT MATCHED THEN
 INSERT (
     Id, Name, AccountId, OwnerId, LeadOwnerId,
@@ -81,7 +82,7 @@ INSERT (
     PotentialTurnover_Value, BKMTurnover_Value,
     TargetTurnover_Value,
     Probability, IsThereDelay,
-    CloseDate, DeliveryDate, FirstCreatedDate
+    CloseDate, DeliveryDate, FirstCreatedDate,ClosedLostReason
 )
 VALUES (
     SOURCE.Id, SOURCE.Name, SOURCE.AccountId, SOURCE.OwnerId, SOURCE.LeadOwnerId,
@@ -94,5 +95,5 @@ VALUES (
     SOURCE.PotentialTurnover_Value, SOURCE.BKMTurnover_Value,
     SOURCE.TargetTurnover_Value,
     SOURCE.Probability, SOURCE.IsThereDelay,
-    SOURCE.CloseDate, SOURCE.DeliveryDate, SOURCE.FirstCreatedDate
+    SOURCE.CloseDate, SOURCE.DeliveryDate, SOURCE.FirstCreatedDate, Source.ClosedLostReason
 );

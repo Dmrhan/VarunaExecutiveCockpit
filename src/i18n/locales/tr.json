@@ -1076,5 +1076,28 @@
             "invoice": "Fatura",
             "collection": "Tahsilat"
         }
+    },
+    "Enum": {
+        "EClosedLostReason": {
+            "B2BPreferred": "B2B Tercih Etti",
+            "NoERPIntegration": "ERP Entegrasyonu Yok",
+            "ExpensivePrices": "Fiyatlarınız Pahalı Geldi",
+            "CustomerDoesNotNeed": "Müşterinin İhtiyacı Yok",
+            "UnableToReachCustomer": "Müşteriye Ulaşılamıyor",
+            "CompetitorOfferedBetterPrice": "Rakip Daha İyi Fiyat Verdi",
+            "CompetitorProductBetter": "Rakip Ürünü Daha İyi",
+            "ProductIsInsufficient": "Ürün Yetersiz",
+            "WeCouldNotExplainProductWell": "Ürünü İyi Anlatamadık",
+            "CustomerDoNotConsiderToBuy": "Müşteri Kısa Sürede Alım Düşünmüyor",
+            "NegativeIntelligence": "Olumsuz İstihbarat",
+            "BKMCancellationRecord": "BKM Fesih Kaydı",
+            "FindexNote": "Findeks Notu",
+            "HighRiskSector": "Riskli Sektör",
+            "ProhibitedSector": "Yasaklı Sektör",
+            "Other": "Diğer (Detaylı teyit yapılamadı)",
+            "CollectFromSupplier": "Tedarikçiden çekecek/çekmeye devam edecek",
+            "ProjectIsCancelled": "Proje İptal Edildi",
+            "Suspended": "Askıya Alındı"
+        }
     }
 }

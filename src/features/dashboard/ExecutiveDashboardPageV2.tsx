@@ -1102,20 +1102,48 @@ export function ExecutiveDashboardPageV2() {
                 {/* Gamified Leaderboard & Product Distribution */}
                 <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <GamifiedLeaderboard
-                        dateRange={{
-                            start: dateFilter === 'custom' && customRange.start ? customRange.start.toISOString().split('T')[0] :
-                                dateFilter === 'ytd' ? new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0] :
-                                    dateFilter === 'this_month' ? new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0] :
-                                        dateFilter === 'this_week' ? (() => {
-                                            const d = new Date();
-                                            const day = d.getDay() || 7;
-                                            d.setDate(d.getDate() - day + 1);
-                                            return d.toISOString().split('T')[0];
-                                        })() : null,
-                            end: dateFilter === 'custom' && customRange.end ? customRange.end.toISOString().split('T')[0] : null
-                        }}
-                        teamId={selectedTeam.includes('all') ? undefined : selectedTeam[0]}
-                        ownerId={selectedOwner.includes('all') ? undefined : selectedOwner[0]}
+                        dateRange={(() => {
+                            const now = new Date();
+                            const formatLocalDate = (d: Date) => new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().substring(0, 10);
+                            let start = '';
+                            let end = formatLocalDate(now);
+                            
+                            switch (dateFilter) {
+                                case 'this_week': {
+                                    const day = now.getDay() || 7;
+                                    const monday = new Date(now);
+                                    monday.setDate(monday.getDate() - (day - 1));
+                                    start = formatLocalDate(monday);
+                                    const sunday = new Date(monday);
+                                    sunday.setDate(sunday.getDate() + 6);
+                                    end = formatLocalDate(sunday);
+                                    break;
+                                }
+                                case 'this_month': {
+                                    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                                    start = formatLocalDate(firstDayOfMonth);
+                                    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                                    end = formatLocalDate(lastDayOfMonth);
+                                    break;
+                                }
+                                case 'ytd': {
+                                    const firstDayOfYear = new Date(now.getFullYear(), 0, 1);
+                                    start = formatLocalDate(firstDayOfYear);
+                                    const lastDayOfYear = new Date(now.getFullYear(), 11, 31);
+                                    end = formatLocalDate(lastDayOfYear);
+                                    break;
+                                }
+                                case 'custom':
+                                    if (customRange.start) start = formatLocalDate(customRange.start);
+                                    if (customRange.end) end = formatLocalDate(customRange.end);
+                                    break;
+                                default:
+                                    return undefined;
+                            }
+                            return { start: start || null, end: end || null };
+                        })()}
+                        teamId={selectedTeam.includes('all') ? undefined : selectedTeam.filter(t => t !== 'all')}
+                        ownerId={selectedOwner.includes('all') ? undefined : selectedOwner}
                     />
                     <div className="flex flex-col gap-8 h-full">
                         <div className="flex-1">

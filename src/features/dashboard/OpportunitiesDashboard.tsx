@@ -861,7 +861,7 @@ export function OpportunitiesDashboard() {
                                                     </div>
                                                 </td>
                                                 <td className="p-4 font-mono font-medium text-[13px] text-slate-700 dark:text-slate-300">
-                                                    ₺{(deal.value).toLocaleString()}
+                                                    ₺{(deal.value).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                                 </td>
                                                 <td className="p-4">
                                                     <div className="flex flex-col">
@@ -951,7 +951,7 @@ export function OpportunitiesDashboard() {
                                                 </div>
                                                 <span className="bg-white dark:bg-slate-700 px-2 py-0.5 rounded-full text-[10px] font-bold text-slate-500 shadow-sm border border-slate-100 dark:border-white/5">{stageDeals.length}</span>
                                             </div>
-                                            <div className="text-[11px] font-mono font-bold" style={{ color: stageColor }}>₺{totalVal.toLocaleString()}</div>
+                                            <div className="text-[11px] font-mono font-bold" style={{ color: stageColor }}>₺{totalVal.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</div>
                                         </div>
 
                                         <div className="space-y-3 h-[500px] overflow-y-auto pr-1">

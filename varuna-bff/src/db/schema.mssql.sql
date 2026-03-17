@@ -28,6 +28,7 @@ CREATE TABLE [dbo].[Opportunity] (
     OpportunityStageName    INT,
     OpportunityStageId      NVARCHAR(450),
     OpportunityStageNameTr  NVARCHAR(MAX),
+    ClosedLostReason        INT,
     Amount_Value            FLOAT,
     ExpectedRevenue_Value   FLOAT,
     PotentialTurnover_Value FLOAT,
@@ -40,6 +41,16 @@ CREATE TABLE [dbo].[Opportunity] (
     FirstCreatedDate        DATE,
     _SyncedAt               DATETIME DEFAULT GETUTCDATE()
 );
+END
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM sys.columns 
+    WHERE object_id = OBJECT_ID(N'[dbo].[Opportunity]') 
+    AND name = 'ClosedLostReason'
+)
+BEGIN
+    ALTER TABLE [dbo].[Opportunity] ADD ClosedLostReason INT;
 END
 GO
 

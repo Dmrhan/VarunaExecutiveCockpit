@@ -860,7 +860,7 @@ export function OpportunitiesDashboard() {
                                                         <span className="text-slate-600 dark:text-slate-400 font-mono">%{Math.round(deal.probability)}</span>
                                                     </div>
                                                 </td>
-                                                <td className="p-4 font-mono font-medium text-slate-700 dark:text-slate-300">
+                                                <td className="p-4 font-mono font-medium text-[13px] text-slate-700 dark:text-slate-300">
                                                     ₺{(deal.value).toLocaleString()}
                                                 </td>
                                                 <td className="p-4">
@@ -934,21 +934,24 @@ export function OpportunitiesDashboard() {
                             <span className="text-xs text-slate-400 font-mono font-bold uppercase">{t('performance.listingDetails_short', { count: sortedDeals.length, defaultValue: `${sortedDeals.length} Kayıt` })}</span>
                         </div>
                         <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
-                            {['Lead', 'Qualified', 'Proposal', 'Negotiation'].map(stage => {
-                                const stageDeals = sortedDeals.filter(d => d.stage === stage || (stage === 'Order' && d.stage === 'Kazanıldı') || (stage === 'Lost' && d.stage === 'Kaybedildi'));
+                            {Array.from(new Set(sortedDeals.map(d => d.stage))).sort().map(stage => {
+                                const stageDeals = sortedDeals.filter(d => d.stage === stage);
                                 const totalVal = stageDeals.reduce((s, d) => s + d.value, 0);
+                                const stageHash = Math.abs(stage.split('').reduce((a, b) => {a = ((a << 5) - a) + b.charCodeAt(0); return a&a}, 0));
+                                const palette = ['#6366f1', '#8b5cf6', '#d946ef', '#f43f5e', '#0ea5e9', '#f59e0b', '#10b981', '#64748b'];
+                                const stageColor = STAGE_COLORS[stage] || palette[stageHash % palette.length];
 
                                 return (
                                     <div key={stage} className="flex flex-col gap-3 min-w-[300px] w-[300px] shrink-0">
-                                        <div className="p-3 rounded-xl border border-slate-200 dark:border-white/5 sticky top-0 z-10 backdrop-blur-sm" style={{ backgroundColor: `${STAGE_COLORS[stage]}15` }}>
+                                        <div className="p-3 rounded-xl border border-slate-200 dark:border-white/5 sticky top-0 z-10 backdrop-blur-sm" style={{ backgroundColor: `${stageColor}15` }}>
                                             <div className="flex justify-between items-center mb-1">
                                                 <div className="flex items-center gap-2">
-                                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: STAGE_COLORS[stage] }} />
+                                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: stageColor }} />
                                                     <h3 className="font-bold text-slate-700 dark:text-slate-200 text-xs uppercase tracking-wider">{stage}</h3>
                                                 </div>
                                                 <span className="bg-white dark:bg-slate-700 px-2 py-0.5 rounded-full text-[10px] font-bold text-slate-500 shadow-sm border border-slate-100 dark:border-white/5">{stageDeals.length}</span>
                                             </div>
-                                            <div className="text-[11px] font-mono font-bold" style={{ color: STAGE_COLORS[stage] }}>₺{totalVal.toLocaleString()}</div>
+                                            <div className="text-[11px] font-mono font-bold" style={{ color: stageColor }}>₺{totalVal.toLocaleString()}</div>
                                         </div>
 
                                         <div className="space-y-3 h-[500px] overflow-y-auto pr-1">

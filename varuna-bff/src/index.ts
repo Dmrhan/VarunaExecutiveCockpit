@@ -4,6 +4,7 @@ import { getDb } from './db/database';
 import syncRouter from './routes/sync';
 import analyticsRouter from './routes/analytics';
 import opportunitiesRouter from './routes/opportunities';
+import opportunitiesLeaderboardRouter from './routes/opportunities-leaderboard';
 import syncPersonRouter from './routes/sync-person';
 import analyticsPersonRouter from './routes/analytics-person';
 import analyticsPersonScorecardRouter from './routes/analytics-person-scorecard';
@@ -60,6 +61,7 @@ app.use(express.json({ limit: '10mb' }));
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/opportunity', syncRouter);
 app.use('/api/opportunities', opportunitiesRouter);
+app.use('/api/opportunities-leaderboard', opportunitiesLeaderboardRouter);
 app.use('/api/analytics', analyticsRouter);
 app.use('/api/person/sync', syncPersonRouter);
 app.use('/api/analytics/person', analyticsPersonRouter);

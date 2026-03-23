@@ -8,7 +8,8 @@ import {
     FileText,
     ShoppingCart,
     FileSignature,
-    BadgeCheck
+    BadgeCheck,
+    ShieldCheck
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../../lib/utils';
@@ -19,7 +20,7 @@ const NAV_ITEMS = [
     { icon: LayoutDashboard, key: 'executivev2' },
     { icon: Gauge, key: 'performance' },
     { icon: Briefcase, key: 'opportunities' },
-    // { icon: ShieldCheck, key: 'management' }, // Hidden for now
+    { icon: ShieldCheck, key: 'management' },
     { icon: CalendarCheck, key: 'activities' },
     { icon: FileText, key: 'quotes' },
     { icon: ShoppingCart, key: 'orders' },

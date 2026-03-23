@@ -62,7 +62,8 @@ router.get('/', (req: Request, res: Response) => {
         const sql = `
             SELECT 
                 per.Id AS ownerId,
-                COALESCE(per.Name, '') || ' ' || COALESCE(per.SurName, '') AS ownerName,
+                per.Name AS ownerFirstName,
+                per.SurName AS ownerLastName,
                 SUM(COALESCE(o.ExpectedRevenue_Value, o.Amount_Value, 0)) AS potentialAmount,
                 COUNT(o.Id) AS opportunityCount
             FROM Opportunity o
@@ -77,13 +78,16 @@ router.get('/', (req: Request, res: Response) => {
         // Calculate share%
         const totalPotential = rows.reduce((sum, r) => sum + (r.potentialAmount || 0), 0);
         
-        const result = rows.map(r => ({
-            ownerId: r.ownerId,
-            ownerName: r.ownerName.trim() || r.ownerId,
-            potentialAmount: r.potentialAmount,
-            opportunityCount: r.opportunityCount,
-            sharePct: totalPotential > 0 ? (r.potentialAmount / totalPotential) * 100 : 0
-        }));
+        const result = rows.map(r => {
+            const fullName = [r.ownerFirstName, r.ownerLastName].filter(Boolean).join(' ').trim();
+            return {
+                ownerId: r.ownerId,
+                ownerName: fullName || r.ownerId,
+                potentialAmount: r.potentialAmount,
+                opportunityCount: r.opportunityCount,
+                sharePct: totalPotential > 0 ? (r.potentialAmount / totalPotential) * 100 : 0
+            };
+        });
 
         res.json({ value: result });
     } catch (error: any) {
@@ -116,8 +120,7 @@ router.get('/:ownerId/details', (req: Request, res: Response) => {
                 o.OpportunityStageId,
                 COALESCE(o.ExpectedRevenue_Value, o.Amount_Value, 0) as potentialAmount,
                 o.FirstCreatedDate,
-                o.Probability,
-                CAST(julianday('${asOfDateRaw === "now" ? "now" : asOfDateRaw}') - julianday(o.FirstCreatedDate) AS INT) as AgeDays
+                o.Probability
             FROM Opportunity o
             LEFT JOIN Account a ON o.AccountId = a.Id
             ${whereString}
@@ -140,9 +143,15 @@ router.get('/:ownerId/details', (req: Request, res: Response) => {
         };
         const riskyData: any[] = [];
 
+        const _nowDate = asOfDateRaw === "now" ? new Date() : new Date(asOfDateRaw);
+
         for (const op of ops) {
             count++;
             sumPotential += op.potentialAmount;
+            
+            // Age Days Calculation
+            const d = op.FirstCreatedDate ? new Date(op.FirstCreatedDate) : new Date();
+            const age = Math.max(0, Math.floor((_nowDate.getTime() - d.getTime()) / (1000 * 3600 * 24)));
 
             // byAccount
             const accId = op.AccountId || 'unknown';
@@ -164,7 +173,6 @@ router.get('/:ownerId/details', (req: Request, res: Response) => {
             typeSums[typeKey].count += 1;
 
             // Aging
-            const age = op.AgeDays || 0;
             if (age <= 7) { agingBuckets['0-7'].amount += op.potentialAmount; agingBuckets['0-7'].count += 1; }
             else if (age <= 14) { agingBuckets['8-14'].amount += op.potentialAmount; agingBuckets['8-14'].count += 1; }
             else if (age <= 30) { agingBuckets['15-30'].amount += op.potentialAmount; agingBuckets['15-30'].count += 1; }

@@ -5,6 +5,7 @@ import { OpportunityService, type ODataParams } from '../../services/Opportunity
 import { Search, Filter, Plus, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import type { Deal } from '../../types/crm';
 import { OpportunityDetailDrawer } from './OpportunityDetailDrawer';
+import { useData } from '../../context/DataContext';
 
 const PARAM_DEFAULTS: ODataParams = {
     $top: 10,
@@ -18,15 +19,46 @@ interface OpportunityManagementPageProps {
 }
 
 export const OpportunityManagementPage: React.FC<OpportunityManagementPageProps> = ({ onAddOpportunity }) => {
+    const { users } = useData();
     const [page, setPage] = useState(0);
     const [search, setSearch] = useState('');
     const [selectedOpportunityId, setSelectedOpportunityId] = useState<string | null>(null);
+
+    const [dateFilter, setDateFilter] = useState('all');
+    const [selectedOwner, setSelectedOwner] = useState<string>('all');
+
+    // Calculate dates based on filter
+    const getDateRange = () => {
+        if (dateFilter === 'all') return { startDate: undefined, endDate: undefined };
+        const formatLocalDate = (d: Date) => {
+            const pad = (n: number) => n < 10 ? '0' + n : n;
+            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+        };
+        const now = new Date();
+        const todayStr = formatLocalDate(now);
+        let startStr = todayStr;
+        let endStr = todayStr;
+
+        if (dateFilter === 'this_month') {
+            const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            startStr = formatLocalDate(firstDayOfMonth);
+        } else if (dateFilter === 'this_year') {
+            const firstDayOfYear = new Date(now.getFullYear(), 0, 1);
+            startStr = formatLocalDate(firstDayOfYear);
+        }
+        return { startDate: startStr, endDate: endStr };
+    };
+
+    const { startDate, endDate } = getDateRange();
 
     // Derived ODATA params
     const queryParams: ODataParams = {
         ...PARAM_DEFAULTS,
         $skip: page * (PARAM_DEFAULTS.$top || 10),
-        $filter: search ? `contains(title, '${search}') or contains(customer_name, '${search}')` : undefined
+        $filter: search ? `contains(title, '${search}') or contains(customer_name, '${search}')` : undefined,
+        startDate,
+        endDate,
+        ownerId: selectedOwner !== 'all' ? selectedOwner : undefined
     };
 
     const { data, isLoading, isError, error } = useQuery({
@@ -75,9 +107,30 @@ export const OpportunityManagementPage: React.FC<OpportunityManagementPageProps>
                     />
                 </form>
                 <div className="flex gap-2">
+                    <select
+                        className="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500"
+                        value={dateFilter}
+                        onChange={(e) => setDateFilter(e.target.value)}
+                    >
+                        <option value="all">Tüm Zamanlar</option>
+                        <option value="this_month">Bu Ay</option>
+                        <option value="this_year">Bu Yıl</option>
+                    </select>
+
+                    <select
+                        className="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500"
+                        value={selectedOwner}
+                        onChange={(e) => setSelectedOwner(e.target.value)}
+                    >
+                        <option value="all">Tüm Sorumlular</option>
+                        {users?.map(user => (
+                            <option key={user.id} value={user.id}>{user.name}</option>
+                        ))}
+                    </select>
+
                     <button className="flex items-center gap-2 px-3 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600">
                         <Filter size={18} />
-                        Filters
+                        Filtreler
                     </button>
                 </div>
             </div>

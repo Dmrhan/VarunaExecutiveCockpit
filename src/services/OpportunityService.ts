@@ -56,6 +56,10 @@ export interface ODataParams {
     $select?: string;
     $orderby?: string;
     $count?: boolean;
+    startDate?: string;
+    endDate?: string;
+    ownerId?: string | string[];
+    teamId?: string | string[];
 }
 
 export interface ODataResponse<T> {
@@ -97,6 +101,16 @@ export const OpportunityService = {
         if (params.$select) searchParams.append('$select', params.$select);
         if (params.$orderby) searchParams.append('$orderby', params.$orderby);
         if (params.$count) searchParams.append('$count', 'true');
+        if (params.startDate) searchParams.append('startDate', params.startDate);
+        if (params.endDate) searchParams.append('endDate', params.endDate);
+        if (params.ownerId) {
+            if (Array.isArray(params.ownerId)) params.ownerId.forEach(id => searchParams.append('ownerId', id));
+            else searchParams.append('ownerId', params.ownerId);
+        }
+        if (params.teamId) {
+            if (Array.isArray(params.teamId)) params.teamId.forEach(id => searchParams.append('teamId', id));
+            else searchParams.append('teamId', params.teamId);
+        }
 
         try {
             const response = await fetch(`${getOpportunityUrl()}?${searchParams.toString()}`);
@@ -113,40 +127,8 @@ export const OpportunityService = {
                 };
             }
         } catch (error) {
-            console.warn('API Error, falling back to mock data:', error);
-
-            // Sync Mock Generation
-            const mockDeals = generateMockData(50).deals;
-            let result = [...mockDeals];
-
-            // 1. Filter (Simple simulation for 'contains')
-            if (params.$filter) {
-                const searchMatch = params.$filter.match(/contains\(([^,]+),\s*'([^']+)'\)/);
-                if (searchMatch) {
-                    const [_, _field, term] = searchMatch; // e.g. title, 'acme'
-                    const lowerTerm = term.toLowerCase().replace(/'/g, '');
-
-                    result = result.filter(d =>
-                        d.title.toLowerCase().includes(lowerTerm) ||
-                        d.customerName.toLowerCase().includes(lowerTerm)
-                    );
-                }
-            }
-
-            const totalCount = result.length;
-
-            // 2. Sort (Default to createdAt desc)
-            result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-            // 3. Pagination
-            if (params.$skip !== undefined && params.$top !== undefined) {
-                result = result.slice(params.$skip, params.$skip + params.$top);
-            }
-
-            return {
-                '@odata.count': totalCount,
-                value: result
-            };
+            console.warn('API Error in getList:', error);
+            throw error;
         }
     },
 

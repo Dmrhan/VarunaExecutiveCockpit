@@ -61,7 +61,7 @@ router.get('/', (req: Request, res: Response) => {
             SELECT 
                 COALESCE(ppg.Name, pg.Name, 'Diğer') AS productName,
                 MAX(ppg.Name) AS parentName,
-                SUM(COALESCE(o.ExpectedRevenue_Value, o.Amount_Value, 0)) AS revenue,
+                SUM(COALESCE(o.Amount_Value, 0)) AS revenue,
                 COUNT(o.Id) AS count
             FROM Opportunity o
             LEFT JOIN ProductGroup pg ON o.ProductGroupId = pg.Id

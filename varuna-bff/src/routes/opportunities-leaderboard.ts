@@ -64,7 +64,7 @@ router.get('/', (req: Request, res: Response) => {
                 per.Id AS ownerId,
                 per.Name AS ownerFirstName,
                 per.SurName AS ownerLastName,
-                SUM(COALESCE(o.ExpectedRevenue_Value, o.Amount_Value, 0)) AS potentialAmount,
+                SUM(COALESCE(o.Amount_Value, 0)) AS potentialAmount,
                 COUNT(o.Id) AS opportunityCount
             FROM Opportunity o
             INNER JOIN Person per ON o.OwnerId = per.Id
@@ -118,7 +118,7 @@ router.get('/:ownerId/details', (req: Request, res: Response) => {
                 o.OpportunityStageName as StageCode,
                 o.DealType,
                 o.OpportunityStageId,
-                COALESCE(o.ExpectedRevenue_Value, o.Amount_Value, 0) as potentialAmount,
+                COALESCE(o.Amount_Value, 0) as potentialAmount,
                 o.FirstCreatedDate,
                 o.Probability
             FROM Opportunity o

@@ -396,7 +396,7 @@ router.get('/stats', (req: Request, res: Response) => {
 
         // 5. Revenue by DealType (Top 10)
         const dealTypeRevRaw = db.query(`
-            SELECT o.DealType as name, COUNT(o.Id) as count, SUM(COALESCE(o.ExpectedRevenue_Value, o.Amount_Value, 0)) as revenue
+            SELECT o.DealType as name, COUNT(o.Id) as count, SUM(COALESCE(o.Amount_Value, 0)) as revenue
             FROM Opportunity o
             ${dateFilter} ${dateFilter ? 'AND' : 'WHERE'} o.DealType IS NOT NULL AND o.DealType != '' AND (o.OpportunityStageNameTr NOT IN ('Kazanıldı', 'Order', 'Kaybedildi', 'Lost') OR o.OpportunityStageNameTr IS NULL)
             GROUP BY o.DealType

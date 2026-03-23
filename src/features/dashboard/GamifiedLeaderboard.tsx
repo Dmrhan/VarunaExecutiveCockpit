@@ -72,7 +72,7 @@ export function GamifiedLeaderboard({ dateRange, teamId, ownerId }: GamifiedLead
                     <div>
                         <CardTitle className="text-xs uppercase tracking-[0.2em] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-2">
                             <Target size={16} className="text-indigo-500" />
-                            {t('gamification.title', { defaultValue: 'Satış Yöneticisi Performans İzleme' })}
+                            {t('gamification.title', { defaultValue: 'Fırsat Sahibi Bazında Satış Potansiyel Dağılımı' })}
                         </CardTitle>
                         <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
                             <Activity size={10} />

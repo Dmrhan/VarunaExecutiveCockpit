@@ -62,7 +62,7 @@ export function TopPerformerLeaderboard() {
                     <div>
                         <CardTitle className="text-xs uppercase tracking-[0.2em] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2">
                             <Trophy size={14} />
-                            {t('gamification.title', 'Satış Yöneticisi Performans İzleme')}
+                            {t('gamification.title', 'Fırsat Sahibi Bazında Satış Potansiyel Dağılımı')}
                         </CardTitle>
                     </div>
                     <div className="bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">

@@ -203,7 +203,7 @@
         "closeHint": "You can close by pressing ESC or clicking outside"
     },
     "gamification": {
-        "title": "Sales Performance Tracking",
+        "title": "Sales Potential Distribution by Opportunity Owner",
         "subtitle": "Live Performance Leaderboard",
         "score": "Score",
         "whyScore": "Why this score?",

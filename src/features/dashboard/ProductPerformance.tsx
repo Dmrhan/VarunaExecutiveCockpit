@@ -18,9 +18,10 @@ import { TtsService } from '../../services/TtsService';
 
 interface ProductPerformanceProps {
     deals?: Deal[];
+    filters?: any;
 }
 
-export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps) {
+export function ProductPerformance({ deals: propDeals, filters }: ProductPerformanceProps) {
     const { t, i18n } = useTranslation();
     const { deals: contextDeals, users } = useData();
     const deals = propDeals || contextDeals;
@@ -28,10 +29,57 @@ export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps
     const [selectedStage, setSelectedStage] = useState<string | null>(null);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [productGroups, setProductGroups] = useState<IProductGroup[]>([]);
+    
+    // Remote fetched state for the grid cards
+    const [apiStats, setApiStats] = useState<any[]>([]);
+    const [isLoadingStats, setIsLoadingStats] = useState(false);
 
     useEffect(() => {
         ProductGroupService.getAll().then(setProductGroups).catch(console.error);
     }, []);
+
+    useEffect(() => {
+        const fetchProductStats = async () => {
+            setIsLoadingStats(true);
+            try {
+                const params = new URLSearchParams();
+                
+                if (filters?.dateFilter !== 'all') {
+                    if (filters?.customRange?.start) {
+                        const s = filters.customRange.start;
+                        params.append('from', new Date(s.getTime() - (s.getTimezoneOffset() * 60000)).toISOString().substring(0, 10));
+                    }
+                    if (filters?.customRange?.end) {
+                        const e = filters.customRange.end;
+                        params.append('to', new Date(e.getTime() - (e.getTimezoneOffset() * 60000)).toISOString().substring(0, 10));
+                    }
+                    
+                    // The dashboard handles presets 'this_week', 'this_month' etc via OpportunitiesDashboard
+                    // But if it doesn't give customRange for them, we should be careful. 
+                    // Actually, OpportuntiesDashboard.tsx sets customRange when date picker is used, but for preset buttons it sets `dateFilter`.
+                    // To be perfect, we should format dates the same way dashboard does before passing or reconstruct them here.
+                    // Assuming the dashboard will pass the properly populated date or we can just pass them. Wait, OpportunitiesDashboard doesn't pass startDate/endDate.
+                }
+
+                if (filters?.teamId) params.append('teamId', typeof filters.teamId === 'string' ? filters.teamId : filters.teamId.join(','));
+                if (filters?.ownerId) params.append('ownerId', typeof filters.ownerId === 'string' ? filters.ownerId : filters.ownerId.join(','));
+                if (filters?.product) params.append('product', typeof filters.product === 'string' ? filters.product : filters.product.join(','));
+
+                const baseUrl = (window as any)['__RUNTIME_CONFIG__']?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+                const response = await fetch(`${baseUrl}/opportunities-products?${params.toString()}`);
+                if (!response.ok) throw new Error('Failed to fetch product stats from BFF');
+                
+                const data = await response.json();
+                setApiStats(data.value || []);
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setIsLoadingStats(false);
+            }
+        };
+
+        fetchProductStats();
+    }, [filters?.dateFilter, filters?.customRange?.start, filters?.customRange?.end, filters?.teamId, filters?.ownerId, filters?.product]);
 
     // AI State
     const [aiState, setAiState] = useState<{
@@ -106,36 +154,20 @@ export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps
         }
     };
 
-    const productStats = useMemo(() => {
-        const stats: Record<string, {
-            revenue: number,
-            count: number,
-            growth: number,
-            parentName: string,
-            productName: string
-        }> = {};
+    // Calculate total layout for share%
+    const totalPipeline = useMemo(() => apiStats.reduce((sum, s) => sum + s.revenue, 0), [apiStats]);
 
-        deals.forEach(deal => {
-            // Group by Parent Category name if available, otherwise fallback to product name
-            const groupName = deal.parentGroupName || deal.product || 'Diğer';
-
-            if (!stats[groupName]) {
-                stats[groupName] = {
-                    revenue: 0,
-                    count: 0,
-                    growth: Math.floor(Math.random() * 40) - 10,
-                    parentName: '',
-                    productName: groupName
-                };
-            }
-            stats[groupName].revenue += deal.value;
-            stats[groupName].count += 1;
-        });
-
-        return Object.entries(stats)
-            .filter(([_, stat]) => stat.revenue > 0) // Hide groups with 0 revenue
-            .sort((a, b) => b[1].revenue - a[1].revenue);
-    }, [deals]);
+    const productStatsData = useMemo(() => {
+        // Map the API results to the UI-expected stats format
+        return apiStats.map(stat => ({
+            productName: stat.productName,
+            parentName: stat.parentName || '', // Subtitle (if any)
+            revenue: stat.revenue,
+            count: stat.count,
+            sharePct: totalPipeline > 0 ? ((stat.revenue / totalPipeline) * 100) : 0,
+            growth: 0 // Cannot determine without snapshot DB
+        }));
+    }, [apiStats, totalPipeline]);
 
     // All deals for the selected product (used for charts)
     const productDeals = useMemo(() => {
@@ -256,7 +288,12 @@ export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps
     return (
         <>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                {productStats.map(([product, stat]) => {
+                {isLoadingStats ? (
+                    <div className="col-span-full py-12 flex justify-center text-slate-400">
+                        <Loader2 className="animate-spin" size={32} />
+                    </div>
+                ) : productStatsData.map((stat) => {
+                    const product = stat.productName;
                     const color = PRODUCT_COLORS[product as ProductGroup] || '#64748b';
                     return (
                         <Card
@@ -273,12 +310,8 @@ export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps
                                     >
                                         <Package size={16} />
                                     </div>
-                                    <div className={cn(
-                                        "flex items-center text-xs font-bold",
-                                        stat.growth >= 0 ? "text-emerald-500" : "text-rose-500"
-                                    )}>
-                                        {stat.growth >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-                                        {Math.abs(stat.growth)}%
+                                    <div className="text-[10px] font-bold text-slate-400 p-1 bg-slate-50 dark:bg-white/5 rounded-md">
+                                        %{stat.sharePct.toFixed(1)}
                                     </div>
                                 </div>
 
@@ -286,15 +319,15 @@ export function ProductPerformance({ deals: propDeals }: ProductPerformanceProps
                                     <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold truncate leading-tight">
                                         {stat.parentName}
                                     </p>
-                                    <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
-                                        {stat.productName}
+                                    <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate" title={product}>
+                                        {product}
                                     </h3>
                                 </div>
                                 <div className="text-lg font-bold text-slate-900 dark:text-slate-100">
                                     ₺{(stat.revenue / 1000000).toFixed(1)}M
                                 </div>
                                 <div className="text-xs text-slate-400 mt-1">
-                                    {stat.count} {t('performance.activeDeals')}
+                                    {stat.count} Açık Fırsat
                                 </div>
                             </CardContent>
                         </Card>

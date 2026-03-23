@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { useData } from '../../context/DataContext';
-import { Share2, Info, Users, Sparkles, Calendar, AlertCircle, CheckCircle2, Clock, ArrowUpRight, ArrowDownRight, Building2, Package } from 'lucide-react';
+import { Share2, Info, Users, Sparkles, Calendar, AlertCircle, CheckCircle2, Clock, ArrowUpRight, ArrowDownRight, Building2, Package, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { TeamService } from '../../services/TeamService';
@@ -72,6 +72,7 @@ export function OpportunitiesDashboard() {
     // Chart Drilldown State
     const [selectedSource, setSelectedSource] = useState<string | null>(null);
     const [selectedTopCustomer, setSelectedTopCustomer] = useState<string | null>(null);
+    const [selectedDealType, setSelectedDealType] = useState<string | null>(null);
 
     // Filter State
     const [dateFilter, setDateFilter] = useState('all');
@@ -325,8 +326,13 @@ export function OpportunitiesDashboard() {
             result = result.filter(d => selectedProduct.includes(d.product));
         }
 
+        // 6. Drilldown Filters from Dashboard Charts
+        if (selectedDealType) {
+            result = result.filter(d => d.dealTypeKey === selectedDealType);
+        }
+
         return result;
-    }, [dateFilter, customRange, deals, columnFilters, users, forecastMonthFilter, selectedTeam, teamMembers, selectedOwner, selectedProduct, selectedSource, selectedTopCustomer]);
+    }, [dateFilter, customRange, deals, columnFilters, users, forecastMonthFilter, selectedTeam, teamMembers, selectedOwner, selectedProduct, selectedSource, selectedTopCustomer, selectedDealType]);
 
     // Deals specifically for the Forecast Component
     // (Ignores "Created Date" filter to show future pipeline, but respects Owner/Product/Value filters)
@@ -669,7 +675,16 @@ export function OpportunitiesDashboard() {
                 {/* Product Performance Section */}
                 <div>
                     <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-4">{t('opportunities.productPerformance')}</h3>
-                    <ProductPerformance deals={filteredDeals} />
+                    <ProductPerformance 
+                        deals={filteredDeals} 
+                        filters={{
+                            dateFilter,
+                            customRange,
+                            teamId: selectedTeam.includes('all') ? undefined : selectedTeam.filter(t => t !== 'all'),
+                            ownerId: selectedOwner.includes('all') ? undefined : selectedOwner,
+                            product: selectedProduct.includes('all') ? undefined : selectedProduct
+                        }}
+                    />
                 </div>
 
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -698,7 +713,7 @@ export function OpportunitiesDashboard() {
                     <HorizontalBarChart
                         title={t('opportunities.charts.dealTypeTitle')}
                         data={(chartData.dealTypeRev || []).map((item: any) => ({
-                            id: item.name,
+                            id: item.typeId || item.name,
                             name: t(item.name),
                             value: item.revenue,
                             count: item.count,
@@ -707,6 +722,8 @@ export function OpportunitiesDashboard() {
                         color="#8b5cf6"
                         icon={Share2}
                         insight={t('opportunities.charts.dealTypeInsight')}
+                        activeId={selectedDealType}
+                        onBarClick={(item) => setSelectedDealType(prev => prev === item.id ? null : item.id)}
                     />
 
                 </div>
@@ -740,7 +757,19 @@ export function OpportunitiesDashboard() {
                                         >{t('opportunities.kanbanView')}</button>
                                     </div>
                                 </div>
-                                <span className="text-xs text-slate-400 font-mono font-bold uppercase">{t('performance.listingDetails_short', { count: sortedDeals.length, defaultValue: `${sortedDeals.length} Kayıt` })}</span>
+                                <div className="flex items-center gap-3">
+                                    {selectedDealType && (
+                                        <button 
+                                            onClick={() => setSelectedDealType(null)}
+                                            className="flex items-center gap-1.5 px-3 py-1 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20 rounded-full text-[10px] font-bold transition-colors hover:bg-indigo-100 dark:hover:bg-indigo-500/20"
+                                            title="Filtreyi Temizle"
+                                        >
+                                            Fırsat Tipi Filtresi Aktif
+                                            <X size={12} strokeWidth={3} />
+                                        </button>
+                                    )}
+                                    <span className="text-xs text-slate-400 font-mono font-bold uppercase">{t('performance.listingDetails_short', { count: sortedDeals.length, defaultValue: `${sortedDeals.length} Kayıt` })}</span>
+                                </div>
                             </div>
                         </CardHeader>
                         <CardContent className="p-0 overflow-auto h-[600px]">

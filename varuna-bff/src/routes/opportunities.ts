@@ -115,6 +115,7 @@ router.get('/', (req: Request, res: Response) => {
         ownerName: row.OwnerName || row.OwnerId || 'Unknown',
         source: row.Source?.toString() || 'Diğer',
         dealType: row.DealType ? (DEAL_TYPE_KEYS[row.DealType.toString()] || row.DealType.toString()) : null,
+        dealTypeKey: row.DealType?.toString() || null,
         topic: row.Name || '',
 
         created_at: row.FirstCreatedDate || new Date().toISOString(),
@@ -369,9 +370,9 @@ router.get('/stats', (req: Request, res: Response) => {
 
         // 5. Revenue by DealType (Top 10)
         const dealTypeRevRaw = db.query(`
-            SELECT o.DealType as name, COUNT(*) as count, SUM(o.Amount_Value) as revenue
+            SELECT o.DealType as name, COUNT(o.Id) as count, SUM(COALESCE(o.ExpectedRevenue_Value, o.Amount_Value, 0)) as revenue
             FROM Opportunity o
-            ${dateFilter} ${dateFilter ? 'AND' : 'WHERE'} o.DealType IS NOT NULL AND o.DealType != ''
+            ${dateFilter} ${dateFilter ? 'AND' : 'WHERE'} o.DealType IS NOT NULL AND o.DealType != '' AND o.DealStatus = 0
             GROUP BY o.DealType
             ORDER BY revenue DESC
             ${db.driver === 'mssql' ? 'OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY' : 'LIMIT 10'}
@@ -379,7 +380,8 @@ router.get('/stats', (req: Request, res: Response) => {
 
         const dealTypeRev = dealTypeRevRaw.map((row: any) => ({
             ...row,
-            name: DEAL_TYPE_KEYS[row.name.toString()] || row.name.toString()
+            name: DEAL_TYPE_KEYS[row.name.toString()] || row.name.toString(),
+            typeId: row.name.toString()
         }));
 
         res.json({

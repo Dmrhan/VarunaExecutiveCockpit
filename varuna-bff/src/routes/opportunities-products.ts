@@ -4,7 +4,7 @@ import { getDb } from '../db/database';
 const router = Router();
 
 function buildFilters(req: Request) {
-    const whereClauses = ['o.DealStatus = 0']; // "0" represents Open status
+    const whereClauses = ["(o.OpportunityStageNameTr NOT IN ('Kazanıldı', 'Order', 'Kaybedildi', 'Lost') OR o.OpportunityStageNameTr IS NULL)"];
     const params: any = {};
 
     if (req.query.companyId) {

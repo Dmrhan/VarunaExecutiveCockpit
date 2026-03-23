@@ -202,8 +202,11 @@
         "totalVisibility": "Total Visibility",
         "closeHint": "You can close by pressing ESC or clicking outside"
     },
+    "ownerDistribution": {
+        "title": "Sales Potential Distribution by Opportunity Owner"
+    },
     "gamification": {
-        "title": "Sales Potential Distribution by Opportunity Owner",
+        "title": "Sales Performance Tracking",
         "subtitle": "Live Performance Leaderboard",
         "score": "Score",
         "whyScore": "Why this score?",

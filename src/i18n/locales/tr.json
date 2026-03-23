@@ -195,8 +195,11 @@
         "totalVisibility": "Toplam Görünürlük",
         "closeHint": "ESC veya dışarı tıklayarak kapatabilirsiniz"
     },
+    "ownerDistribution": {
+        "title": "Fırsat Sahibi Bazında Satış Potansiyel Dağılımı"
+    },
     "gamification": {
-        "title": "Fırsat Sahibi Bazında Satış Potansiyel Dağılımı",
+        "title": "Satış Yöneticisi Performans İzleme",
         "subtitle": "Canlı Performans Liderlik Tablosu",
         "score": "Puan",
         "whyScore": "Neden Bu Skor?",

@@ -23,7 +23,7 @@ import { PipelineAIInsightPanel } from './PipelineAIInsightPanel';
 import { OpportunityDetailModal } from './OpportunityDetailModal';
 import { OpportunityService } from '../../services/OpportunityService';
 import { FunnelChart } from './FunnelChart';
-import { GamifiedLeaderboard } from './GamifiedLeaderboard';
+import { OpportunityOwnerDistribution } from './OpportunityOwnerDistribution';
 import { ProductPerformance } from './ProductPerformance';
 import { OpportunityForecast } from './OpportunityForecast';
 import { ProductGroupService } from '../../services/ProductGroupService';
@@ -664,7 +664,7 @@ export function OpportunitiesDashboard() {
                         <FunnelChart deals={filteredDeals} />
                     </div>
                     <div className="xl:col-span-1 h-[600px]">
-                        <GamifiedLeaderboard
+                        <OpportunityOwnerDistribution
                             dateRange={currentDateRangeStr}
                             teamId={selectedTeam.includes('all') ? undefined : selectedTeam.filter(t => t !== 'all')}
                             ownerId={selectedOwner.includes('all') ? undefined : selectedOwner}

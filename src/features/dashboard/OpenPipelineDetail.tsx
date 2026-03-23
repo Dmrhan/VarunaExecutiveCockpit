@@ -10,6 +10,18 @@ const formatCurrency = (value: number) => {
     return value.toString();
 };
 
+const DEAL_TYPE_KEYS: Record<string, string> = {
+    '1': 'opportunities.charts.dealTypes.newSale',
+    '2': 'opportunities.charts.dealTypes.renovation',
+    '3': 'opportunities.charts.dealTypes.crossSelling',
+    '4': 'opportunities.charts.dealTypes.upSellSale',
+    '5': 'opportunities.charts.dealTypes.additionalUsage',
+    '6': 'opportunities.charts.dealTypes.financialInstitute',
+    '7': 'opportunities.charts.dealTypes.newExistingReference',
+    '8': 'opportunities.charts.dealTypes.changesRequestForm',
+    '9': 'opportunities.charts.dealTypes.winBack',
+};
+
 interface OpenPipelineDetailProps {
     ownerId: string;
     filters: any;
@@ -58,7 +70,7 @@ export function OpenPipelineDetail({ ownerId, filters }: OpenPipelineDetailProps
 
     const formatVal = (item: any) => mode === 'amount' ? `${formatCurrency(item.amount)}₺` : `${item.count} Adet`;
 
-    const renderBarChart = (items: any[], labelKey: string = 'label', title: string) => {
+    const renderBarChart = (items: any[], labelKey: string = 'label', title: string, isDealType: boolean = false) => {
         if (!items || items.length === 0) return null;
         const maxVal = Math.max(...items.map(i => mode === 'amount' ? i.amount : i.count), 1);
         
@@ -72,7 +84,9 @@ export function OpenPipelineDetail({ ownerId, filters }: OpenPipelineDetailProps
                         return (
                             <div key={idx}>
                                 <div className="flex justify-between text-[10px] mb-1">
-                                    <span className="truncate pr-2 font-medium text-slate-700 dark:text-slate-300">{i[labelKey] || i.key}</span>
+                                    <span className="truncate pr-2 font-medium text-slate-700 dark:text-slate-300" title={isDealType && DEAL_TYPE_KEYS[i.key] ? t(DEAL_TYPE_KEYS[i.key]) : (i[labelKey] || i.key)}>
+                                        {isDealType && DEAL_TYPE_KEYS[i.key] ? t(DEAL_TYPE_KEYS[i.key]) : (i[labelKey] || i.key)}
+                                    </span>
                                     <span className="font-bold text-slate-600 dark:text-slate-400 whitespace-nowrap">{formatVal(i)}</span>
                                 </div>
                                 <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
@@ -121,8 +135,8 @@ export function OpenPipelineDetail({ ownerId, filters }: OpenPipelineDetailProps
             {/* Distributions Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {renderBarChart(data.byStage, 'label', 'SATIŞ AŞAMASI (STAGE)')}
-                {renderBarChart(data.byAccountTop10, 'accountName', 'EN İYİ 10 MÜŞTERİ')}
-                {renderBarChart(data.byType, 'label', 'FIRSAT TİPİ (DEAL TYPE)')}
+                {renderBarChart(data.byAccountTop10, 'accountName', 'EN YÜKSEK 10 POTANSİYEL')}
+                {renderBarChart(data.byType, 'label', 'FIRSAT TİPİ (DEAL TYPE)', true)}
                 {renderBarChart(data.byAgingBuckets, 'label', 'YAŞLANDIRMA (0-60+ GÜN)')}
             </div>
 

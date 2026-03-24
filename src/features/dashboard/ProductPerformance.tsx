@@ -318,9 +318,11 @@ export function ProductPerformance({ deals: propDeals, filters }: ProductPerform
                                 </div>
 
                                 <div className="mb-1">
-                                    <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold truncate leading-tight">
-                                        {stat.parentName}
-                                    </p>
+                                    {stat.parentName && stat.parentName.toLowerCase() !== product.toLowerCase() && (
+                                        <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold truncate leading-tight">
+                                            {stat.parentName}
+                                        </p>
+                                    )}
                                     <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate" title={product}>
                                         {product}
                                     </h3>

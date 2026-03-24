@@ -14,6 +14,7 @@ import type { Deal } from '../../types/crm';
 
 const STAGE_CONFIG: { stage: DealStage | string; matchStages: string[]; color: string; probability: number }[] = [
     { stage: 'İlk Temas', matchStages: ['Lead', 'Aday', 'Konumlama'], color: '#4f46e5', probability: 10 },   // indigo-600
+    { stage: 'İlerletiliyor', matchStages: ['İlerletiliyor'], color: '#0d9488', probability: 10 },   // teal-600
     { stage: 'Demo', matchStages: ['Qualified', 'Nitelikli', 'Demo'], color: '#2563eb', probability: 30 },   // blue-600
     { stage: 'Teklif', matchStages: ['Proposal', 'Teklif'], color: '#0284c7', probability: 60 },   // sky-600
     { stage: 'Sözleşme Bekleniyor', matchStages: ['Negotiation', 'Müzakere', 'Sözleşme Bekleniyor'], color: '#0891b2', probability: 80 },   // cyan-600

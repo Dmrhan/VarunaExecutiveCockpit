@@ -23,8 +23,6 @@ const STAGE_CONFIG: { stage: DealStage | string; matchStages: string[]; color: s
     { stage: 'Teklif', matchStages: ['Proposal', 'Teklif'], color: '#0284c7', probability: 60 },   // sky-600
     { stage: 'Sözleşme Bekleniyor', matchStages: ['Negotiation', 'Müzakere', 'Sözleşme Bekleniyor'], color: '#0891b2', probability: 80 },   // cyan-600
     { stage: 'Kazanıldı', matchStages: ['Order', 'Kazanıldı', 'Onaylandı'], color: '#0d9488', probability: 100 },   // teal-600
-    { stage: 'İlerletiliyor', matchStages: ['İlerletiliyor'], color: '#0d9488', probability: 10 },   // teal-600
-
 ];
 
 const formatCurrency = (value: number) => {
@@ -83,16 +81,13 @@ export function FunnelChart({ deals: propDeals }: FunnelChartProps) {
         return STAGE_CONFIG.map((config, index) => {
             const stageDeals = deals.filter(d => config.matchStages.includes(d.stage));
             const totalValue = stageDeals.reduce((sum, d) => sum + d.value, 0);
-            const widthScale = 100 - (index * 12);
-
             return {
                 ...config,
                 count: stageDeals.length,
                 totalValue,
-                width: `${widthScale}%`,
                 deals: stageDeals
             };
-        });
+        }).filter(item => item.count > 0); // Sadece veri olan aşamaları göster
     }, [deals]);
 
     const handleStageClick = (stage: DealStage | string) => {
@@ -224,23 +219,25 @@ export function FunnelChart({ deals: propDeals }: FunnelChartProps) {
                 </div>
             </CardHeader>
             <CardContent className="pt-6 pb-4 flex flex-col items-center justify-center min-h-[400px]">
-                <div className="w-full max-w-2xl flex flex-col">
+                <div className="w-full max-w-2xl flex flex-col h-full min-h-[300px] justify-center gap-0.5">
                     {funnelData.map((item, index) => {
-                        // Each step narrows: index 0 widest, index 4 narrowest
-                        // offsetPct is how much each side is cut in (%)
-                        const topOff = index * 6;       // left/right clip start %
-                        const botOff = (index + 1) * 6; // left/right clip end %
+                        // Max 45% clip on each side (leaving 10% in the middle minimum)
+                        const maxClipPct = 40;
+                        const step = Math.min(8, maxClipPct / Math.max(1, funnelData.length)); 
+                        const topOff = index * step;
+                        const botOff = (index + 1) * step; 
                         const clipPath = `polygon(${topOff}% 0%, ${100 - topOff}% 0%, ${100 - botOff}% 100%, ${botOff}% 100%)`;
-                        // Text padding must exceed the larger of the two offsets so text doesn't go into clipped area
-                        const textPadding = `${botOff + 4}%`;
+                        
+                        // Prevent padding from exceeding 50%
+                        const paddingVal = Math.min(48, botOff + 2);
+                        const textPadding = `${paddingVal}%`;
 
                         return (
                             <motion.div
                                 key={item.stage}
-                                whileHover={{ scale: 1.005 }}
+                                whileHover={{ scale: 1.01, zIndex: 20 }}
                                 onClick={() => handleStageClick(item.stage)}
-                                className="relative cursor-pointer w-full"
-                                style={{ height: '70px' }}
+                                className="relative cursor-pointer w-full flex-1 transition-all min-h-[40px] max-h-[80px]"
                             >
                                 {/* Clipped background shape */}
                                 <div

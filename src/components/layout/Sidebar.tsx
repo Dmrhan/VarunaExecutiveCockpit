@@ -25,7 +25,7 @@ const NAV_ITEMS = [
     { icon: FileText, key: 'quotes' },
     { icon: ShoppingCart, key: 'orders' },
     { icon: FileSignature, key: 'contracts' },
-    { icon: BadgeCheck, key: 'scorecard' },
+    // { icon: BadgeCheck, key: 'scorecard' },
 ];
 
 interface SidebarProps {

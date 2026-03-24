@@ -18,7 +18,7 @@ const STAGE_CONFIG: { stage: DealStage | string; matchStages: string[]; color: s
     { stage: 'Teklif', matchStages: ['Proposal', 'Teklif'], color: '#0284c7', probability: 60 },   // sky-600
     { stage: 'Sözleşme Bekleniyor', matchStages: ['Negotiation', 'Müzakere', 'Sözleşme Bekleniyor'], color: '#0891b2', probability: 80 },   // cyan-600
     { stage: 'Kazanıldı', matchStages: ['Order', 'Kazanıldı', 'Onaylandı'], color: '#0d9488', probability: 100 },   // teal-600
-    { stage: 'İlerletiliyor', matchStages: ['İlerletiliyor'], color: '#0d9488', probability: 100 },   // teal-600
+    { stage: 'İlerletiliyor', matchStages: ['İlerletiliyor'], color: '#0d9488', probability: 10 },   // teal-600
 
 ];
 

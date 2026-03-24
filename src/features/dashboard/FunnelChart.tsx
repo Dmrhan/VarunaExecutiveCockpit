@@ -209,11 +209,11 @@ export function FunnelChart({ deals: propDeals }: FunnelChartProps) {
                     </CardTitle>
                     <p className="text-[10px] text-slate-400 mt-1">{t('funnel.subtitle')}</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1.5 max-w-[50%]">
                     {STAGE_CONFIG.map(s => (
-                        <div key={s.stage} className="flex items-center gap-1.5">
+                        <div key={s.stage} className="flex items-center gap-1">
                             <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: s.color }} />
-                            <span className="text-[9px] text-slate-500 font-bold uppercase">{s.stage}</span>
+                            <span className="text-[8px] text-slate-500 font-bold uppercase">{s.stage}</span>
                         </div>
                     ))}
                 </div>
@@ -221,15 +221,15 @@ export function FunnelChart({ deals: propDeals }: FunnelChartProps) {
             <CardContent className="pt-6 pb-4 flex flex-col items-center justify-center min-h-[400px]">
                 <div className="w-full max-w-2xl flex flex-col h-full min-h-[300px] justify-center gap-0.5">
                     {funnelData.map((item, index) => {
-                        // Max 45% clip on each side (leaving 10% in the middle minimum)
-                        const maxClipPct = 40;
+                        // Max 25% clip on each side (leaving at least 50% width in the middle minimum)
+                        const maxClipPct = 25;
                         const step = Math.min(8, maxClipPct / Math.max(1, funnelData.length));
                         const topOff = index * step;
                         const botOff = (index + 1) * step;
                         const clipPath = `polygon(${topOff}% 0%, ${100 - topOff}% 0%, ${100 - botOff}% 100%, ${botOff}% 100%)`;
 
-                        // Prevent padding from exceeding 50%
-                        const paddingVal = Math.min(48, botOff + 2);
+                        // Prevent padding from exceeding the available space, use a slightly softer padding than exact cut
+                        const paddingVal = Math.min(30, botOff * 0.8 + 2);
                         const textPadding = `${paddingVal}%`;
 
                         return (
@@ -237,7 +237,7 @@ export function FunnelChart({ deals: propDeals }: FunnelChartProps) {
                                 key={item.stage}
                                 whileHover={{ scale: 1.01, zIndex: 20 }}
                                 onClick={() => handleStageClick(item.stage)}
-                                className="relative cursor-pointer w-full flex-1 transition-all min-h-[40px] max-h-[80px]"
+                                className="relative cursor-pointer w-full flex-1 transition-all min-h-[50px] max-h-[80px]"
                             >
                                 {/* Clipped background shape */}
                                 <div

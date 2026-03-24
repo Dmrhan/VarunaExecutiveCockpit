@@ -112,14 +112,14 @@ export function PipelineAIInsightPanel({ currentDeals, allDeals, dateFilter, cus
         const wonByOwner = currentDeals
             .filter(d => d.stage === 'Kazanıldı' || d.stage === 'Order')
             .reduce((acc, d) => {
-                const key = d.ownerName || d.owner_name || d.ownerId;
+                const key = d.ownerName || d.ownerId;
                 acc[key] = (acc[key] || 0) + d.value;
                 return acc;
             }, {} as Record<string, number>);
         const topOwner = Object.entries(wonByOwner).sort((a, b) => b[1] - a[1])[0];
         const wonCountByOwner = currentDeals.filter(d =>
             (d.stage === 'Kazanıldı' || d.stage === 'Order') &&
-            (d.ownerName || d.owner_name || d.ownerId) === topOwner?.[0]
+            (d.ownerName || d.ownerId) === topOwner?.[0]
         ).length;
 
         const champCard: InsightCard = {
@@ -167,7 +167,7 @@ export function PipelineAIInsightPanel({ currentDeals, allDeals, dateFilter, cus
             icon: <Snowflake size={16} />,
             label: 'En Uzun Bekleyen',
             title: oldest
-                ? oldest.customerName || oldest.customer_name || 'Bilinmeyen Müşteri'
+                ? oldest.customerName || 'Bilinmeyen Müşteri'
                 : 'Donmuş fırsat yok',
             value: oldest ? `${oldest.aging} Gün` : '—',
             sub: oldest ? oldest.topic?.substring(0, 40) : undefined,

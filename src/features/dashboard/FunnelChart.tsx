@@ -223,11 +223,11 @@ export function FunnelChart({ deals: propDeals }: FunnelChartProps) {
                     {funnelData.map((item, index) => {
                         // Max 45% clip on each side (leaving 10% in the middle minimum)
                         const maxClipPct = 40;
-                        const step = Math.min(8, maxClipPct / Math.max(1, funnelData.length)); 
+                        const step = Math.min(8, maxClipPct / Math.max(1, funnelData.length));
                         const topOff = index * step;
-                        const botOff = (index + 1) * step; 
+                        const botOff = (index + 1) * step;
                         const clipPath = `polygon(${topOff}% 0%, ${100 - topOff}% 0%, ${100 - botOff}% 100%, ${botOff}% 100%)`;
-                        
+
                         // Prevent padding from exceeding 50%
                         const paddingVal = Math.min(48, botOff + 2);
                         const textPadding = `${paddingVal}%`;

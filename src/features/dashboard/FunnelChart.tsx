@@ -202,18 +202,19 @@ export function FunnelChart({ deals: propDeals }: FunnelChartProps) {
 
     return (
         <Card className="col-span-1 lg:col-span-3 bg-white/40 dark:bg-slate-700/40 backdrop-blur-md border border-slate-200 dark:border-white/10 shadow-sm overflow-hidden h-full">
-            <CardHeader className="pb-4 border-b border-slate-100 dark:border-white/5 flex flex-row items-center justify-between">
-                <div>
+            <CardHeader className="pb-3 border-b border-slate-100 dark:border-white/5">
+                <div className="flex items-center justify-between">
                     <CardTitle className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 font-bold">
                         {t('funnel.title')}
                     </CardTitle>
-                    <p className="text-[10px] text-slate-400 mt-1">{t('funnel.subtitle')}</p>
+                    <p className="text-[10px] text-slate-400">{t('funnel.subtitle')}</p>
                 </div>
-                <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1.5 max-w-[50%]">
+                {/* Legend — full width, wraps gracefully */}
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
                     {STAGE_CONFIG.map(s => (
                         <div key={s.stage} className="flex items-center gap-1">
-                            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: s.color }} />
-                            <span className="text-[8px] text-slate-500 font-bold uppercase">{s.stage}</span>
+                            <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
+                            <span className="text-[8px] text-slate-500 font-bold uppercase whitespace-nowrap">{s.stage}</span>
                         </div>
                     ))}
                 </div>
@@ -221,47 +222,47 @@ export function FunnelChart({ deals: propDeals }: FunnelChartProps) {
             <CardContent className="pt-6 pb-4 flex flex-col items-center justify-center min-h-[400px]">
                 <div className="w-full max-w-2xl flex flex-col h-full min-h-[300px] justify-center gap-0.5">
                     {funnelData.map((item, index) => {
-                        // Max 25% clip on each side (leaving at least 50% width in the middle minimum)
-                        const maxClipPct = 25;
-                        const step = Math.min(8, maxClipPct / Math.max(1, funnelData.length));
+                        const n = funnelData.length;
+                        // Each step clips at most 20% total width so bottom bar has at least 60% width
+                        const maxTotalClip = 20;
+                        const step = maxTotalClip / Math.max(1, n);
                         const topOff = index * step;
                         const botOff = (index + 1) * step;
                         const clipPath = `polygon(${topOff}% 0%, ${100 - topOff}% 0%, ${100 - botOff}% 100%, ${botOff}% 100%)`;
 
-                        // Prevent padding from exceeding the available space, use a slightly softer padding than exact cut
-                        const paddingVal = Math.min(30, botOff * 0.8 + 2);
-                        const textPadding = `${paddingVal}%`;
+                        // Text padding: use the midpoint offset of this row + a small buffer
+                        // This keeps text inside the narrowest visible part of the trapezoid
+                        const midOff = (topOff + botOff) / 2;
+                        const paddingPct = Math.min(midOff + 4, 32);
+                        const textPadding = `${paddingPct}%`;
 
                         return (
                             <motion.div
                                 key={item.stage}
                                 whileHover={{ scale: 1.01, zIndex: 20 }}
                                 onClick={() => handleStageClick(item.stage)}
-                                className="relative cursor-pointer w-full flex-1 transition-all min-h-[50px] max-h-[80px]"
+                                className="relative cursor-pointer w-full flex-1 transition-all min-h-[48px] max-h-[80px]"
                             >
                                 {/* Clipped background shape */}
                                 <div
                                     className="absolute inset-0"
-                                    style={{
-                                        clipPath,
-                                        backgroundColor: item.color,
-                                    }}
+                                    style={{ clipPath, backgroundColor: item.color }}
                                 >
                                     <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent" />
                                 </div>
 
-                                {/* Text content — full width, padded to stay inside trapezoid */}
+                                {/* Text — padded to stay inside the trapezoid */}
                                 <div
-                                    className="absolute inset-0 flex items-center justify-between text-white z-10"
+                                    className="absolute inset-0 flex items-center justify-between text-white z-10 overflow-hidden"
                                     style={{ paddingLeft: textPadding, paddingRight: textPadding }}
                                 >
-                                    <div className="flex flex-col">
-                                        <span className="text-[11px] font-semibold uppercase tracking-widest opacity-90">{item.stage}</span>
+                                    <div className="flex flex-col min-w-0 overflow-hidden">
+                                        <span className="text-[11px] font-semibold uppercase tracking-widest opacity-90 truncate">{item.stage}</span>
                                         <span className="text-[9px] opacity-60">{t('opportunities.probabilityShort')}: {item.probability}%</span>
                                     </div>
-                                    <div className="flex flex-col items-end">
-                                        <span className="text-base opacity-90">{formatCurrency(item.totalValue)}</span>
-                                        <span className="text-[10px] uppercase opacity-70">{item.count} {t('opportunities.opportunityCount', { defaultValue: 'Fırsat' })}</span>
+                                    <div className="flex flex-col items-end flex-shrink-0 ml-2">
+                                        <span className="text-sm font-bold opacity-90 whitespace-nowrap">{formatCurrency(item.totalValue)}</span>
+                                        <span className="text-[10px] uppercase opacity-70 whitespace-nowrap">{item.count} {t('opportunities.opportunityCount', { defaultValue: 'Fırsat' })}</span>
                                     </div>
                                 </div>
                             </motion.div>

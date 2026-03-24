@@ -68,6 +68,7 @@ export const USERS: User[] = [
     // ─── İş Ortakları ──────────────────────────────────────────────────────────
     { id: 'u3', name: 'Mehmet Kaya', avatar: 'https://i.pravatar.cc/150?u=u3', role: 'sales_rep', department: 'İş Ortakları' },
     { id: 'u14', name: 'Selin Arslan', avatar: 'https://i.pravatar.cc/150?u=u14', role: 'sales_rep', department: 'İş Ortakları' },
+    { id: '03600255-a779-45e9-a4de-910ed51c2381', name: 'Hülya Özbey AĞARER', avatar: 'https://i.pravatar.cc/150?u=hulya', role: 'sales_rep', department: 'Univera Satış' },
 ];
 
 

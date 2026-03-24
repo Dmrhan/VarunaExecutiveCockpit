@@ -24,6 +24,8 @@ interface MonthlyData {
     isCurrent: boolean;
 }
 
+import { getMappedStageInfo } from './OpportunitiesDashboard';
+
 export function OpportunityForecast({ deals, onMonthClick, activeFilterMonth }: OpportunityForecastProps) {
     const { t } = useTranslation();
 
@@ -56,7 +58,8 @@ export function OpportunityForecast({ deals, onMonthClick, activeFilterMonth }: 
             if (!deal.expectedCloseDate) return;
 
             // Only process specific active stages for the forecast
-            if (!['Demo', 'Konumlama', 'Teklif'].includes(deal.stage)) return;
+            const mappedStage = getMappedStageInfo(deal.stage).stage;
+            if (mappedStage === 'Kazanıldı' || mappedStage === 'Kaybedildi') return;
 
             const closeDate = new Date(deal.expectedCloseDate);
             // Ignore invalid dates

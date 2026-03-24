@@ -9,20 +9,16 @@ import { useQuery } from '@tanstack/react-query';
 import { TeamService } from '../../services/TeamService';
 import { MultiSelect } from '../../components/ui/MultiSelect';
 
-const STAGE_COLORS: Record<string, string> = {
-    'Lead': '#6366f1',
-    'Qualified': '#8b5cf6',
-    'Proposal': '#d946ef',
-    'Negotiation': '#f43f5e',
-    'Order': '#10b981',
-    'Lost': '#64748b'
+export const getMappedStageInfo = (rawStage: string) => {
+    const config = STAGE_CONFIG.find(c => c.matchStages.includes(rawStage) || c.stage === rawStage);
+    return config || { stage: rawStage, color: '#94a3b8', probability: 0 };
 };
 
 import { DateRangePicker } from '../../components/ui/DateRangePicker';
 import { PipelineAIInsightPanel } from './PipelineAIInsightPanel';
 import { OpportunityDetailModal } from './OpportunityDetailModal';
 import { OpportunityService } from '../../services/OpportunityService';
-import { FunnelChart } from './FunnelChart';
+import { FunnelChart, STAGE_CONFIG } from './FunnelChart';
 import { OpportunityOwnerDistribution } from './OpportunityOwnerDistribution';
 import { ProductPerformance } from './ProductPerformance';
 import { OpportunityForecast } from './OpportunityForecast';
@@ -279,7 +275,7 @@ export function OpportunitiesDashboard() {
         }
 
         if (columnFilters.stage !== 'all') {
-            result = result.filter(d => d.stage === columnFilters.stage);
+            result = result.filter(d => getMappedStageInfo(d.stage).stage === columnFilters.stage);
         }
 
         if (columnFilters.owner) {
@@ -357,7 +353,10 @@ export function OpportunitiesDashboard() {
         }
 
         // Exclude Won and Lost deals from Forecast
-        result = result.filter(d => !['Kazanıldı', 'Order', 'Kaybedildi', 'Lost'].includes(d.stage));
+        result = result.filter(d => {
+            const stageName = getMappedStageInfo(d.stage).stage;
+            return stageName !== 'Kazanıldı' && stageName !== 'Kaybedildi';
+        });
 
         return result;
     }, [deals, columnFilters, users, selectedTeam, teamMembers, selectedOwner, selectedProduct]);
@@ -441,9 +440,12 @@ export function OpportunitiesDashboard() {
         if (backendStats) return backendStats.metrics;
 
         const count = filteredDeals.length;
-        const lost = filteredDeals.filter(d => ['Kaybedildi', 'Lost'].includes(d.stage)).reduce((s, d) => s + d.value, 0);
-        const won = filteredDeals.filter(d => ['Kazanıldı', 'Order'].includes(d.stage)).reduce((s, d) => s + d.value, 0);
-        const open = filteredDeals.filter(d => !['Kazanıldı', 'Kaybedildi', 'Order', 'Lost'].includes(d.stage)).reduce((s, d) => s + d.value, 0);
+        const lost = filteredDeals.filter(d => getMappedStageInfo(d.stage).stage === 'Kaybedildi').reduce((s, d) => s + d.value, 0);
+        const won = filteredDeals.filter(d => getMappedStageInfo(d.stage).stage === 'Kazanıldı').reduce((s, d) => s + d.value, 0);
+        const open = filteredDeals.filter(d => {
+            const s = getMappedStageInfo(d.stage).stage;
+            return s !== 'Kazanıldı' && s !== 'Kaybedildi';
+        }).reduce((s, d) => s + d.value, 0);
         const total = won + open + lost;
 
         return { count, lost, won, open, total };
@@ -473,7 +475,9 @@ export function OpportunitiesDashboard() {
             const ownerName = d.ownerName || users.find(u => u.id === d.ownerId)?.name || 'Unknown';
             dataMaps.ownerRev[ownerName] = (dataMaps.ownerRev[ownerName] || 0) + d.value;
             dataMaps.topicRev[d.topic] = (dataMaps.topicRev[d.topic] || 0) + d.value;
-            dataMaps.statusRev[d.stage] = (dataMaps.statusRev[d.stage] || 0) + d.value;
+            
+            const mappedStageName = getMappedStageInfo(d.stage).stage;
+            dataMaps.statusRev[mappedStageName] = (dataMaps.statusRev[mappedStageName] || 0) + d.value;
         });
 
         const sortAndLimit = (map: Record<string, number>, key: string) =>
@@ -509,7 +513,10 @@ export function OpportunitiesDashboard() {
     // Use filteredDeals for List/Kanban
     const sortedDeals = useMemo(() => {
         // Filter out Won and Lost deals from the list/kanban views
-        let result = filteredDeals.filter(d => !['Kazanıldı', 'Order', 'Kaybedildi', 'Lost'].includes(d.stage));
+        let result = filteredDeals.filter(d => {
+            const mappedStage = getMappedStageInfo(d.stage).stage;
+            return mappedStage !== 'Kazanıldı' && mappedStage !== 'Kaybedildi';
+        });
 
         if (sortConfig) {
             result.sort((a, b) => {
@@ -537,15 +544,7 @@ export function OpportunitiesDashboard() {
     }, [filteredDeals, sortConfig, users]);
 
 
-    const statusColors: Record<string, string> = {
-        'Onaylandı': 'bg-emerald-100 text-emerald-700 border-emerald-200',
-        'Lead': 'bg-blue-50 text-blue-700 border-blue-200',
-        'Qualified': 'bg-indigo-50 text-indigo-700 border-indigo-200',
-        'Proposal': 'bg-purple-50 text-purple-700 border-purple-200',
-        'Negotiation': 'bg-amber-50 text-amber-700 border-amber-200',
-        'Order': 'bg-emerald-500 text-white border-emerald-600',
-        'Lost': 'bg-slate-100 text-slate-500 border-slate-200',
-    };
+
 
     return (
         <div className="space-y-8 animate-in fade-in duration-700">
@@ -824,8 +823,8 @@ export function OpportunitiesDashboard() {
                                                 onChange={e => setColumnFilters(prev => ({ ...prev, stage: e.target.value }))}
                                             >
                                                 <option value="all">{t('dateFilters.all')}</option>
-                                                {['Lead', 'Qualified', 'Proposal', 'Negotiation', 'Order', 'Lost'].map(s => (
-                                                    <option key={s} value={s}>{s}</option>
+                                                {STAGE_CONFIG.map(s => (
+                                                    <option key={s.stage} value={s.stage}>{s.stage}</option>
                                                 ))}
                                             </select>
                                         </th>
@@ -877,16 +876,16 @@ export function OpportunitiesDashboard() {
                                                     <div className="text-slate-500 dark:text-slate-500">{deal.customerName}</div>
                                                 </td>
                                                 <td className="p-4">
-                                                    <span className={cn("px-2.5 py-1 rounded text-[10px] uppercase font-bold border", statusColors[deal.stage] || 'bg-slate-100 border-slate-200 text-slate-600')}>
-                                                        {deal.stage}
+                                                    <span className="px-2.5 py-1 rounded text-[10px] uppercase font-bold text-white shadow-sm" style={{ backgroundColor: getMappedStageInfo(deal.stage).color }}>
+                                                        {getMappedStageInfo(deal.stage).stage}
                                                     </span>
                                                 </td>
                                                 <td className="p-4">
                                                     <div className="flex items-center gap-2">
                                                         <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                                            <div className="h-full bg-indigo-500" style={{ width: `${deal.probability}%` }}></div>
+                                                            <div className="h-full" style={{ width: `${getMappedStageInfo(deal.stage).probability}%`, backgroundColor: getMappedStageInfo(deal.stage).color }}></div>
                                                         </div>
-                                                        <span className="text-slate-600 dark:text-slate-400 font-mono">%{Math.round(deal.probability)}</span>
+                                                        <span className="text-slate-600 dark:text-slate-400 font-mono">%{getMappedStageInfo(deal.stage).probability}</span>
                                                     </div>
                                                 </td>
                                                 <td className="p-4 font-mono font-medium text-[13px] text-slate-700 dark:text-slate-300">
@@ -963,20 +962,18 @@ export function OpportunitiesDashboard() {
                             <span className="text-xs text-slate-400 font-mono font-bold uppercase">{t('performance.listingDetails_short', { count: sortedDeals.length, defaultValue: `${sortedDeals.length} Kayıt` })}</span>
                         </div>
                         <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
-                            {Array.from(new Set(sortedDeals.map(d => d.stage))).sort().map(stage => {
-                                const stageDeals = sortedDeals.filter(d => d.stage === stage);
+                            {STAGE_CONFIG.filter(cfg => cfg.stage !== 'Kazanıldı' && cfg.stage !== 'Kaybedildi').map(config => {
+                                const stageDeals = sortedDeals.filter(d => getMappedStageInfo(d.stage).stage === config.stage);
                                 const totalVal = stageDeals.reduce((s, d) => s + d.value, 0);
-                                const stageHash = Math.abs(stage.split('').reduce((a, b) => {a = ((a << 5) - a) + b.charCodeAt(0); return a&a}, 0));
-                                const palette = ['#6366f1', '#8b5cf6', '#d946ef', '#f43f5e', '#0ea5e9', '#f59e0b', '#10b981', '#64748b'];
-                                const stageColor = STAGE_COLORS[stage] || palette[stageHash % palette.length];
+                                const stageColor = config.color;
 
                                 return (
-                                    <div key={stage} className="flex flex-col gap-3 min-w-[300px] w-[300px] shrink-0">
+                                    <div key={config.stage} className="flex flex-col gap-3 min-w-[300px] w-[300px] shrink-0">
                                         <div className="p-3 rounded-xl border border-slate-200 dark:border-white/5 sticky top-0 z-10 backdrop-blur-sm" style={{ backgroundColor: `${stageColor}15` }}>
                                             <div className="flex justify-between items-center mb-1">
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: stageColor }} />
-                                                    <h3 className="font-bold text-slate-700 dark:text-slate-200 text-xs uppercase tracking-wider">{stage}</h3>
+                                                    <h3 className="font-bold text-slate-700 dark:text-slate-200 text-xs uppercase tracking-wider">{config.stage}</h3>
                                                 </div>
                                                 <span className="bg-white dark:bg-slate-700 px-2 py-0.5 rounded-full text-[10px] font-bold text-slate-500 shadow-sm border border-slate-100 dark:border-white/5">{stageDeals.length}</span>
                                             </div>

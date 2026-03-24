@@ -12,7 +12,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import type { Deal } from '../../types/crm';
 
-const STAGE_CONFIG: { stage: DealStage | string; matchStages: string[]; color: string; probability: number }[] = [
+export const STAGE_CONFIG: { stage: DealStage | string; matchStages: string[]; color: string; probability: number }[] = [
     { stage: 'İlk Temas', matchStages: ['Lead', 'Aday', 'Konumlama'], color: '#4f46e5', probability: 10 },   // indigo-600
     { stage: 'İlerletiliyor', matchStages: ['İlerletiliyor'], color: '#0d9488', probability: 10 },   // teal-600
     { stage: 'Randevu Alındı', matchStages: ['Randevu Alındı'], color: '#0d9488', probability: 10 },   // teal-600

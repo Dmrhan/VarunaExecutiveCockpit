@@ -15,6 +15,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { AiService } from '../../services/AiService';
 import { TtsService } from '../../services/TtsService';
+import { getMappedStageInfo } from './OpportunitiesDashboard';
 
 interface ProductPerformanceProps {
     deals?: Deal[];
@@ -182,7 +183,7 @@ export function ProductPerformance({ deals: propDeals, filters }: ProductPerform
     // Deals filtered by stage (used for table view)
     const filteredDeals = useMemo(() => {
         if (!selectedStage) return productDeals;
-        return productDeals.filter(d => d.stage === selectedStage);
+        return productDeals.filter(d => getMappedStageInfo(d.stage).stage === selectedStage);
     }, [productDeals, selectedStage]);
 
     // Analytics Data
@@ -191,16 +192,17 @@ export function ProductPerformance({ deals: propDeals, filters }: ProductPerform
 
         // Stage Distribution (Revenue Based)
         const byStage = productDeals.reduce((acc, deal) => {
-            if (!acc[deal.stage]) {
-                acc[deal.stage] = { value: 0, count: 0 };
+            const mapped = getMappedStageInfo(deal.stage);
+            if (!acc[mapped.stage]) {
+                acc[mapped.stage] = { value: 0, count: 0, color: mapped.color };
             }
-            acc[deal.stage].value += deal.value;
-            acc[deal.stage].count += 1;
+            acc[mapped.stage].value += deal.value;
+            acc[mapped.stage].count += 1;
             return acc;
-        }, {} as Record<string, { value: number, count: number }>);
+        }, {} as Record<string, { value: number, count: number, color: string }>);
 
         const stageData = Object.entries(byStage)
-            .map(([name, stats]) => ({ name, value: stats.value, count: stats.count }))
+            .map(([name, stats]) => ({ name, value: stats.value, count: stats.count, color: stats.color }))
             .sort((a, b) => b.value - a.value);
 
         // Trend Data (Last 6 Months) — keyed by YYYY-MM to avoid cross-year bleed
@@ -228,7 +230,7 @@ export function ProductPerformance({ deals: propDeals, filters }: ProductPerform
         return { stageData, trendData: last6Months };
     }, [productDeals, i18n.language]);
 
-    const COLORS = ['#6366f1', '#8b5cf6', '#d946ef', '#f43f5e', '#10b981', '#f59e0b'];
+
 
     const exportToExcel = () => {
         try {
@@ -498,7 +500,7 @@ export function ProductPerformance({ deals: propDeals, filters }: ProductPerform
                                                             {analyticsData.stageData.map((entry, index) => (
                                                                 <Cell
                                                                     key={`cell-${index}`}
-                                                                    fill={COLORS[index % COLORS.length]}
+                                                                    fill={entry.color}
                                                                     stroke={selectedStage === entry.name ? '#1e293b' : 'none'}
                                                                     strokeWidth={2}
                                                                     className="cursor-pointer hover:opacity-80 transition-opacity"
@@ -526,7 +528,7 @@ export function ProductPerformance({ deals: propDeals, filters }: ProductPerform
                                                             className={`flex items-center gap-2 cursor-pointer rounded-lg px-2 py-1 transition-colors ${selectedStage === entry.name ? 'bg-slate-100 dark:bg-white/10' : 'hover:bg-slate-50 dark:hover:bg-white/5'}`}
                                                             onClick={() => setSelectedStage(selectedStage === entry.name ? null : entry.name)}
                                                         >
-                                                            <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                                                            <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: entry.color }} />
                                                             <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 flex-1 truncate">{entry.name}</span>
                                                             <span className="text-[10px] font-mono font-bold text-slate-800 dark:text-white">₺{(entry.value / 1000000).toFixed(1)}M</span>
                                                             <span className="text-[9px] text-slate-400 font-bold">{pct}%</span>

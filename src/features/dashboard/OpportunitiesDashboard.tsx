@@ -667,6 +667,7 @@ export function OpportunitiesDashboard() {
                             dateRange={currentDateRangeStr}
                             teamId={selectedTeam.includes('all') ? undefined : selectedTeam.filter(t => t !== 'all')}
                             ownerId={selectedOwner.includes('all') ? undefined : selectedOwner}
+                            product={selectedProduct.includes('all') ? undefined : selectedProduct}
                         />
                     </div>
                 </div>

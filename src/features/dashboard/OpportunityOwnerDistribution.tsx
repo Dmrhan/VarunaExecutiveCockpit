@@ -17,9 +17,10 @@ interface OpportunityOwnerDistributionProps {
     dateRange?: { start: string | null; end: string | null };
     teamId?: string | string[];
     ownerId?: string | string[];
+    product?: string | string[];
 }
 
-export function OpportunityOwnerDistribution({ dateRange, teamId, ownerId }: OpportunityOwnerDistributionProps) {
+export function OpportunityOwnerDistribution({ dateRange, teamId, ownerId, product }: OpportunityOwnerDistributionProps) {
     const { t } = useTranslation();
     const [leaderboardData, setLeaderboardData] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -34,6 +35,7 @@ export function OpportunityOwnerDistribution({ dateRange, teamId, ownerId }: Opp
                 if (dateRange?.end) params.append('to', dateRange.end + ' 23:59:59');
                 if (teamId) params.append('teamId', Array.isArray(teamId) ? teamId.join(',') : teamId);
                 if (ownerId) params.append('ownerId', Array.isArray(ownerId) ? ownerId.join(',') : ownerId);
+                if (product) params.append('product', Array.isArray(product) ? product.join(',') : product);
 
                 const baseUrl = (window as any)['__RUNTIME_CONFIG__']?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
                 const response = await fetch(`${baseUrl}/opportunities-leaderboard?${params.toString()}`);
@@ -50,7 +52,7 @@ export function OpportunityOwnerDistribution({ dateRange, teamId, ownerId }: Opp
         };
 
         fetchPerformance();
-    }, [dateRange?.start, dateRange?.end, teamId, ownerId]);
+    }, [dateRange?.start, dateRange?.end, teamId, ownerId, product]);
 
     const getRankIcon = (index: number) => {
         switch (index) {

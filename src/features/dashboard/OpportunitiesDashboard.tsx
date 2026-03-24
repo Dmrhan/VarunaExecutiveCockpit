@@ -43,7 +43,7 @@ const formatCurrency = (value: number) => {
 // Remove DashboardGridCard and its dependencies
 
 
-const StatCard = ({ label, value, colorClass }: { label: string; value: string; colorClass: string }) => (
+const StatCard = ({ label, value, colorClass, subLabel }: { label: string; value: string; colorClass: string; subLabel?: string }) => (
     <div className="bg-white/60 dark:bg-slate-700/60 backdrop-blur-md border border-slate-200 dark:border-slate-600 p-5 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm h-full min-h-[100px]">
         <span className="text-[10px] uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400 font-bold mb-2">
             {label}
@@ -51,6 +51,9 @@ const StatCard = ({ label, value, colorClass }: { label: string; value: string; 
         <span className={`text-xl lg:text-2xl font-light tracking-tight ${colorClass}`}>
             {value}
         </span>
+        {subLabel && (
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-1.5">{subLabel}</span>
+        )}
     </div>
 );
 
@@ -437,18 +440,21 @@ export function OpportunitiesDashboard() {
     }, [dateFilter, customRange, selectedOwner, selectedTeam, selectedProduct]);
 
     const metrics = useMemo(() => {
-        if (backendStats) return backendStats.metrics;
+        const openDeals = filteredDeals.filter(d => {
+            const s = getMappedStageInfo(d.stage).stage;
+            return s !== 'Kazanıldı' && s !== 'Kaybedildi';
+        });
+        const openCount = openDeals.length;
+
+        if (backendStats) return { ...backendStats.metrics, openCount };
 
         const count = filteredDeals.length;
         const lost = filteredDeals.filter(d => getMappedStageInfo(d.stage).stage === 'Kaybedildi').reduce((s, d) => s + d.value, 0);
         const won = filteredDeals.filter(d => getMappedStageInfo(d.stage).stage === 'Kazanıldı').reduce((s, d) => s + d.value, 0);
-        const open = filteredDeals.filter(d => {
-            const s = getMappedStageInfo(d.stage).stage;
-            return s !== 'Kazanıldı' && s !== 'Kaybedildi';
-        }).reduce((s, d) => s + d.value, 0);
+        const open = openDeals.reduce((s, d) => s + d.value, 0);
         const total = won + open + lost;
 
-        return { count, lost, won, open, total };
+        return { count, lost, won, open, total, openCount };
     }, [filteredDeals, backendStats]);
 
     const chartData = useMemo(() => {
@@ -638,22 +644,23 @@ export function OpportunitiesDashboard() {
                 </div>
             </div>
 
-            {/* AI Insight & KPIs */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                <PipelineAIInsightPanel
-                    currentDeals={filteredDeals}
-                    allDeals={deals}
-                    dateFilter={dateFilter}
-                    customRange={customRange}
-                    className="lg:col-span-1 min-h-[300px]"
-                />
-                <div className="lg:col-span-3 grid grid-cols-2 lg:grid-cols-2 gap-4">
-                    <StatCard label={t('opportunities.count')} value={metrics.count.toString()} colorClass="text-slate-900 dark:text-white font-medium" />
-                    <StatCard label={t('opportunities.lostDeals')} value={formatCurrency(metrics.lost)} colorClass="text-rose-600 dark:text-rose-400 font-medium" />
-                    <StatCard label={t('opportunities.wonDeals')} value={formatCurrency(metrics.won)} colorClass="text-emerald-600 dark:text-emerald-400 font-medium" />
-                    <StatCard label={t('opportunities.pipelineRevenue')} value={formatCurrency(metrics.open)} colorClass="text-sky-600 dark:text-sky-400 font-medium" />
-                </div>
+            {/* KPI Row */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4">
+                <StatCard label={t('opportunities.count')} value={metrics.count.toString()} colorClass="text-slate-900 dark:text-white font-medium" />
+                <StatCard label={t('opportunities.lostDeals')} value={formatCurrency(metrics.lost)} colorClass="text-rose-600 dark:text-rose-400 font-medium" />
+                <StatCard label={t('opportunities.wonDeals')} value={formatCurrency(metrics.won)} colorClass="text-emerald-600 dark:text-emerald-400 font-medium" />
+                <StatCard label={t('opportunities.pipelineRevenue')} value={formatCurrency(metrics.open)} colorClass="text-sky-600 dark:text-sky-400 font-medium" subLabel={`${(metrics as any).openCount ?? '—'} Açık Fırsat`} />
+                <StatCard label={t('opportunities.conversionRate')} value={metrics.won + metrics.lost > 0 ? `%${((metrics.won / (metrics.won + metrics.lost)) * 100).toFixed(1)}` : '%0'} colorClass="text-violet-600 dark:text-violet-400 font-medium" />
             </div>
+
+            {/* AI Insight Strip */}
+            <PipelineAIInsightPanel
+                currentDeals={filteredDeals}
+                allDeals={deals}
+                dateFilter={dateFilter}
+                customRange={customRange}
+                className="w-full"
+            />
 
             {/* Charts & Pipeline */}
             <div className="space-y-6">

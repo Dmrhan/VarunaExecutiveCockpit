@@ -675,20 +675,18 @@ export function OpportunitiesDashboard() {
 
             {/* Charts & Pipeline */}
             <div className="space-y-6">
-                {/* Pipeline & Leaderboard Row */}
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                    <div className="xl:col-span-1 h-[600px]">
-                        <FunnelChart deals={filteredDeals} />
-                    </div>
-                    <div className="xl:col-span-1 h-[600px]">
-                        <OpportunityOwnerDistribution
-                            dateRange={currentDateRangeStr}
-                            teamId={selectedTeam.includes('all') ? undefined : selectedTeam.filter(t => t !== 'all')}
-                            ownerId={selectedOwner.includes('all') ? undefined : selectedOwner}
-                            product={selectedProduct.includes('all') ? undefined : selectedProduct}
-                        />
-                    </div>
+                {/* Pipeline Funnel — full width */}
+                <div className="h-[600px]">
+                    <FunnelChart deals={filteredDeals} />
                 </div>
+
+                {/* Owner Distribution — full width */}
+                <OpportunityOwnerDistribution
+                    dateRange={currentDateRangeStr}
+                    teamId={selectedTeam.includes('all') ? undefined : selectedTeam.filter(t => t !== 'all')}
+                    ownerId={selectedOwner.includes('all') ? undefined : selectedOwner}
+                    product={selectedProduct.includes('all') ? undefined : selectedProduct}
+                />
 
                 {/* Product Performance Section */}
                 <div>

@@ -120,6 +120,7 @@ router.get('/:ownerId/details', (req: Request, res: Response) => {
                 o.OpportunityStageId,
                 COALESCE(o.Amount_Value, 0) as potentialAmount,
                 o.FirstCreatedDate,
+                o.CloseDate,
                 o.Probability
             FROM Opportunity o
             LEFT JOIN Account a ON o.AccountId = a.Id
@@ -144,6 +145,20 @@ router.get('/:ownerId/details', (req: Request, res: Response) => {
         const riskyData: any[] = [];
 
         const _nowDate = asOfDateRaw === "now" ? new Date() : new Date(asOfDateRaw);
+
+        // Forecast buckets — next 13 months
+        const forecastBuckets: Record<string, { label: string; amount: number; count: number; overdueCount: number }> = {};
+        const currentMonthKey = `${_nowDate.getFullYear()}-${String(_nowDate.getMonth() + 1).padStart(2, '0')}`;
+        for (let i = 0; i < 13; i++) {
+            const d = new Date(_nowDate.getFullYear(), _nowDate.getMonth() + i, 1);
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            forecastBuckets[key] = {
+                label: d.toLocaleDateString('tr-TR', { month: 'short', year: 'numeric' }),
+                amount: 0,
+                count: 0,
+                overdueCount: 0
+            };
+        }
 
         for (const op of ops) {
             count++;
@@ -179,6 +194,21 @@ router.get('/:ownerId/details', (req: Request, res: Response) => {
             else if (age <= 60) { agingBuckets['31-60'].amount += op.potentialAmount; agingBuckets['31-60'].count += 1; }
             else { agingBuckets['60+'].amount += op.potentialAmount; agingBuckets['60+'].count += 1; }
 
+            // Forecast bucketing by CloseDate
+            if (op.CloseDate) {
+                const closeDate = new Date(op.CloseDate);
+                if (!isNaN(closeDate.getTime())) {
+                    const isOverdue = closeDate < _nowDate;
+                    const closeKey = `${closeDate.getFullYear()}-${String(closeDate.getMonth() + 1).padStart(2, '0')}`;
+                    const targetKey = forecastBuckets[closeKey] ? closeKey : (isOverdue ? currentMonthKey : null);
+                    if (targetKey && forecastBuckets[targetKey]) {
+                        forecastBuckets[targetKey].amount += op.potentialAmount;
+                        forecastBuckets[targetKey].count += 1;
+                        if (isOverdue) forecastBuckets[targetKey].overdueCount += 1;
+                    }
+                }
+            }
+
             // Risky rule: > 30 days old OR Probability < 20 (assuming 20%)
             const prob = op.Probability || 0;
             if (age > 30 || prob < 20) {
@@ -208,6 +238,7 @@ router.get('/:ownerId/details', (req: Request, res: Response) => {
             byAccountTop10: byAccountList.slice(0, 10),
             byType: Object.values(typeSums).sort((a, b) => b.amount - a.amount),
             byAgingBuckets: Object.values(agingBuckets),
+            byForecast: Object.values(forecastBuckets),
             riskyTop10: riskyData.slice(0, 10)
         };
 

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, AlertTriangle, DollarSign, List, ToggleLeft, ToggleRight, Info } from 'lucide-react';
+import { AlertTriangle, TrendingUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../../lib/utils';
-import { UserAvatar } from '../../components/ui/UserAvatar';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, LabelList } from 'recharts';
 
 const formatCurrency = (value: number) => {
     if (value >= 1000000) return `${(value / 1000000).toFixed(2)}M`;
@@ -140,6 +140,58 @@ export function OpenPipelineDetail({ ownerId, filters }: OpenPipelineDetailProps
                 {renderBarChart(data.byType, 'label', 'FIRSAT TİPİ (DEAL TYPE)', true)}
                 {renderBarChart(data.byAgingBuckets, 'label', 'YAŞLANDIRMA (0-60+ GÜN)')}
             </div>
+
+            {/* Forecast Chart */}
+            {data.byForecast && data.byForecast.some((m: any) => m.amount > 0) && (
+                <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700/50 p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                        <div className="p-1.5 rounded-lg bg-orange-500/10 text-orange-500">
+                            <TrendingUp size={13} />
+                        </div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                            Tahmini Kapanış Öngörüsü
+                        </span>
+                    </div>
+                    <div className="h-[160px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={data.byForecast} margin={{ top: 24, right: 8, left: 0, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" strokeOpacity={0.5} />
+                                <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 9 }} dy={6} />
+                                <YAxis hide />
+                                <RechartsTooltip
+                                    cursor={{ fill: 'rgba(249,115,22,0.05)' }}
+                                    content={({ active, payload }: any) => {
+                                        if (!active || !payload?.length) return null;
+                                        const d = payload[0].payload;
+                                        return (
+                                            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-[10px] shadow-lg">
+                                                <p className="font-bold text-slate-700 dark:text-slate-200 mb-1">{d.label}</p>
+                                                <p className="text-orange-600 dark:text-orange-400 font-semibold">{formatCurrency(d.amount)}₺</p>
+                                                <p className="text-slate-500">{d.count} Fırsat{d.overdueCount > 0 ? ` • ${d.overdueCount} Geciken` : ''}</p>
+                                            </div>
+                                        );
+                                    }}
+                                />
+                                <Bar dataKey="amount" radius={[3, 3, 0, 0]} maxBarSize={36} fill="#f97316">
+                                    <LabelList
+                                        dataKey="amount"
+                                        position="top"
+                                        content={(props: any) => {
+                                            const { x, y, width, value } = props;
+                                            if (!value) return null;
+                                            return (
+                                                <text x={x + width / 2} y={y - 4} textAnchor="middle" fill="#f97316" fontSize={9} fontWeight={600}>
+                                                    {formatCurrency(value)}₺
+                                                </text>
+                                            );
+                                        }}
+                                    />
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            )}
 
             {/* Risky Opportunities */}
             {data.riskyTop10 && data.riskyTop10.length > 0 && (

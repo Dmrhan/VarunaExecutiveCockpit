@@ -33,6 +33,13 @@ export function ProductPerformance({ deals: propDeals, filters }: ProductPerform
     // Remote fetched state for the grid cards
     const [apiStats, setApiStats] = useState<any[]>([]);
     const [isLoadingStats, setIsLoadingStats] = useState(false);
+    const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
+
+    useEffect(() => {
+        const obs = new MutationObserver(() => setIsDark(document.documentElement.classList.contains('dark')));
+        obs.observe(document.documentElement, { attributeFilter: ['class'] });
+        return () => obs.disconnect();
+    }, []);
 
     useEffect(() => {
         ProductGroupService.getAll().then(setProductGroups).catch(console.error);
@@ -273,21 +280,35 @@ export function ProductPerformance({ deals: propDeals, filters }: ProductPerform
     };
 
     const TREEMAP_COLORS: Record<string, string> = {
-        'ENROUTE':                '#e03e3e', // modern kırmızı
-        'STOKBAR':                '#4c8ef7', // modern mavi
-        'QUEST':                  '#2da868', // modern yeşil
-        'CallDesk':               '#8b5cf6', // modern mor (violet-500)
-        'HOSTING':                '#6b7280', // modern gri (gray-500)
-        'E-Dönüşüm':             '#f0a732', // modern sarı/amber
-        'Varuna':                 '#22d3ee', // modern açık mavi (cyan-400)
-        'Donanım-Endüstriyel':   '#f97316', // modern turuncu (orange-500)
-        'Outsource - Hizmet':    '#e879f9', // modern fuşya (fuchsia-400)
-        'Diğer':                  '#94a3b8', // slate-400
+        'ENROUTE':                '#e03e3e',
+        'STOKBAR':                '#4c8ef7',
+        'QUEST':                  '#2da868',
+        'CallDesk':               '#8b5cf6',
+        'HOSTING':                '#6b7280',
+        'E-Dönüşüm':             '#f0a732',
+        'Varuna':                 '#22d3ee',
+        'Donanım-Endüstriyel':   '#f97316',
+        'Outsource - Hizmet':    '#e879f9',
+        'Diğer':                  '#94a3b8',
+    };
+
+    const TREEMAP_COLORS_DARK: Record<string, string> = {
+        'ENROUTE':                '#f87171', // red-400
+        'STOKBAR':                '#60a5fa', // blue-400
+        'QUEST':                  '#34d399', // emerald-400
+        'CallDesk':               '#a78bfa', // violet-400
+        'HOSTING':                '#9ca3af', // gray-400
+        'E-Dönüşüm':             '#fbbf24', // amber-400
+        'Varuna':                 '#67e8f9', // cyan-300
+        'Donanım-Endüstriyel':   '#fb923c', // orange-400
+        'Outsource - Hizmet':    '#f0abfc', // fuchsia-300
+        'Diğer':                  '#cbd5e1', // slate-300
     };
 
     const TreemapCell = (props: any) => {
         const { x, y, width, height, name, size, sharePct, count } = props;
-        const color = TREEMAP_COLORS[name] || PRODUCT_COLORS[name as ProductGroup] || '#64748b';
+        const palette = isDark ? TREEMAP_COLORS_DARK : TREEMAP_COLORS;
+        const color = palette[name] || PRODUCT_COLORS[name as ProductGroup] || '#64748b';
         if (!width || !height || width < 2 || height < 2) return null;
         return (
             <g style={{ cursor: 'pointer' }} onClick={() => setSelectedProduct(name)}>

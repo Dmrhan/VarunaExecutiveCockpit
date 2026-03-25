@@ -610,8 +610,8 @@ export function OpportunitiesDashboard() {
                             { label: t('dateFilters.thisWeek'), value: 'this_week' },
                             { label: t('dateFilters.thisMonth'), value: 'this_month' },
                             { label: t('dateFilters.thisQuarter'), value: 'this_quarter' },
-                            { label: t('dateFilters.ytd'), value: 'ytd' },
                             { label: t('dateFilters.mtd'), value: 'mtd' },
+                            { label: t('dateFilters.ytd'), value: 'ytd' },
                             { label: t('dateFilters.all'), value: 'all' }
                         ].map(f => (
                             <button

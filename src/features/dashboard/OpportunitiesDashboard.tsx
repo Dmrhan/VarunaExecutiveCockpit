@@ -683,9 +683,9 @@ export function OpportunitiesDashboard() {
                     </div>
 
                     {/* Product Performance (Treemap) */}
-                    <div className="bg-white/60 dark:bg-slate-700/60 backdrop-blur-xl border border-slate-200 dark:border-white/10 shadow-sm rounded-2xl p-4 flex flex-col">
+                    <div className="bg-white/60 dark:bg-slate-700/60 backdrop-blur-xl border border-slate-200 dark:border-white/10 shadow-sm rounded-2xl p-4 flex flex-col h-full">
                         <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">{t('opportunities.productPerformance')}</h3>
-                        <div className="flex-1">
+                        <div className="flex-1 min-h-0">
                             <ProductPerformance
                                 deals={filteredDeals}
                                 filters={{

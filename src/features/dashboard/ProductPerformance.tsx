@@ -286,9 +286,22 @@ export function ProductPerformance({ deals: propDeals, filters }: ProductPerform
         }
     };
 
+    const TREEMAP_COLORS: Record<string, string> = {
+        'ENROUTE':                '#dc2626', // kırmızı
+        'STOKBAR':                '#3b82f6', // mavi
+        'QUEST':                  '#16a34a', // yeşil
+        'CallDesk':               '#7c3aed', // mor
+        'HOSTING':                '#64748b', // gri
+        'E-Dönüşüm':             '#eab308', // sarı
+        'Varuna':                 '#38bdf8', // açık mavi
+        'Donanım-Endüstriyel':   '#f59e0b', // amber
+        'Outsource - Hizmet':    '#ec4899', // pembe
+        'Diğer':                  '#94a3b8', // slate
+    };
+
     const TreemapCell = (props: any) => {
         const { x, y, width, height, name, size, sharePct, count } = props;
-        const color = PRODUCT_COLORS[name as ProductGroup] || '#64748b';
+        const color = TREEMAP_COLORS[name] || PRODUCT_COLORS[name as ProductGroup] || '#64748b';
         if (!width || !height || width < 2 || height < 2) return null;
         return (
             <g style={{ cursor: 'pointer' }} onClick={() => setSelectedProduct(name)}>
@@ -315,11 +328,11 @@ export function ProductPerformance({ deals: propDeals, filters }: ProductPerform
     return (
         <>
             {isLoadingStats ? (
-                <div className="h-[280px] flex justify-center items-center text-slate-400">
+                <div className="h-full flex justify-center items-center text-slate-400">
                     <Loader2 className="animate-spin" size={32} />
                 </div>
             ) : (
-                <div className="h-[280px]">
+                <div className="h-full">
                     <ResponsiveContainer width="100%" height="100%">
                         <Treemap
                             data={productStatsData.map(s => ({ name: s.productName, size: s.revenue, sharePct: s.sharePct, count: s.count }))}

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, TrendingUp } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../../lib/utils';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, LabelList } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, LabelList, Cell } from 'recharts';
 
 const formatCurrency = (value: number) => {
     if (value >= 1000000) return `${(value / 1000000).toFixed(2)}M`;
@@ -32,6 +32,7 @@ export function OpenPipelineDetail({ ownerId, filters }: OpenPipelineDetailProps
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [mode, setMode] = useState<'amount' | 'count'>('amount');
+    const [selectedForecastLabel, setSelectedForecastLabel] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchDetails = async () => {
@@ -101,6 +102,10 @@ export function OpenPipelineDetail({ ownerId, filters }: OpenPipelineDetailProps
         );
     };
 
+    const selectedForecastItems = selectedForecastLabel
+        ? (data.byForecast?.find((m: any) => m.label === selectedForecastLabel)?.items ?? [])
+        : [];
+
     return (
         <div className="p-4 pt-0 pl-16 flex flex-col gap-4 text-xs">
             {/* Header / Summary */}
@@ -115,16 +120,16 @@ export function OpenPipelineDetail({ ownerId, filters }: OpenPipelineDetailProps
                         <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(data.summary.sumPotential)}₺</span>
                     </div>
                 </div>
-                
+
                 {/* Mode Toggle */}
                 <div className="flex items-center bg-white dark:bg-slate-700 p-1 rounded-lg border border-slate-200 dark:border-slate-600 shadow-sm">
-                    <button 
+                    <button
                         onClick={() => setMode('amount')}
                         className={cn("px-3 py-1 text-[10px] font-bold rounded-md transition-colors", mode === 'amount' ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300" : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-600")}
                     >
                         CİRO (TL)
                     </button>
-                    <button 
+                    <button
                         onClick={() => setMode('count')}
                         className={cn("px-3 py-1 text-[10px] font-bold rounded-md transition-colors", mode === 'count' ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300" : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-600")}
                     >
@@ -133,10 +138,11 @@ export function OpenPipelineDetail({ ownerId, filters }: OpenPipelineDetailProps
                 </div>
             </div>
 
-            {/* Distributions Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Distributions Grid — 5 columns */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 {renderBarChart(data.byStage, 'label', 'SATIŞ AŞAMASI (STAGE)')}
                 {renderBarChart(data.byAccountTop10, 'accountName', 'EN YÜKSEK 10 POTANSİYEL')}
+                {renderBarChart(data.byOpportunityTop10, 'label', 'FIRSAT ADI (TOP 10)')}
                 {renderBarChart(data.byType, 'label', 'FIRSAT TİPİ (DEAL TYPE)', true)}
                 {renderBarChart(data.byAgingBuckets, 'label', 'YAŞLANDIRMA (0-60+ GÜN)')}
             </div>
@@ -144,17 +150,31 @@ export function OpenPipelineDetail({ ownerId, filters }: OpenPipelineDetailProps
             {/* Forecast Chart */}
             {data.byForecast && data.byForecast.some((m: any) => m.amount > 0) && (
                 <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700/50 p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                        <div className="p-1.5 rounded-lg bg-orange-500/10 text-orange-500">
-                            <TrendingUp size={13} />
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                        <div className="flex items-center gap-2">
+                            <div className="p-1.5 rounded-lg bg-orange-500/10 text-orange-500">
+                                <TrendingUp size={13} />
+                            </div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                Tahmini Kapanış Öngörüsü
+                            </span>
                         </div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                            Tahmini Kapanış Öngörüsü
-                        </span>
+                        {selectedForecastLabel && (
+                            <button
+                                onClick={() => setSelectedForecastLabel(null)}
+                                className="text-[9px] font-bold text-slate-400 hover:text-slate-600 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-600"
+                            >
+                                Seçimi Kaldır ✕
+                            </button>
+                        )}
                     </div>
                     <div className="h-[160px]">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={data.byForecast} margin={{ top: 24, right: 8, left: 0, bottom: 0 }}>
+                            <BarChart
+                                data={data.byForecast}
+                                margin={{ top: 24, right: 8, left: 0, bottom: 0 }}
+                                style={{ cursor: 'pointer' }}
+                            >
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" strokeOpacity={0.5} />
                                 <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 9 }} dy={6} />
                                 <YAxis hide />
@@ -168,11 +188,24 @@ export function OpenPipelineDetail({ ownerId, filters }: OpenPipelineDetailProps
                                                 <p className="font-bold text-slate-700 dark:text-slate-200 mb-1">{d.label}</p>
                                                 <p className="text-orange-600 dark:text-orange-400 font-semibold">{formatCurrency(d.amount)}₺</p>
                                                 <p className="text-slate-500">{d.count} Fırsat{d.overdueCount > 0 ? ` • ${d.overdueCount} Geciken` : ''}</p>
+                                                <p className="text-slate-400 mt-0.5">Detay için tıklayın</p>
                                             </div>
                                         );
                                     }}
                                 />
-                                <Bar dataKey="amount" radius={[3, 3, 0, 0]} maxBarSize={36} fill="#f97316">
+                                <Bar
+                                    dataKey="amount"
+                                    radius={[3, 3, 0, 0]}
+                                    maxBarSize={36}
+                                    onClick={(d: any) => setSelectedForecastLabel(prev => prev === d.label ? null : d.label)}
+                                >
+                                    {data.byForecast.map((entry: any) => (
+                                        <Cell
+                                            key={entry.label}
+                                            fill={selectedForecastLabel === entry.label ? '#ea580c' : '#f97316'}
+                                            fillOpacity={selectedForecastLabel && selectedForecastLabel !== entry.label ? 0.4 : 1}
+                                        />
+                                    ))}
                                     <LabelList
                                         dataKey="amount"
                                         position="top"
@@ -190,30 +223,35 @@ export function OpenPipelineDetail({ ownerId, filters }: OpenPipelineDetailProps
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
-                </div>
-            )}
 
-            {/* Risky Opportunities */}
-            {data.riskyTop10 && data.riskyTop10.length > 0 && (
-                <div className="bg-rose-50/50 dark:bg-rose-900/10 p-4 rounded-xl border border-rose-100 dark:border-rose-900/30">
-                    <h4 className="font-bold text-rose-700 dark:text-rose-400 mb-3 flex items-center gap-1.5 uppercase tracking-wide text-[10px]">
-                        <AlertTriangle size={14} />
-                        Riske Giren / Yaşlanmış Fırsatlar (Top 10)
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {data.riskyTop10.map((risk: any, rIdx: number) => (
-                            <div key={risk.opportunityId || rIdx} className="bg-white dark:bg-slate-800 p-2.5 rounded border border-rose-100 dark:border-rose-900/50 flex justify-between items-center group hover:border-rose-300 transition-colors">
-                                <div className="min-w-0 pr-2">
-                                    <div className="font-semibold text-[11px] text-slate-800 dark:text-slate-200 truncate">{risk.name}</div>
-                                    <div className="text-[10px] text-slate-500 truncate">{risk.accountName} • {risk.stageLabel}</div>
-                                </div>
-                                <div className="flex flex-col items-end flex-shrink-0">
-                                    <span className="font-bold text-rose-600 dark:text-rose-400 text-[11px]">{formatCurrency(risk.potentialAmount)}₺</span>
-                                    <span className="text-[9px] font-medium text-slate-400">{risk.ageDays} Gün • %{risk.probability} Olasılık</span>
-                                </div>
+                    {/* Forecast drill-down list */}
+                    {selectedForecastLabel && selectedForecastItems.length > 0 && (
+                        <div className="mt-3 border-t border-slate-200 dark:border-slate-700 pt-3">
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">
+                                {selectedForecastLabel} — {selectedForecastItems.length} Fırsat
+                            </span>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5 max-h-[240px] overflow-y-auto">
+                                {selectedForecastItems
+                                    .slice()
+                                    .sort((a: any, b: any) => b.potentialAmount - a.potentialAmount)
+                                    .map((item: any) => (
+                                        <div key={item.id} className="bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-100 dark:border-slate-700 flex justify-between items-center">
+                                            <div className="min-w-0 pr-2">
+                                                <div className="font-semibold text-[11px] text-slate-800 dark:text-slate-200 truncate">{item.name}</div>
+                                                <div className="text-[10px] text-slate-500 truncate">
+                                                    {item.accountName} • {item.stageLabel}
+                                                    {item.isOverdue && <span className="ml-1 text-rose-500 font-bold">• Gecikmiş</span>}
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-col items-end flex-shrink-0">
+                                                <span className="font-bold text-orange-600 dark:text-orange-400 text-[11px]">{formatCurrency(item.potentialAmount)}₺</span>
+                                                <span className="text-[9px] text-slate-400">%{item.probability} • {item.ageDays}g</span>
+                                            </div>
+                                        </div>
+                                    ))}
                             </div>
-                        ))}
-                    </div>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

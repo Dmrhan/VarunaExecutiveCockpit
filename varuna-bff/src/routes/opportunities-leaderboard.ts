@@ -147,7 +147,7 @@ router.get('/:ownerId/details', (req: Request, res: Response) => {
         const _nowDate = asOfDateRaw === "now" ? new Date() : new Date(asOfDateRaw);
 
         // Forecast buckets — next 13 months
-        const forecastBuckets: Record<string, { label: string; amount: number; count: number; overdueCount: number }> = {};
+        const forecastBuckets: Record<string, { label: string; amount: number; count: number; overdueCount: number; items: any[] }> = {};
         const currentMonthKey = `${_nowDate.getFullYear()}-${String(_nowDate.getMonth() + 1).padStart(2, '0')}`;
         for (let i = 0; i < 13; i++) {
             const d = new Date(_nowDate.getFullYear(), _nowDate.getMonth() + i, 1);
@@ -156,7 +156,8 @@ router.get('/:ownerId/details', (req: Request, res: Response) => {
                 label: d.toLocaleDateString('tr-TR', { month: 'short', year: 'numeric' }),
                 amount: 0,
                 count: 0,
-                overdueCount: 0
+                overdueCount: 0,
+                items: []
             };
         }
 
@@ -205,6 +206,16 @@ router.get('/:ownerId/details', (req: Request, res: Response) => {
                         forecastBuckets[targetKey].amount += op.potentialAmount;
                         forecastBuckets[targetKey].count += 1;
                         if (isOverdue) forecastBuckets[targetKey].overdueCount += 1;
+                        forecastBuckets[targetKey].items.push({
+                            id: op.Id,
+                            name: op.Name || '',
+                            accountName: accName,
+                            stageLabel,
+                            potentialAmount: op.potentialAmount,
+                            probability: op.Probability || 0,
+                            ageDays: age,
+                            isOverdue
+                        });
                     }
                 }
             }
@@ -225,8 +236,15 @@ router.get('/:ownerId/details', (req: Request, res: Response) => {
         }
 
         const byAccountList = Object.values(accountSums).sort((a, b) => b.amount - a.amount);
-        
-        riskyData.sort((a, b) => b.potentialAmount - a.potentialAmount); // High potential risk first
+
+        const byOpportunityTop10 = [...ops]
+            .sort((a: any, b: any) => b.potentialAmount - a.potentialAmount)
+            .slice(0, 10)
+            .map((op: any) => ({
+                label: op.Name || op.Id,
+                amount: op.potentialAmount,
+                count: 1
+            }));
 
         const result = {
             summary: {
@@ -236,10 +254,10 @@ router.get('/:ownerId/details', (req: Request, res: Response) => {
             },
             byStage: Object.values(stageSums).sort((a, b) => b.amount - a.amount),
             byAccountTop10: byAccountList.slice(0, 10),
+            byOpportunityTop10,
             byType: Object.values(typeSums).sort((a, b) => b.amount - a.amount),
             byAgingBuckets: Object.values(agingBuckets),
-            byForecast: Object.values(forecastBuckets),
-            riskyTop10: riskyData.slice(0, 10)
+            byForecast: Object.values(forecastBuckets)
         };
 
         res.json({ value: result });

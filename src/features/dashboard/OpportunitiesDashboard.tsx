@@ -675,14 +675,6 @@ export function OpportunitiesDashboard() {
 
             {/* Charts & Pipeline */}
             <div className="space-y-6">
-                {/* Owner Distribution — full width, scrollable to 10 rows */}
-                <OpportunityOwnerDistribution
-                    dateRange={currentDateRangeStr}
-                    teamId={selectedTeam.includes('all') ? undefined : selectedTeam.filter(t => t !== 'all')}
-                    ownerId={selectedOwner.includes('all') ? undefined : selectedOwner}
-                    product={selectedProduct.includes('all') ? undefined : selectedProduct}
-                />
-
                 {/* Funnel + Product Treemap — side by side */}
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                     {/* Pipeline Funnel */}
@@ -707,6 +699,14 @@ export function OpportunitiesDashboard() {
                         </div>
                     </div>
                 </div>
+
+                {/* Owner Distribution — full width, scrollable to 5 rows */}
+                <OpportunityOwnerDistribution
+                    dateRange={currentDateRangeStr}
+                    teamId={selectedTeam.includes('all') ? undefined : selectedTeam.filter(t => t !== 'all')}
+                    ownerId={selectedOwner.includes('all') ? undefined : selectedOwner}
+                    product={selectedProduct.includes('all') ? undefined : selectedProduct}
+                />
 
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                     <HorizontalBarChart

@@ -44,22 +44,8 @@ export function ProductPerformance({ deals: propDeals, filters }: ProductPerform
             try {
                 const params = new URLSearchParams();
                 
-                if (filters?.dateFilter !== 'all') {
-                    if (filters?.customRange?.start) {
-                        const s = filters.customRange.start;
-                        params.append('from', new Date(s.getTime() - (s.getTimezoneOffset() * 60000)).toISOString().substring(0, 10));
-                    }
-                    if (filters?.customRange?.end) {
-                        const e = filters.customRange.end;
-                        params.append('to', new Date(e.getTime() - (e.getTimezoneOffset() * 60000)).toISOString().substring(0, 10));
-                    }
-                    
-                    // The dashboard handles presets 'this_week', 'this_month' etc via OpportunitiesDashboard
-                    // But if it doesn't give customRange for them, we should be careful. 
-                    // Actually, OpportuntiesDashboard.tsx sets customRange when date picker is used, but for preset buttons it sets `dateFilter`.
-                    // To be perfect, we should format dates the same way dashboard does before passing or reconstruct them here.
-                    // Assuming the dashboard will pass the properly populated date or we can just pass them. Wait, OpportunitiesDashboard doesn't pass startDate/endDate.
-                }
+                if (filters?.dateRange?.start) params.append('from', filters.dateRange.start + ' 00:00:00');
+                if (filters?.dateRange?.end) params.append('to', filters.dateRange.end + ' 23:59:59');
 
                 if (filters?.teamId) params.append('teamId', typeof filters.teamId === 'string' ? filters.teamId : filters.teamId.join(','));
                 if (filters?.ownerId) params.append('ownerId', typeof filters.ownerId === 'string' ? filters.ownerId : filters.ownerId.join(','));
@@ -79,7 +65,7 @@ export function ProductPerformance({ deals: propDeals, filters }: ProductPerform
         };
 
         fetchProductStats();
-    }, [filters?.dateFilter, filters?.customRange?.start, filters?.customRange?.end, filters?.teamId, filters?.ownerId, filters?.product]);
+    }, [filters?.dateRange?.start, filters?.dateRange?.end, filters?.teamId, filters?.ownerId, filters?.product]);
 
     // AI State
     const [aiState, setAiState] = useState<{

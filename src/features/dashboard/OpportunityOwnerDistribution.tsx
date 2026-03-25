@@ -167,9 +167,9 @@ export function OpportunityOwnerDistribution({ dateRange, teamId, ownerId, produ
                                                 className="overflow-hidden cursor-default"
                                                 onClick={(e) => e.stopPropagation()}
                                             >
-                                                <OpenPipelineDetail 
-                                                    ownerId={performer.ownerId} 
-                                                    filters={{ dateRange, teamId, ownerId }} 
+                                                <OpenPipelineDetail
+                                                    ownerId={performer.ownerId}
+                                                    filters={{ dateRange, teamId, ownerId, product }}
                                                 />
                                             </motion.div>
                                         )}

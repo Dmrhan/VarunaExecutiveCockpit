@@ -41,6 +41,7 @@ export function OpenPipelineDetail({ ownerId, filters }: OpenPipelineDetailProps
                 if (filters.dateRange?.start) params.append('from', filters.dateRange.start + ' 00:00:00');
                 if (filters.dateRange?.end) params.append('to', filters.dateRange.end + ' 23:59:59');
                 if (filters.teamId) params.append('teamId', Array.isArray(filters.teamId) ? filters.teamId.join(',') : filters.teamId);
+                if (filters.product) params.append('product', Array.isArray(filters.product) ? filters.product.join(',') : filters.product);
                 // We don't append ownerId array from parent because we only fetch for THIS specific owner
                 
                 const baseUrl = (window as any)['__RUNTIME_CONFIG__']?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';

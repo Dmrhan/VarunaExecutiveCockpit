@@ -15,6 +15,14 @@ const DEAL_TYPE_KEYS: Record<string, string> = {
     '9': 'opportunities.charts.dealTypes.winBack',
 };
 
+// EOpportunitySource enum → Türkçe etiket (seed_enums.sql: EOpportunitySource)
+const SOURCE_LABELS: Record<string, string> = {
+    '1': 'Telefon',
+    '2': 'Mevcut Müşteri (Yükseltme)',
+    '3': 'Web Sitesi',
+    '4': 'Diğer',
+};
+
 
 
 /**
@@ -139,7 +147,7 @@ router.get('/', (req: Request, res: Response) => {
         ownerId: row.OwnerId || '',
         owner_name: row.OwnerName || row.OwnerId || 'Unknown',
         ownerName: row.OwnerName || row.OwnerId || 'Unknown',
-        source: row.Source?.toString() || 'Diğer',
+        source: SOURCE_LABELS[row.Source?.toString()] || row.Source?.toString() || 'Diğer',
         dealType: row.DealType ? (DEAL_TYPE_KEYS[row.DealType.toString()] || row.DealType.toString()) : null,
         dealTypeKey: row.DealType?.toString() || null,
         topic: row.Name || '',
@@ -452,7 +460,7 @@ router.get('/:id', (req: Request, res: Response) => {
         probability: row.Probability || 0,
         owner_id: row.OwnerId || '',
         owner_name: row.OwnerName || row.OwnerId || 'Unknown',
-        source: row.Source?.toString() || 'Diğer',
+        source: SOURCE_LABELS[row.Source?.toString()] || row.Source?.toString() || 'Diğer',
         topic: row.Name || '',
         created_at: row.FirstCreatedDate || new Date().toISOString(),
         expected_close_date: row.CloseDate || new Date().toISOString(),

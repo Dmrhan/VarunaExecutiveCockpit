@@ -13,15 +13,15 @@ import 'jspdf-autotable';
 import type { Deal } from '../../types/crm';
 
 export const STAGE_CONFIG: { stage: DealStage | string; matchStages: string[]; color: string; probability: number }[] = [
-    { stage: 'İlk Temas',           matchStages: ['Lead', 'Aday', 'Konumlama'],                    color: '#93c5fd', probability: 10  },  // blue-300
-    { stage: 'İlerletiliyor',        matchStages: ['İlerletiliyor'],                                color: '#60a5fa', probability: 10  },  // blue-400
-    { stage: 'Randevu Alındı',       matchStages: ['Randevu Alındı'],                               color: '#3b82f6', probability: 10  },  // blue-500
-    { stage: 'İletişim Kurulamadı',  matchStages: ['İletişim Kurulamadı'],                          color: '#2563eb', probability: 10  },  // blue-600
-    { stage: 'Sunum',                matchStages: ['Sunum'],                                        color: '#1d4ed8', probability: 30  },  // blue-700
-    { stage: 'Demo',                 matchStages: ['Demo'],                                         color: '#1e40af', probability: 30  },  // blue-800
-    { stage: 'Teknik Analiz',        matchStages: ['Teknik Analiz'],                                color: '#1e3a8a', probability: 30  },  // blue-900
-    { stage: 'Teklif',               matchStages: ['Proposal', 'Teklif'],                           color: '#1e3068', probability: 60  },  // blue-950 (custom)
-    { stage: 'Sözleşme Bekleniyor',  matchStages: ['Negotiation', 'Müzakere', 'Sözleşme Bekleniyor'], color: '#172554', probability: 80 },  // blue-950
+    { stage: 'İlk Temas',           matchStages: ['Lead', 'Aday', 'Konumlama'],                    color: '#bae6fd', probability: 10  },  // sky-200
+    { stage: 'İlerletiliyor',        matchStages: ['İlerletiliyor'],                                color: '#7dd3fc', probability: 10  },  // sky-300
+    { stage: 'Randevu Alındı',       matchStages: ['Randevu Alındı'],                               color: '#38bdf8', probability: 10  },  // sky-400
+    { stage: 'İletişim Kurulamadı',  matchStages: ['İletişim Kurulamadı'],                          color: '#818cf8', probability: 10  },  // indigo-400
+    { stage: 'Sunum',                matchStages: ['Sunum'],                                        color: '#6366f1', probability: 30  },  // indigo-500
+    { stage: 'Demo',                 matchStages: ['Demo'],                                         color: '#4f46e5', probability: 30  },  // indigo-600
+    { stage: 'Teknik Analiz',        matchStages: ['Teknik Analiz'],                                color: '#4338ca', probability: 30  },  // indigo-700
+    { stage: 'Teklif',               matchStages: ['Proposal', 'Teklif'],                           color: '#3730a3', probability: 60  },  // indigo-800
+    { stage: 'Sözleşme Bekleniyor',  matchStages: ['Negotiation', 'Müzakere', 'Sözleşme Bekleniyor'], color: '#312e81', probability: 80 },  // indigo-900
     { stage: 'Kazanıldı',            matchStages: ['Order', 'Kazanıldı', 'Onaylandı'],              color: '#0d9488', probability: 100 },  // teal-600 (unchanged)
 ];
 

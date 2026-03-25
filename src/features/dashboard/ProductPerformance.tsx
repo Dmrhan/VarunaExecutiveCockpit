@@ -273,16 +273,16 @@ export function ProductPerformance({ deals: propDeals, filters }: ProductPerform
     };
 
     const TREEMAP_COLORS: Record<string, string> = {
-        'ENROUTE':                '#dc2626', // kırmızı
-        'STOKBAR':                '#3b82f6', // mavi
-        'QUEST':                  '#16a34a', // yeşil
-        'CallDesk':               '#7c3aed', // mor
-        'HOSTING':                '#64748b', // gri
-        'E-Dönüşüm':             '#eab308', // sarı
-        'Varuna':                 '#38bdf8', // açık mavi
-        'Donanım-Endüstriyel':   '#f59e0b', // amber
-        'Outsource - Hizmet':    '#ec4899', // pembe
-        'Diğer':                  '#94a3b8', // slate
+        'ENROUTE':                '#e03e3e', // modern kırmızı
+        'STOKBAR':                '#4c8ef7', // modern mavi
+        'QUEST':                  '#2da868', // modern yeşil
+        'CallDesk':               '#8b5cf6', // modern mor (violet-500)
+        'HOSTING':                '#6b7280', // modern gri (gray-500)
+        'E-Dönüşüm':             '#f0a732', // modern sarı/amber
+        'Varuna':                 '#22d3ee', // modern açık mavi (cyan-400)
+        'Donanım-Endüstriyel':   '#f97316', // modern turuncu (orange-500)
+        'Outsource - Hizmet':    '#e879f9', // modern fuşya (fuchsia-400)
+        'Diğer':                  '#94a3b8', // slate-400
     };
 
     const TreemapCell = (props: any) => {

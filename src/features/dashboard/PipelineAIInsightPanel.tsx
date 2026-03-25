@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Sparkles, TrendingUp, TrendingDown, Trophy, Zap,
@@ -30,14 +30,14 @@ interface InsightCard {
 const formatM = (v: number) => `${(v / 1_000_000).toFixed(1)}M₺`;
 
 export function PipelineAIInsightPanel({ currentDeals, allDeals, dateFilter, customRange, className }: PipelineAIInsightPanelProps) {
-    const { t } = useTranslation();
+    useTranslation();
     const [page, setPage] = useState(0);
     const VISIBLE = 2;
 
     const cards: InsightCard[] = useMemo(() => {
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-        const isOpen = (d: Deal) => !['Kazanıldı', 'Order', 'Kaybedildi', 'Lost'].includes(d.stage);
+        const isOpen = (d: Deal) => !['Kazanıldı', 'Order', 'Onaylandı', 'Kaybedildi', 'Lost'].includes(d.stage);
 
         // ── 1. Pipeline Momentumu ─────────────────────────────────────────────
         let prevDeals: Deal[] = [];
@@ -209,6 +209,14 @@ export function PipelineAIInsightPanel({ currentDeals, allDeals, dateFilter, cus
     const totalPages = Math.ceil(cards.length / VISIBLE);
     const visibleCards = cards.slice(page * VISIBLE, page * VISIBLE + VISIBLE);
 
+    // Auto-advance every 10s, loops back to start
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setPage(p => (p + 1) % totalPages);
+        }, 10000);
+        return () => clearInterval(timer);
+    }, [totalPages]);
+
     return (
         <Card className={cn(
             "bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-900 dark:from-indigo-600 dark:via-purple-700 dark:to-indigo-800 text-white border-0 shadow-xl relative overflow-hidden",
@@ -227,9 +235,8 @@ export function PipelineAIInsightPanel({ currentDeals, allDeals, dateFilter, cus
 
                 {/* Left Arrow */}
                 <button
-                    onClick={() => setPage(p => Math.max(0, p - 1))}
-                    disabled={page === 0}
-                    className="flex-shrink-0 p-1 rounded-lg bg-white/10 border border-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                    onClick={() => setPage(p => (p - 1 + totalPages) % totalPages)}
+                    className="flex-shrink-0 p-1 rounded-lg bg-white/10 border border-white/10 hover:bg-white/20 transition-all"
                     aria-label="Önceki"
                 >
                     <ChevronLeft size={14} />
@@ -262,9 +269,8 @@ export function PipelineAIInsightPanel({ currentDeals, allDeals, dateFilter, cus
 
                 {/* Right Arrow */}
                 <button
-                    onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-                    disabled={page >= totalPages - 1}
-                    className="flex-shrink-0 p-1 rounded-lg bg-white/10 border border-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                    onClick={() => setPage(p => (p + 1) % totalPages)}
+                    className="flex-shrink-0 p-1 rounded-lg bg-white/10 border border-white/10 hover:bg-white/20 transition-all"
                     aria-label="Sonraki"
                 >
                     <ChevronRight size={14} />

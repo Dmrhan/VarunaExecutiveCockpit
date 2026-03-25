@@ -667,7 +667,7 @@ export function OpportunitiesDashboard() {
             {/* AI Insight Strip */}
             <PipelineAIInsightPanel
                 currentDeals={filteredDeals}
-                allDeals={deals}
+                allDeals={selectedProduct.includes('all') ? deals : deals.filter(d => selectedProduct.includes(d.product))}
                 dateFilter={dateFilter}
                 customRange={customRange}
                 className="w-full"

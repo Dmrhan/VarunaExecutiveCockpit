@@ -339,14 +339,25 @@ export function ProductPerformance({ deals: propDeals, filters }: ProductPerform
                     <Loader2 className="animate-spin" size={32} />
                 </div>
             ) : (
-                <div className="h-full">
+                <div className="h-full relative overflow-hidden">
                     <ResponsiveContainer width="100%" height="100%">
                         <Treemap
+                            key={apiStats.length}
                             data={productStatsData.map(s => ({ name: s.productName, size: s.revenue, sharePct: s.sharePct, count: s.count }))}
                             dataKey="size"
+                            isAnimationActive={false}
                             content={<TreemapCell />}
                         />
                     </ResponsiveContainer>
+                    {/* Cover reveal overlay */}
+                    <motion.div
+                        key={apiStats.length + '-overlay'}
+                        className="absolute inset-0 rounded-xl pointer-events-none"
+                        style={{ backgroundColor: isDark ? '#1e293b' : '#f8fafc' }}
+                        initial={{ opacity: 1 }}
+                        animate={{ opacity: 0 }}
+                        transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+                    />
                 </div>
             )}
 

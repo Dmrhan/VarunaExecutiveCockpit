@@ -645,11 +645,22 @@ export function OpportunitiesDashboard() {
             </div>
 
             {/* KPI Row */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
+                {/* Potansiyel Ciro — Hero card (col-span-2) */}
+                <div className="col-span-2 bg-indigo-50/80 dark:bg-indigo-900/30 backdrop-blur-md border border-indigo-200 dark:border-indigo-500/40 shadow-md shadow-indigo-500/10 p-5 rounded-2xl flex flex-col items-center justify-center text-center min-h-[100px]">
+                    <span className="text-[10px] uppercase tracking-[0.15em] text-indigo-500 dark:text-indigo-400 font-bold mb-2">
+                        {t('opportunities.pipelineRevenue')}
+                    </span>
+                    <span className="text-3xl lg:text-4xl font-light tracking-tight text-indigo-600 dark:text-indigo-300">
+                        {formatCurrency(metrics.open)}
+                    </span>
+                    <span className="text-[10px] text-indigo-400 dark:text-indigo-500 mt-1.5">
+                        {(metrics as any).openCount ?? '—'} Açık Fırsat
+                    </span>
+                </div>
                 <StatCard label={t('opportunities.count')} value={metrics.count.toString()} colorClass="text-slate-900 dark:text-white font-medium" />
                 <StatCard label={t('opportunities.lostDeals')} value={formatCurrency(metrics.lost)} colorClass="text-rose-600 dark:text-rose-400 font-medium" />
                 <StatCard label={t('opportunities.wonDeals')} value={formatCurrency(metrics.won)} colorClass="text-emerald-600 dark:text-emerald-400 font-medium" />
-                <StatCard label={t('opportunities.pipelineRevenue')} value={formatCurrency(metrics.open)} colorClass="text-sky-600 dark:text-sky-400 font-medium" subLabel={`${(metrics as any).openCount ?? '—'} Açık Fırsat`} />
                 <StatCard label={t('opportunities.conversionRate')} value={metrics.won + metrics.lost > 0 ? `%${((metrics.won / (metrics.won + metrics.lost)) * 100).toFixed(1)}` : '%0'} colorClass="text-violet-600 dark:text-violet-400 font-medium" />
             </div>
 

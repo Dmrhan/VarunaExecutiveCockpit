@@ -95,7 +95,7 @@ export function OpportunityOwnerDistribution({ dateRange, teamId, ownerId, produ
                         {'Seçili kriterlerde açık fırsat bulunamadı.'}
                     </div>
                 ) : (
-                    <div className="flex flex-col">
+                    <div className="flex flex-col max-h-[720px] overflow-y-auto">
                         {leaderboardData.map((performer, index) => {
                             const isExpanded = expandedUserId === performer.ownerId;
                             return (

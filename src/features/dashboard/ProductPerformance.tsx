@@ -2,10 +2,9 @@ import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent } from '../../components/ui/Card';
 import { useData } from '../../context/DataContext';
 import { ArrowUpRight, ArrowDownRight, Package, X, Minimize2, Maximize2, FileSpreadsheet, FileText, Search, Mail, Volume2, Square, Loader2, AlertCircle, Sparkles, Send, PieChart as PieChartIcon, TrendingUp } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, Treemap } from 'recharts';
 import { cn } from '../../lib/utils';
 import { ProductGroupService } from '../../services/ProductGroupService';
 import type { IProductGroup, ProductGroup, Deal } from '../../types/crm';
@@ -287,57 +286,49 @@ export function ProductPerformance({ deals: propDeals, filters }: ProductPerform
         }
     };
 
+    const TreemapCell = (props: any) => {
+        const { x, y, width, height, name, size, sharePct, count } = props;
+        const color = PRODUCT_COLORS[name as ProductGroup] || '#64748b';
+        if (!width || !height || width < 2 || height < 2) return null;
+        return (
+            <g style={{ cursor: 'pointer' }} onClick={() => setSelectedProduct(name)}>
+                <rect x={x} y={y} width={width} height={height} fill={color} fillOpacity={0.88} rx={6} stroke="white" strokeWidth={2} />
+                {width > 55 && height > 32 && (
+                    <text x={x + 10} y={y + 20} fill="white" fontSize={Math.min(13, width / 8)} fontWeight="700" style={{ pointerEvents: 'none' }}>
+                        {name}
+                    </text>
+                )}
+                {width > 55 && height > 50 && (
+                    <text x={x + 10} y={y + 36} fill="rgba(255,255,255,0.9)" fontSize={11} fontWeight="600" style={{ pointerEvents: 'none' }}>
+                        ₺{(size / 1000000).toFixed(1)}M
+                    </text>
+                )}
+                {width > 55 && height > 66 && (
+                    <text x={x + 10} y={y + 50} fill="rgba(255,255,255,0.65)" fontSize={9} style={{ pointerEvents: 'none' }}>
+                        %{sharePct?.toFixed(1)} · {count} Fırsat
+                    </text>
+                )}
+            </g>
+        );
+    };
+
     return (
         <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                {isLoadingStats ? (
-                    <div className="col-span-full py-12 flex justify-center text-slate-400">
-                        <Loader2 className="animate-spin" size={32} />
-                    </div>
-                ) : productStatsData.map((stat) => {
-                    const product = stat.productName;
-                    const color = PRODUCT_COLORS[product as ProductGroup] || '#64748b';
-                    return (
-                        <Card
-                            key={product}
-                            onClick={() => setSelectedProduct(product)}
-                            className="flex flex-col justify-between group hover:border-[--hover-color] transition-all cursor-pointer bg-white dark:bg-slate-700 shadow-sm hover:shadow-md"
-                            style={{ '--hover-color': color } as React.CSSProperties}
-                        >
-                            <CardContent className="p-4">
-                                <div className="flex items-start justify-between mb-2">
-                                    <div
-                                        className="p-1.5 rounded-lg transition-colors"
-                                        style={{ backgroundColor: `${color}15`, color: color }}
-                                    >
-                                        <Package size={16} />
-                                    </div>
-                                    <div className="text-[10px] font-bold text-slate-400 p-1 bg-slate-50 dark:bg-white/5 rounded-md">
-                                        %{stat.sharePct.toFixed(1)}
-                                    </div>
-                                </div>
-
-                                <div className="mb-1">
-                                    {stat.parentName && stat.parentName.toLowerCase() !== product.toLowerCase() && (
-                                        <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold truncate leading-tight">
-                                            {stat.parentName}
-                                        </p>
-                                    )}
-                                    <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate" title={product}>
-                                        {product}
-                                    </h3>
-                                </div>
-                                <div className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                                    ₺{(stat.revenue / 1000000).toFixed(1)}M
-                                </div>
-                                <div className="text-xs text-slate-400 mt-1">
-                                    {stat.count} Açık Fırsat
-                                </div>
-                            </CardContent>
-                        </Card>
-                    );
-                })}
-            </div>
+            {isLoadingStats ? (
+                <div className="h-[280px] flex justify-center items-center text-slate-400">
+                    <Loader2 className="animate-spin" size={32} />
+                </div>
+            ) : (
+                <div className="h-[280px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <Treemap
+                            data={productStatsData.map(s => ({ name: s.productName, size: s.revenue, sharePct: s.sharePct, count: s.count }))}
+                            dataKey="size"
+                            content={<TreemapCell />}
+                        />
+                    </ResponsiveContainer>
+                </div>
+            )}
 
             {/* Portal Modal */}
             {createPortal(

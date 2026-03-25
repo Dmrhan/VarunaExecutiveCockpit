@@ -675,12 +675,7 @@ export function OpportunitiesDashboard() {
 
             {/* Charts & Pipeline */}
             <div className="space-y-6">
-                {/* Pipeline Funnel — full width */}
-                <div className="h-[600px]">
-                    <FunnelChart deals={filteredDeals} />
-                </div>
-
-                {/* Owner Distribution — full width */}
+                {/* Owner Distribution — full width, scrollable to 10 rows */}
                 <OpportunityOwnerDistribution
                     dateRange={currentDateRangeStr}
                     teamId={selectedTeam.includes('all') ? undefined : selectedTeam.filter(t => t !== 'all')}
@@ -688,19 +683,29 @@ export function OpportunitiesDashboard() {
                     product={selectedProduct.includes('all') ? undefined : selectedProduct}
                 />
 
-                {/* Product Performance Section */}
-                <div>
-                    <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-4">{t('opportunities.productPerformance')}</h3>
-                    <ProductPerformance 
-                        deals={filteredDeals} 
-                        filters={{
-                            dateFilter,
-                            customRange,
-                            teamId: selectedTeam.includes('all') ? undefined : selectedTeam.filter(t => t !== 'all'),
-                            ownerId: selectedOwner.includes('all') ? undefined : selectedOwner,
-                            product: selectedProduct.includes('all') ? undefined : selectedProduct
-                        }}
-                    />
+                {/* Funnel + Product Treemap — side by side */}
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    {/* Pipeline Funnel */}
+                    <div className="h-[500px]">
+                        <FunnelChart deals={filteredDeals} />
+                    </div>
+
+                    {/* Product Performance (Treemap) */}
+                    <div className="bg-white/60 dark:bg-slate-700/60 backdrop-blur-xl border border-slate-200 dark:border-white/10 shadow-sm rounded-2xl p-4 flex flex-col">
+                        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">{t('opportunities.productPerformance')}</h3>
+                        <div className="flex-1">
+                            <ProductPerformance
+                                deals={filteredDeals}
+                                filters={{
+                                    dateFilter,
+                                    customRange,
+                                    teamId: selectedTeam.includes('all') ? undefined : selectedTeam.filter(t => t !== 'all'),
+                                    ownerId: selectedOwner.includes('all') ? undefined : selectedOwner,
+                                    product: selectedProduct.includes('all') ? undefined : selectedProduct
+                                }}
+                            />
+                        </div>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">

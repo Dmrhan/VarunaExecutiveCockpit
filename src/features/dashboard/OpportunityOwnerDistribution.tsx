@@ -68,7 +68,7 @@ export function OpportunityOwnerDistribution({ dateRange, teamId, ownerId, produ
     };
 
     return (
-        <Card className="h-full bg-white/60 dark:bg-slate-700/60 backdrop-blur-xl border border-slate-200 dark:border-white/10 shadow-sm overflow-hidden flex flex-col">
+        <Card className="bg-white/60 dark:bg-slate-700/60 backdrop-blur-xl border border-slate-200 dark:border-white/10 shadow-sm overflow-hidden flex flex-col">
             <CardHeader className="flex-shrink-0 border-b border-slate-100 dark:border-white/5 pb-4 bg-white/50 dark:bg-slate-700/50">
                 <div className="flex justify-between items-center">
                     <div>
@@ -84,7 +84,7 @@ export function OpportunityOwnerDistribution({ dateRange, teamId, ownerId, produ
                 </div>
             </CardHeader>
 
-            <CardContent className="p-0 flex-1 overflow-auto">
+            <CardContent className="p-0">
                 {isLoading ? (
                     <div className="flex justify-center items-center h-48 animate-pulse text-slate-500 text-sm flex-col gap-2">
                         <Activity size={24} className="text-indigo-400" />
@@ -95,7 +95,7 @@ export function OpportunityOwnerDistribution({ dateRange, teamId, ownerId, produ
                         {'Seçili kriterlerde açık fırsat bulunamadı.'}
                     </div>
                 ) : (
-                    <div className="flex flex-col max-h-[360px] overflow-y-auto">
+                    <div className={cn("flex flex-col", expandedUserId === null ? "max-h-[360px] overflow-y-auto" : "")}>
                         {leaderboardData.map((performer, index) => {
                             const isExpanded = expandedUserId === performer.ownerId;
                             return (

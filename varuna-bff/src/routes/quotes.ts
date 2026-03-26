@@ -102,7 +102,7 @@ router.get('/trend', (req: Request, res: Response) => {
         }
     }
 
-    const amountCol = "COALESCE(q.TotalAmountWithTaxLocalCurrency_Amount, q.TotalNetAmountLocalCurrency_Amount, 0)";
+    const amountCol = "COALESCE(nl.NetLineTotal, 0)";
 
     const sql = `
         SELECT
@@ -114,6 +114,12 @@ router.get('/trend', (req: Request, res: Response) => {
             SUM(CASE WHEN q.Status IN (5, 8, 9)    THEN ${amountCol} ELSE 0 END)                      AS lostAmount,
             SUM(CASE WHEN q.Status IN (1, 2, 3, 6) THEN ${amountCol} ELSE 0 END)                      AS openAmount
         FROM Quote q
+        LEFT JOIN (
+            SELECT qod.QuoteId, SUM(cop.NetLineTotalAmountLocalCurrency_Amount) AS NetLineTotal
+            FROM QuoteOrderDetails qod
+            JOIN CrmOrderProducts   cop ON cop.CrmOrderId = qod.CrmOrderId
+            GROUP BY qod.QuoteId
+        ) nl ON nl.QuoteId = q.Id
         ${whereStr}
         GROUP BY ${groupExpr}
         ORDER BY period ASC
@@ -171,13 +177,20 @@ router.get('/', (req: Request, res: Response) => {
             o.ProductGroupId    AS OppProductGroupId,
             pg.Name             AS ProductGroupName,
             pg.Level            AS ProductLevel,
-            ppg.Name            AS ParentGroupName
+            ppg.Name            AS ParentGroupName,
+            COALESCE(nl.NetLineTotal, 0) AS NetLineTotalAmount
         FROM Quote q
-        LEFT JOIN Account      a ON q.AccountId       = a.Id
-        LEFT JOIN Person      p ON q.ProposalOwnerId  = p.Id
-        LEFT JOIN Opportunity o ON q.OpportunityId    = o.Id
-        LEFT JOIN ProductGroup pg ON o.ProductGroupId = pg.Id
-        LEFT JOIN ProductGroup ppg ON pg.ParentGroupId = ppg.Id
+        LEFT JOIN Account      a   ON q.AccountId       = a.Id
+        LEFT JOIN Person       p   ON q.ProposalOwnerId = p.Id
+        LEFT JOIN Opportunity  o   ON q.OpportunityId   = o.Id
+        LEFT JOIN ProductGroup pg  ON o.ProductGroupId  = pg.Id
+        LEFT JOIN ProductGroup ppg ON pg.ParentGroupId  = ppg.Id
+        LEFT JOIN (
+            SELECT qod.QuoteId, SUM(cop.NetLineTotalAmountLocalCurrency_Amount) AS NetLineTotal
+            FROM QuoteOrderDetails qod
+            JOIN CrmOrderProducts  cop ON cop.CrmOrderId = qod.CrmOrderId
+            GROUP BY qod.QuoteId
+        ) nl ON nl.QuoteId = q.Id
         ORDER BY q.CreatedOn DESC
     `;
 
@@ -193,8 +206,7 @@ router.get('/', (req: Request, res: Response) => {
         const statusCode: number = row.Status ?? 0;
         const productGroupId: string = row.OppProductGroupId || '';
         const productName = row.ParentGroupName || row.ProductGroupName || productGroupId || 'Unknown';
-        // Amount: use VAT-included figure (same as what was seeded)
-        const amount = row.TotalAmountWithTaxLocalCurrency_Amount || row.TotalNetAmountLocalCurrency_Amount || 0;
+        const amount = Number(row.NetLineTotalAmount) || 0;
 
         return {
             id: row.Id,
@@ -207,7 +219,7 @@ router.get('/', (req: Request, res: Response) => {
             productGroupId,
             title: row.Name || row.Number || 'Teklif',
             amount,
-            netAmount: row.TotalNetAmountLocalCurrency_Amount || 0,
+            netAmount: amount,
             currency: 'TRY',
             status: String(statusCode),
             statusLabel: Q_STATUS_LABEL[statusCode] ?? String(statusCode),

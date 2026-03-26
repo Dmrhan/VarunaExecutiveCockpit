@@ -102,7 +102,13 @@ router.get('/trend', (req: Request, res: Response) => {
         }
     }
 
-    const amountCol = "COALESCE(q.TotalNetAmountLocalCurrency_Amount, q.TotalAmountWithTaxLocalCurrency_Amount, 0)";
+    const amountCol = `COALESCE(
+            direct_sum.NetLineTotal,
+            qod_sum.NetLineTotal,
+            q.TotalNetAmountLocalCurrency_Amount,
+            q.NetSubTotalLocalCurrency_Amount,
+            q.TotalAmountWithTaxLocalCurrency_Amount,
+            0)`;
 
     const sql = `
         SELECT
@@ -114,6 +120,17 @@ router.get('/trend', (req: Request, res: Response) => {
             SUM(CASE WHEN q.Status IN (5, 8, 9)    THEN ${amountCol} ELSE 0 END)                      AS lostAmount,
             SUM(CASE WHEN q.Status IN (1, 2, 3, 6) THEN ${amountCol} ELSE 0 END)                      AS openAmount
         FROM Quote q
+        LEFT JOIN (
+            SELECT cop.CrmOrderId, SUM(cop.NetLineTotalAmountLocalCurrency_Amount) AS NetLineTotal
+            FROM CrmOrderProducts cop
+            GROUP BY cop.CrmOrderId
+        ) direct_sum ON direct_sum.CrmOrderId = q.CrmOrderId
+        LEFT JOIN (
+            SELECT qod.QuoteId, SUM(cop.NetLineTotalAmountLocalCurrency_Amount) AS NetLineTotal
+            FROM QuoteOrderDetails qod
+            JOIN CrmOrderProducts  cop ON cop.CrmOrderId = qod.CrmOrderId
+            GROUP BY qod.QuoteId
+        ) qod_sum ON qod_sum.QuoteId = q.Id
         ${whereStr}
         GROUP BY ${groupExpr}
         ORDER BY period ASC
@@ -171,13 +188,34 @@ router.get('/', (req: Request, res: Response) => {
             o.ProductGroupId    AS OppProductGroupId,
             pg.Name             AS ProductGroupName,
             pg.Level            AS ProductLevel,
-            ppg.Name            AS ParentGroupName
+            ppg.Name            AS ParentGroupName,
+            COALESCE(
+                direct_sum.NetLineTotal,
+                qod_sum.NetLineTotal,
+                q.TotalNetAmountLocalCurrency_Amount,
+                q.NetSubTotalLocalCurrency_Amount,
+                q.TotalAmountWithTaxLocalCurrency_Amount,
+                0
+            ) AS ComputedAmount
         FROM Quote q
         LEFT JOIN Account      a   ON q.AccountId       = a.Id
         LEFT JOIN Person       p   ON q.ProposalOwnerId = p.Id
         LEFT JOIN Opportunity  o   ON q.OpportunityId   = o.Id
         LEFT JOIN ProductGroup pg  ON o.ProductGroupId  = pg.Id
         LEFT JOIN ProductGroup ppg ON pg.ParentGroupId  = ppg.Id
+        -- Path 1: Quote.CrmOrderId → CrmOrderProducts (for quotes with direct order link)
+        LEFT JOIN (
+            SELECT cop.CrmOrderId, SUM(cop.NetLineTotalAmountLocalCurrency_Amount) AS NetLineTotal
+            FROM CrmOrderProducts cop
+            GROUP BY cop.CrmOrderId
+        ) direct_sum ON direct_sum.CrmOrderId = q.CrmOrderId
+        -- Path 2: Quote → QuoteOrderDetails → CrmOrderProducts (for quotes with indirect order link)
+        LEFT JOIN (
+            SELECT qod.QuoteId, SUM(cop.NetLineTotalAmountLocalCurrency_Amount) AS NetLineTotal
+            FROM QuoteOrderDetails qod
+            JOIN CrmOrderProducts  cop ON cop.CrmOrderId = qod.CrmOrderId
+            GROUP BY qod.QuoteId
+        ) qod_sum ON qod_sum.QuoteId = q.Id
         ORDER BY q.CreatedOn DESC
     `;
 
@@ -193,8 +231,7 @@ router.get('/', (req: Request, res: Response) => {
         const statusCode: number = row.Status ?? 0;
         const productGroupId: string = row.OppProductGroupId || '';
         const productName = row.ParentGroupName || row.ProductGroupName || productGroupId || 'Unknown';
-        // "Net Toplam Tutar" in Varuna UI = TotalNetAmountLocalCurrency_Amount on the Quote header
-        const amount = row.TotalNetAmountLocalCurrency_Amount || row.TotalAmountWithTaxLocalCurrency_Amount || 0;
+        const amount = Number(row.ComputedAmount) || 0;
 
         return {
             id: row.Id,

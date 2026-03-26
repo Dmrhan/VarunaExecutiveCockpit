@@ -121,12 +121,18 @@ router.get('/trend', (req: Request, res: Response) => {
             SUM(CASE WHEN q.Status IN (1, 2, 3, 6) THEN ${amountCol} ELSE 0 END)                      AS openAmount
         FROM Quote q
         LEFT JOIN (
-            SELECT cop.CrmOrderId, SUM(cop.NetLineTotalAmountLocalCurrency_Amount) AS NetLineTotal
+            SELECT cop.CrmOrderId,
+                   SUM(COALESCE(cop.NetLineTotalAmountLocalCurrency_Amount,
+                                cop.NetLineSubTotalLocalCurrency_Amount,
+                                cop.Total_Amount, 0)) AS NetLineTotal
             FROM CrmOrderProducts cop
             GROUP BY cop.CrmOrderId
         ) direct_sum ON direct_sum.CrmOrderId = q.CrmOrderId
         LEFT JOIN (
-            SELECT qod.QuoteId, SUM(cop.NetLineTotalAmountLocalCurrency_Amount) AS NetLineTotal
+            SELECT qod.QuoteId,
+                   SUM(COALESCE(cop.NetLineTotalAmountLocalCurrency_Amount,
+                                cop.NetLineSubTotalLocalCurrency_Amount,
+                                cop.Total_Amount, 0)) AS NetLineTotal
             FROM QuoteOrderDetails qod
             JOIN CrmOrderProducts  cop ON cop.CrmOrderId = qod.CrmOrderId
             GROUP BY qod.QuoteId
@@ -172,6 +178,60 @@ router.get('/trend', (req: Request, res: Response) => {
     }
 });
 
+// ─── GET /debug/:id ──────────────────────────────────────────────────────────
+// Diagnostic: shows all amount fields + related CrmOrderProducts/QuoteOrderDetails
+router.get('/debug/:id', (req: Request, res: Response) => {
+    const db = getDb();
+    const id = req.params.id;
+
+    const quoteRow = db.queryOne(`
+        SELECT Id, Name, Status, CrmOrderId,
+               TotalNetAmountLocalCurrency_Amount,
+               NetSubTotalLocalCurrency_Amount,
+               TotalAmountWithTaxLocalCurrency_Amount
+        FROM Quote WHERE Id = @id`, { id }) as Record<string, any> | null;
+
+    if (!quoteRow) return res.status(404).json({ error: 'Quote not found' });
+
+    const quoteOrderDetails = db.query(
+        `SELECT Id, QuoteId, CrmOrderId FROM QuoteOrderDetails WHERE QuoteId = @id`, { id }
+    ) as Record<string, any>[];
+
+    const orderIds: string[] = [
+        ...(quoteRow.CrmOrderId ? [quoteRow.CrmOrderId] : []),
+        ...quoteOrderDetails.map((r: any) => r.CrmOrderId)
+    ].filter(Boolean);
+
+    const crmOrderProducts = orderIds.length > 0
+        ? db.query(
+            `SELECT CrmOrderId,
+                    NetLineTotalAmountLocalCurrency_Amount,
+                    NetLineSubTotalLocalCurrency_Amount,
+                    NetLineTotalWithTaxLocalCurrency_Amount,
+                    Total_Amount
+             FROM CrmOrderProducts
+             WHERE CrmOrderId IN (${orderIds.map((_, i) => `@oid${i}`).join(',')})`,
+            Object.fromEntries(orderIds.map((id, i) => [`oid${i}`, id]))
+        ) as Record<string, any>[]
+        : [];
+
+    const sumNetLine    = crmOrderProducts.reduce((s, r) => s + (Number(r.NetLineTotalAmountLocalCurrency_Amount) || 0), 0);
+    const sumNetSub     = crmOrderProducts.reduce((s, r) => s + (Number(r.NetLineSubTotalLocalCurrency_Amount)    || 0), 0);
+    const sumWithTax    = crmOrderProducts.reduce((s, r) => s + (Number(r.NetLineTotalWithTaxLocalCurrency_Amount) || 0), 0);
+
+    return res.json({
+        quote: quoteRow,
+        quoteOrderDetails,
+        crmOrderProductsCount: crmOrderProducts.length,
+        sums: { sumNetLine, sumNetSub, sumWithTax },
+        currentComputedAmount:
+            sumNetLine || sumNetSub ||
+            quoteRow.TotalNetAmountLocalCurrency_Amount ||
+            quoteRow.NetSubTotalLocalCurrency_Amount ||
+            quoteRow.TotalAmountWithTaxLocalCurrency_Amount || 0
+    });
+});
+
 // ─── GET / ────────────────────────────────────────────────────────────────────
 router.get('/', (req: Request, res: Response) => {
     const db = getDb();
@@ -205,13 +265,19 @@ router.get('/', (req: Request, res: Response) => {
         LEFT JOIN ProductGroup ppg ON pg.ParentGroupId  = ppg.Id
         -- Path 1: Quote.CrmOrderId → CrmOrderProducts (for quotes with direct order link)
         LEFT JOIN (
-            SELECT cop.CrmOrderId, SUM(cop.NetLineTotalAmountLocalCurrency_Amount) AS NetLineTotal
+            SELECT cop.CrmOrderId,
+                   SUM(COALESCE(cop.NetLineTotalAmountLocalCurrency_Amount,
+                                cop.NetLineSubTotalLocalCurrency_Amount,
+                                cop.Total_Amount, 0)) AS NetLineTotal
             FROM CrmOrderProducts cop
             GROUP BY cop.CrmOrderId
         ) direct_sum ON direct_sum.CrmOrderId = q.CrmOrderId
         -- Path 2: Quote → QuoteOrderDetails → CrmOrderProducts (for quotes with indirect order link)
         LEFT JOIN (
-            SELECT qod.QuoteId, SUM(cop.NetLineTotalAmountLocalCurrency_Amount) AS NetLineTotal
+            SELECT qod.QuoteId,
+                   SUM(COALESCE(cop.NetLineTotalAmountLocalCurrency_Amount,
+                                cop.NetLineSubTotalLocalCurrency_Amount,
+                                cop.Total_Amount, 0)) AS NetLineTotal
             FROM QuoteOrderDetails qod
             JOIN CrmOrderProducts  cop ON cop.CrmOrderId = qod.CrmOrderId
             GROUP BY qod.QuoteId

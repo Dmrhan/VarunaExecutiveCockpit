@@ -124,6 +124,7 @@ export interface Order {
     amount: number;
     status: OrderStatus;
     createdAt: string;
+    invoiceDate?: string;
     deliveryDate: string;
     salesRepId: string;
     parentGroupName?: string;

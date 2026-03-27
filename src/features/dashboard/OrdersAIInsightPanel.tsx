@@ -43,18 +43,21 @@ export function OrdersAIInsightPanel({ currentOrders, allOrders, dateFilter, cus
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
 
         // ── 1. Sipariş Momentumu ──────────────────────────────────────────────
+        // Kapalı siparişlerde InvoiceDate, diğerlerinde CreatedAt referans tarih
+        const getRefDate = (o: Order) => (o.status === 'Closed' && o.invoiceDate) ? o.invoiceDate : o.createdAt;
+
         let prevOrders: Order[] = [];
         if (dateFilter === 'today') {
             const yesterday = today - 86400000;
             prevOrders = allOrders.filter(o => {
-                const dt = new Date(o.createdAt).getTime();
+                const dt = new Date(getRefDate(o)).getTime();
                 return dt >= yesterday && dt < today;
             });
         } else if (dateFilter === 'month' || dateFilter === 'mtd') {
             const lm = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
             const ly = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
             prevOrders = allOrders.filter(o => {
-                const dt = new Date(o.createdAt);
+                const dt = new Date(getRefDate(o));
                 return dt.getMonth() === lm && dt.getFullYear() === ly;
             });
         } else if (dateFilter === 'custom' && customRange.start && customRange.end) {
@@ -62,12 +65,12 @@ export function OrdersAIInsightPanel({ currentOrders, allOrders, dateFilter, cus
             const prevEnd = customRange.start.getTime();
             const prevStart = prevEnd - duration;
             prevOrders = allOrders.filter(o => {
-                const dt = new Date(o.createdAt).getTime();
+                const dt = new Date(getRefDate(o)).getTime();
                 return dt >= prevStart && dt < prevEnd;
             });
         } else {
             prevOrders = allOrders
-                .filter(o => new Date(o.createdAt).getTime() < today)
+                .filter(o => new Date(getRefDate(o)).getTime() < today)
                 .slice(-Math.max(1, Math.floor(currentOrders.length * 0.9)));
         }
 

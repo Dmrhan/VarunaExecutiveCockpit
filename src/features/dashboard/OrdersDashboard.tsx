@@ -125,7 +125,11 @@ export function OrdersDashboard() {
 
             if (startStr) {
                 result = result.filter(order => {
-                    const orderDateStr = order.createdAt ? order.createdAt.substring(0, 10) : '';
+                    // Kapalı siparişlerde fatura tarihi, açık/iptal olanlarda oluşturma tarihi
+                    const refDate = (order.status === 'Closed' && order.invoiceDate)
+                        ? order.invoiceDate
+                        : order.createdAt;
+                    const orderDateStr = refDate ? refDate.substring(0, 10) : '';
                     if (!orderDateStr) return false;
 
                     if (dateFilter === 'custom' && (!customRange.end || !endStr)) {
@@ -453,6 +457,12 @@ export function OrdersDashboard() {
                                                 )}
                                             </div>
                                         </th>
+                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">
+                                            {t('orders.list.createdAt', { defaultValue: 'Sipariş Tarihi' })}
+                                        </th>
+                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">
+                                            {t('orders.list.invoiceDate', { defaultValue: 'Fatura Tarihi' })}
+                                        </th>
                                         <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">
                                             {t('orders.list.actions')}
                                         </th>
@@ -496,6 +506,20 @@ export function OrdersDashboard() {
                                                 <span className="text-xs font-mono font-bold text-slate-900 dark:text-white">
                                                     {formatCurrency(order.amount)}
                                                 </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                                                    {order.createdAt ? new Date(order.createdAt).toLocaleDateString('tr-TR') : '—'}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                {order.invoiceDate ? (
+                                                    <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">
+                                                        {new Date(order.invoiceDate).toLocaleDateString('tr-TR')}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-[11px] text-slate-300 dark:text-slate-600">—</span>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <button className="p-1.5 rounded-lg text-indigo-500 hover:bg-indigo-500 hover:text-white transition-all shadow-sm">

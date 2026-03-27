@@ -461,6 +461,8 @@ export function OrderProductPerformance({ orders: propOrders }: OrderProductPerf
                                                 <th className="px-4 pb-4">{t('orders.list.orderName')}</th>
                                                 <th className="px-4 pb-4 text-center">{t('orders.list.status')}</th>
                                                 <th className="px-4 pb-4 text-right">{t('orders.list.amount')}</th>
+                                                <th className="px-4 pb-4 text-center">{t('orders.list.createdAt', { defaultValue: 'Sipariş Tarihi' })}</th>
+                                                <th className="px-4 pb-4 text-center">{t('orders.list.invoiceDate', { defaultValue: 'Fatura Tarihi' })}</th>
                                                 <th className="px-4 pb-4 text-right">{t('performance.deliveryDate', { defaultValue: 'Teslim Tarihi' })}</th>
                                             </tr>
                                         </thead>
@@ -498,6 +500,20 @@ export function OrderProductPerformance({ orders: propOrders }: OrderProductPerf
 
                                                         <td className="bg-white dark:bg-white/5 p-4 border-y border-slate-200 dark:border-white/10 text-right shadow-sm">
                                                             <span className="text-xs md:text-sm font-bold text-emerald-600 dark:text-emerald-400">${(order.amount / 1000).toFixed(0)}k</span>
+                                                        </td>
+                                                        <td className="bg-white dark:bg-white/5 p-4 border-y border-slate-200 dark:border-white/10 text-center shadow-sm">
+                                                            <span className="text-[10px] text-slate-500 font-mono">
+                                                                {order.createdAt ? new Date(order.createdAt).toLocaleDateString(i18n.language) : '—'}
+                                                            </span>
+                                                        </td>
+                                                        <td className="bg-white dark:bg-white/5 p-4 border-y border-slate-200 dark:border-white/10 text-center shadow-sm">
+                                                            {order.invoiceDate ? (
+                                                                <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">
+                                                                    {new Date(order.invoiceDate).toLocaleDateString(i18n.language)}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-[10px] text-slate-300 dark:text-slate-600">—</span>
+                                                            )}
                                                         </td>
                                                         <td className="bg-white dark:bg-white/5 p-4 last:rounded-r-2xl border-y border-r border-slate-200 dark:border-white/10 text-right shadow-sm">
                                                             <span className="text-xs text-slate-500 font-mono">

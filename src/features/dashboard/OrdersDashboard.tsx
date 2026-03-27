@@ -205,7 +205,7 @@ export function OrdersDashboard() {
         return {
             status: toChart(statusMap, 'revenue') as { name: string; revenue: number }[],
             statusCount: toChart(statusCountMap, 'count') as { name: string; count: number }[],
-            customer: toChart(customerMap, 'amount').slice(0, 8),
+            customer: toChart(customerMap, 'amount'),
         };
     }, [baseOrders, filteredOrders]);
 

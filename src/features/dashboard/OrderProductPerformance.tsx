@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useData } from '../../context/DataContext';
-import { Package, X, Minimize2, Maximize2, FileSpreadsheet, FileText, TrendingUp, PieChart as PieChartIcon } from 'lucide-react';
+import { Package, X, Minimize2, Maximize2, FileSpreadsheet, FileText, TrendingUp, PieChart as PieChartIcon, Search, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, Treemap } from 'recharts';
 import { cn } from '../../lib/utils';
 import type { ProductGroup, Order } from '../../types/crm';
@@ -23,6 +23,13 @@ export function OrderProductPerformance({ orders: propOrders }: OrderProductPerf
     const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
     const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
     const [isFullScreen, setIsFullScreen] = useState(false);
+    const [tableFilters, setTableFilters] = useState({ customer: '', seller: '', title: '', status: 'all', minValue: '', maxValue: '' });
+    const [tableSort, setTableSort] = useState<{ key: string; dir: 'asc' | 'desc' } | null>(null);
+    const hasTableFilters = tableFilters.customer || tableFilters.seller || tableFilters.title || tableFilters.status !== 'all' || tableFilters.minValue || tableFilters.maxValue;
+    const clearTableFilters = () => setTableFilters({ customer: '', seller: '', title: '', status: 'all', minValue: '', maxValue: '' });
+    const handleTableSort = (key: string) => {
+        setTableSort(prev => prev?.key === key && prev.dir === 'asc' ? { key, dir: 'desc' } : { key, dir: 'asc' });
+    };
     const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
 
     useEffect(() => {
@@ -38,6 +45,7 @@ export function OrderProductPerformance({ orders: propOrders }: OrderProductPerf
                 setSelectedProduct(null);
                 setIsFullScreen(false);
                 setSelectedStatus(null);
+                clearTableFilters();
             }
         };
 
@@ -93,6 +101,42 @@ export function OrderProductPerformance({ orders: propOrders }: OrderProductPerf
         if (!selectedStatus) return selectedOrders;
         return selectedOrders.filter(o => o.status === selectedStatus);
     }, [selectedOrders, selectedStatus]);
+
+    // Table filtered + sorted orders
+    const tableOrders = useMemo(() => {
+        let result = [...filteredOrders];
+        if (tableFilters.customer) {
+            const s = tableFilters.customer.toLowerCase();
+            result = result.filter(o => o.customerName.toLowerCase().includes(s));
+        }
+        if (tableFilters.seller) {
+            const s = tableFilters.seller.toLowerCase();
+            result = result.filter(o => {
+                const rep = users.find(u => u.id === o.salesRepId);
+                return (rep?.name || o.salesRepId).toLowerCase().includes(s);
+            });
+        }
+        if (tableFilters.title) {
+            const s = tableFilters.title.toLowerCase();
+            result = result.filter(o => o.title.toLowerCase().includes(s));
+        }
+        if (tableFilters.status !== 'all') {
+            result = result.filter(o => o.status === tableFilters.status);
+        }
+        if (tableFilters.minValue) result = result.filter(o => o.amount >= Number(tableFilters.minValue));
+        if (tableFilters.maxValue) result = result.filter(o => o.amount <= Number(tableFilters.maxValue));
+
+        if (tableSort) {
+            result.sort((a, b) => {
+                const av = (a as any)[tableSort.key] ?? '';
+                const bv = (b as any)[tableSort.key] ?? '';
+                if (av < bv) return tableSort.dir === 'asc' ? -1 : 1;
+                if (av > bv) return tableSort.dir === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+        return result;
+    }, [filteredOrders, tableFilters, tableSort, users]);
 
     // Analytics Data
     const analyticsData = useMemo(() => {
@@ -330,7 +374,7 @@ export function OrderProductPerformance({ orders: propOrders }: OrderProductPerf
                                                 </h2>
                                             </div>
                                             <p className="text-slate-500 dark:text-slate-400 text-xs pl-12">
-                                                {t('performance.listingDetails', { count: filteredOrders.length })}
+                                                {t('performance.listingDetails', { count: tableOrders.length })}
                                             </p>
                                         </div>
 
@@ -453,21 +497,86 @@ export function OrderProductPerformance({ orders: propOrders }: OrderProductPerf
                                     </div>
                                 </div>
                                 <div className="flex-1 overflow-auto bg-slate-50/50 dark:bg-black/20 p-4 md:p-6 w-full relative">
-                                    <table className="w-full text-left border-separate border-spacing-y-2">
-                                        <thead className="sticky top-0 bg-transparent z-10">
+                                    <table className="w-full text-left border-separate border-spacing-y-1">
+                                        <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-800">
+                                            {/* Header Row */}
                                             <tr className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">
-                                                <th className="px-4 pb-4">{t('opportunities.customer')}</th>
-                                                <th className="px-4 pb-4">{t('productPerformance.seller')}</th>
-                                                <th className="px-4 pb-4">{t('orders.list.orderName')}</th>
-                                                <th className="px-4 pb-4 text-center">{t('orders.list.status')}</th>
-                                                <th className="px-4 pb-4 text-right">{t('orders.list.amount')}</th>
-                                                <th className="px-4 pb-4 text-center">{t('orders.list.createdAt', { defaultValue: 'Sipariş Tarihi' })}</th>
-                                                <th className="px-4 pb-4 text-center">{t('orders.list.invoiceDate', { defaultValue: 'Fatura Tarihi' })}</th>
-                                                <th className="px-4 pb-4 text-right">{t('performance.deliveryDate', { defaultValue: 'Teslim Tarihi' })}</th>
+                                                <th className="px-4 py-2 cursor-pointer hover:text-indigo-500 transition-colors" onClick={() => handleTableSort('customerName')}>
+                                                    <div className="flex items-center gap-1">{t('opportunities.customer')} {tableSort?.key === 'customerName' && (tableSort.dir === 'asc' ? <ArrowUpRight size={10} /> : <ArrowDownRight size={10} />)}</div>
+                                                </th>
+                                                <th className="px-4 py-2 cursor-pointer hover:text-indigo-500 transition-colors" onClick={() => handleTableSort('salesRepId')}>
+                                                    <div className="flex items-center gap-1">{t('productPerformance.seller')} {tableSort?.key === 'salesRepId' && (tableSort.dir === 'asc' ? <ArrowUpRight size={10} /> : <ArrowDownRight size={10} />)}</div>
+                                                </th>
+                                                <th className="px-4 py-2 cursor-pointer hover:text-indigo-500 transition-colors" onClick={() => handleTableSort('title')}>
+                                                    <div className="flex items-center gap-1">{t('orders.list.orderName')} {tableSort?.key === 'title' && (tableSort.dir === 'asc' ? <ArrowUpRight size={10} /> : <ArrowDownRight size={10} />)}</div>
+                                                </th>
+                                                <th className="px-4 py-2 text-center">{t('orders.list.status')}</th>
+                                                <th className="px-4 py-2 text-right cursor-pointer hover:text-indigo-500 transition-colors" onClick={() => handleTableSort('amount')}>
+                                                    <div className="flex items-center justify-end gap-1">{t('orders.list.amount')} {tableSort?.key === 'amount' && (tableSort.dir === 'asc' ? <ArrowUpRight size={10} /> : <ArrowDownRight size={10} />)}</div>
+                                                </th>
+                                                <th className="px-4 py-2 text-center cursor-pointer hover:text-indigo-500 transition-colors" onClick={() => handleTableSort('createdAt')}>
+                                                    <div className="flex items-center justify-center gap-1">{t('orders.list.createdAt', { defaultValue: 'Sipariş Tarihi' })} {tableSort?.key === 'createdAt' && (tableSort.dir === 'asc' ? <ArrowUpRight size={10} /> : <ArrowDownRight size={10} />)}</div>
+                                                </th>
+                                                <th className="px-4 py-2 text-center cursor-pointer hover:text-indigo-500 transition-colors" onClick={() => handleTableSort('invoiceDate')}>
+                                                    <div className="flex items-center justify-center gap-1">{t('orders.list.invoiceDate', { defaultValue: 'Fatura Tarihi' })} {tableSort?.key === 'invoiceDate' && (tableSort.dir === 'asc' ? <ArrowUpRight size={10} /> : <ArrowDownRight size={10} />)}</div>
+                                                </th>
+                                                <th className="px-4 py-2 text-right cursor-pointer hover:text-indigo-500 transition-colors" onClick={() => handleTableSort('deliveryDate')}>
+                                                    <div className="flex items-center justify-end gap-1">{t('performance.deliveryDate', { defaultValue: 'Teslim Tarihi' })} {tableSort?.key === 'deliveryDate' && (tableSort.dir === 'asc' ? <ArrowUpRight size={10} /> : <ArrowDownRight size={10} />)}</div>
+                                                </th>
+                                            </tr>
+                                            {/* Filter Row */}
+                                            <tr className="bg-slate-100/60 dark:bg-black/20">
+                                                <th className="px-4 py-1.5">
+                                                    <div className="relative">
+                                                        <Search size={10} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+                                                        <input type="text" placeholder="Ara..." value={tableFilters.customer} onChange={(e) => setTableFilters(p => ({ ...p, customer: e.target.value }))}
+                                                            className="w-full pl-6 pr-2 py-1 bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-white/10 rounded text-[10px] focus:ring-1 focus:ring-indigo-500 outline-none" />
+                                                    </div>
+                                                </th>
+                                                <th className="px-4 py-1.5">
+                                                    <div className="relative">
+                                                        <Search size={10} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+                                                        <input type="text" placeholder="Ara..." value={tableFilters.seller} onChange={(e) => setTableFilters(p => ({ ...p, seller: e.target.value }))}
+                                                            className="w-full pl-6 pr-2 py-1 bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-white/10 rounded text-[10px] focus:ring-1 focus:ring-indigo-500 outline-none" />
+                                                    </div>
+                                                </th>
+                                                <th className="px-4 py-1.5">
+                                                    <div className="relative">
+                                                        <Search size={10} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+                                                        <input type="text" placeholder="Ara..." value={tableFilters.title} onChange={(e) => setTableFilters(p => ({ ...p, title: e.target.value }))}
+                                                            className="w-full pl-6 pr-2 py-1 bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-white/10 rounded text-[10px] focus:ring-1 focus:ring-indigo-500 outline-none" />
+                                                    </div>
+                                                </th>
+                                                <th className="px-4 py-1.5">
+                                                    <select value={tableFilters.status} onChange={(e) => setTableFilters(p => ({ ...p, status: e.target.value }))}
+                                                        className="w-full px-2 py-1 bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-white/10 rounded text-[10px] focus:ring-1 focus:ring-indigo-500 outline-none cursor-pointer">
+                                                        <option value="all">Tümü</option>
+                                                        <option value="Open">{t('status.Open')}</option>
+                                                        <option value="Closed">{t('status.Closed')}</option>
+                                                        <option value="Canceled">{t('status.Canceled')}</option>
+                                                    </select>
+                                                </th>
+                                                <th className="px-4 py-1.5">
+                                                    <div className="flex gap-1">
+                                                        <input type="number" placeholder="Min" value={tableFilters.minValue} onChange={(e) => setTableFilters(p => ({ ...p, minValue: e.target.value }))}
+                                                            className="w-1/2 px-1 py-1 bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-white/10 rounded text-[10px] focus:ring-1 focus:ring-indigo-500 outline-none text-right" />
+                                                        <input type="number" placeholder="Max" value={tableFilters.maxValue} onChange={(e) => setTableFilters(p => ({ ...p, maxValue: e.target.value }))}
+                                                            className="w-1/2 px-1 py-1 bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-white/10 rounded text-[10px] focus:ring-1 focus:ring-indigo-500 outline-none text-right" />
+                                                    </div>
+                                                </th>
+                                                <th className="px-4 py-1.5" />
+                                                <th className="px-4 py-1.5" />
+                                                <th className="px-4 py-1.5 text-right">
+                                                    {hasTableFilters && (
+                                                        <button onClick={clearTableFilters} className="p-1 rounded hover:bg-rose-500/10 text-rose-400 hover:text-rose-500 transition-all" title="Filtreleri Temizle">
+                                                            <X size={12} />
+                                                        </button>
+                                                    )}
+                                                </th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {filteredOrders.map((order) => {
+                                            {tableOrders.map((order) => {
                                                 const rep = users.find(u => u.id === order.salesRepId);
                                                 return (
                                                     <tr key={order.id} className="group transition-all hover:translate-x-1">

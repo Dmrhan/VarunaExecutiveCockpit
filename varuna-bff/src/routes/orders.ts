@@ -92,8 +92,8 @@ router.get('/', (req: Request, res: Response) => {
         // Customer name: from the Account join on AccountId
         const customerName = row.AccountTitle || row.AccountName || row.AccountId || 'Bilinmiyor';
 
-        // Order name: use Name field (we seed it as "Müşteri – Ürün Siparişi")
-        const title = row.Name || `Sipariş #${row.Id}`;
+        // Order name: use Name field, fallback to customer + product
+        const title = row.Name || `${customerName} - ${productName} Siparişi`;
 
         return {
             id: row.Id,

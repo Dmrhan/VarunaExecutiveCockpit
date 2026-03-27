@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Ca
 import { useData } from '../../context/DataContext';
 import { cn } from '../../lib/utils';
 import { DateRangePicker } from '../../components/ui/DateRangePicker';
-import { Sparkles, Users, Search, Calendar, ArrowUpRight, ArrowDownRight, LayoutGrid, List as ListIcon } from 'lucide-react';
+import { Sparkles, Users, Search, Calendar, ArrowUpRight, ArrowDownRight, LayoutGrid, List as ListIcon, X } from 'lucide-react';
 import { OrdersAIInsightPanel } from './OrdersAIInsightPanel';
 import { OrderPoolAnalysis } from './OrderPoolAnalysis';
 import { OrderProductPerformance } from './OrderProductPerformance';
@@ -51,11 +51,14 @@ export function OrdersDashboard() {
     // Advanced Filtering & Sorting State
     const [sortConfig, setSortConfig] = useState<{ key: keyof Order; direction: 'asc' | 'desc' } | null>(null);
     const [columnFilters, setColumnFilters] = useState({
+        title: '',
         customer: '',
         status: 'all',
         minValue: '',
         maxValue: '',
     });
+    const hasActiveFilters = columnFilters.title || columnFilters.customer || columnFilters.status !== 'all' || columnFilters.minValue || columnFilters.maxValue;
+    const clearAllFilters = () => setColumnFilters({ title: '', customer: '', status: 'all', minValue: '', maxValue: '' });
 
     const handleSort = (key: keyof Order) => {
         let direction: 'asc' | 'desc' = 'asc';
@@ -144,12 +147,13 @@ export function OrdersDashboard() {
         }
 
         // 2. Column Filters (Except Status)
+        if (columnFilters.title) {
+            const search = columnFilters.title.toLowerCase();
+            result = result.filter(o => o.title.toLowerCase().includes(search));
+        }
         if (columnFilters.customer) {
             const search = columnFilters.customer.toLowerCase();
-            result = result.filter(o =>
-                o.customerName.toLowerCase().includes(search) ||
-                o.title.toLowerCase().includes(search)
-            );
+            result = result.filter(o => o.customerName.toLowerCase().includes(search));
         }
 
         if (columnFilters.minValue) {
@@ -160,7 +164,7 @@ export function OrdersDashboard() {
         }
 
         return result;
-    }, [dateFilter, customRange, orders, columnFilters.customer, columnFilters.minValue, columnFilters.maxValue]);
+    }, [dateFilter, customRange, orders, columnFilters.title, columnFilters.customer, columnFilters.minValue, columnFilters.maxValue]);
 
     const filteredOrders = useMemo(() => {
         if (columnFilters.status === 'all') return baseOrders;
@@ -382,8 +386,12 @@ export function OrdersDashboard() {
                                     {t('orders.list.title')}
                                 </CardTitle>
                                 <div className="flex gap-2 items-center">
-                                    {/* View Toggle */}
-                                    <div className="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-lg items-center gap-1 mr-2">
+                                    {hasActiveFilters && (
+                                        <button onClick={clearAllFilters} className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-all">
+                                            <X size={12} /> Filtreleri Temizle
+                                        </button>
+                                    )}
+                                    <div className="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-lg items-center gap-1">
                                         <button
                                             onClick={() => setViewMode('list')}
                                             className={cn(
@@ -403,34 +411,15 @@ export function OrdersDashboard() {
                                             <LayoutGrid size={14} />
                                         </button>
                                     </div>
-                                    <div className="relative">
-                                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                                        <input
-                                            type="text"
-                                            placeholder={t('orders.list.searchPlaceholder')}
-                                            value={columnFilters.customer}
-                                            onChange={(e) => setColumnFilters(prev => ({ ...prev, customer: e.target.value }))}
-                                            className="pl-9 pr-3 py-1.5 bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 rounded-lg text-xs focus:ring-1 focus:ring-indigo-500 outline-none w-48 transition-all"
-                                        />
-                                    </div>
-                                    <select
-                                        value={columnFilters.status}
-                                        onChange={(e) => setColumnFilters(prev => ({ ...prev, status: e.target.value }))}
-                                        className="px-3 py-1.5 bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 rounded-lg text-xs focus:ring-1 focus:ring-indigo-500 outline-none transition-all cursor-pointer"
-                                    >
-                                        <option value="all">{t('orders.list.allStatuses')}</option>
-                                        <option value="Open">{t('status.Open')}</option>
-                                        <option value="Closed">{t('status.Closed')}</option>
-                                        <option value="Canceled">{t('status.Canceled')}</option>
-                                    </select>
                                 </div>
                             </div>
                         </CardHeader>
                         <CardContent className="p-0 overflow-auto max-h-[500px]">
                             <table className="w-full text-left">
-                                <thead className="sticky top-0 bg-slate-50/90 dark:bg-slate-800/90 backdrop-blur-md z-10 border-b border-slate-200 dark:border-white/10">
-                                    <tr>
-                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest cursor-pointer hover:text-indigo-600 transition-colors" onClick={() => handleSort('title')}>
+                                <thead className="sticky top-0 bg-slate-50/90 dark:bg-slate-800/90 backdrop-blur-md z-10">
+                                    {/* Header Row */}
+                                    <tr className="border-b border-slate-200 dark:border-white/10">
+                                        <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest cursor-pointer hover:text-indigo-600 transition-colors" onClick={() => handleSort('title')}>
                                             <div className="flex items-center gap-1">
                                                 {t('orders.list.orderName')}
                                                 {sortConfig?.key === 'title' && (
@@ -438,7 +427,7 @@ export function OrdersDashboard() {
                                                 )}
                                             </div>
                                         </th>
-                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest cursor-pointer hover:text-indigo-600 transition-colors" onClick={() => handleSort('customerName')}>
+                                        <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest cursor-pointer hover:text-indigo-600 transition-colors" onClick={() => handleSort('customerName')}>
                                             <div className="flex items-center gap-1">
                                                 {t('orders.list.customer')}
                                                 {sortConfig?.key === 'customerName' && (
@@ -446,10 +435,10 @@ export function OrdersDashboard() {
                                                 )}
                                             </div>
                                         </th>
-                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">
+                                        <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">
                                             {t('orders.list.status')}
                                         </th>
-                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right cursor-pointer hover:text-indigo-600 transition-colors" onClick={() => handleSort('amount')}>
+                                        <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right cursor-pointer hover:text-indigo-600 transition-colors" onClick={() => handleSort('amount')}>
                                             <div className="flex items-center justify-end gap-1">
                                                 {t('orders.list.amount')}
                                                 {sortConfig?.key === 'amount' && (
@@ -457,14 +446,90 @@ export function OrdersDashboard() {
                                                 )}
                                             </div>
                                         </th>
-                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">
-                                            {t('orders.list.createdAt', { defaultValue: 'Sipariş Tarihi' })}
+                                        <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center cursor-pointer hover:text-indigo-600 transition-colors" onClick={() => handleSort('createdAt')}>
+                                            <div className="flex items-center justify-center gap-1">
+                                                {t('orders.list.createdAt', { defaultValue: 'Sipariş Tarihi' })}
+                                                {sortConfig?.key === 'createdAt' && (
+                                                    sortConfig.direction === 'asc' ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />
+                                                )}
+                                            </div>
                                         </th>
-                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">
-                                            {t('orders.list.invoiceDate', { defaultValue: 'Fatura Tarihi' })}
+                                        <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center cursor-pointer hover:text-indigo-600 transition-colors" onClick={() => handleSort('invoiceDate' as keyof Order)}>
+                                            <div className="flex items-center justify-center gap-1">
+                                                {t('orders.list.invoiceDate', { defaultValue: 'Fatura Tarihi' })}
+                                                {sortConfig?.key === ('invoiceDate' as keyof Order) && (
+                                                    sortConfig.direction === 'asc' ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />
+                                                )}
+                                            </div>
                                         </th>
-                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">
+                                        <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">
                                             {t('orders.list.actions')}
+                                        </th>
+                                    </tr>
+                                    {/* Filter Row */}
+                                    <tr className="border-b border-slate-200/60 dark:border-white/5 bg-slate-100/50 dark:bg-slate-900/30">
+                                        <th className="px-4 py-2">
+                                            <div className="relative">
+                                                <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+                                                <input
+                                                    type="text"
+                                                    placeholder="Ara..."
+                                                    value={columnFilters.title}
+                                                    onChange={(e) => setColumnFilters(prev => ({ ...prev, title: e.target.value }))}
+                                                    className="w-full pl-7 pr-2 py-1 bg-white/70 dark:bg-slate-800/70 border border-slate-200 dark:border-white/10 rounded text-[11px] focus:ring-1 focus:ring-indigo-500 outline-none"
+                                                />
+                                            </div>
+                                        </th>
+                                        <th className="px-4 py-2">
+                                            <div className="relative">
+                                                <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+                                                <input
+                                                    type="text"
+                                                    placeholder="Ara..."
+                                                    value={columnFilters.customer}
+                                                    onChange={(e) => setColumnFilters(prev => ({ ...prev, customer: e.target.value }))}
+                                                    className="w-full pl-7 pr-2 py-1 bg-white/70 dark:bg-slate-800/70 border border-slate-200 dark:border-white/10 rounded text-[11px] focus:ring-1 focus:ring-indigo-500 outline-none"
+                                                />
+                                            </div>
+                                        </th>
+                                        <th className="px-4 py-2">
+                                            <select
+                                                value={columnFilters.status}
+                                                onChange={(e) => setColumnFilters(prev => ({ ...prev, status: e.target.value }))}
+                                                className="w-full px-2 py-1 bg-white/70 dark:bg-slate-800/70 border border-slate-200 dark:border-white/10 rounded text-[11px] focus:ring-1 focus:ring-indigo-500 outline-none cursor-pointer"
+                                            >
+                                                <option value="all">{t('orders.list.allStatuses', { defaultValue: 'Tümü' })}</option>
+                                                <option value="Open">{t('status.Open')}</option>
+                                                <option value="Closed">{t('status.Closed')}</option>
+                                                <option value="Canceled">{t('status.Canceled')}</option>
+                                            </select>
+                                        </th>
+                                        <th className="px-4 py-2">
+                                            <div className="flex gap-1">
+                                                <input
+                                                    type="number"
+                                                    placeholder="Min"
+                                                    value={columnFilters.minValue}
+                                                    onChange={(e) => setColumnFilters(prev => ({ ...prev, minValue: e.target.value }))}
+                                                    className="w-1/2 px-2 py-1 bg-white/70 dark:bg-slate-800/70 border border-slate-200 dark:border-white/10 rounded text-[11px] focus:ring-1 focus:ring-indigo-500 outline-none text-right"
+                                                />
+                                                <input
+                                                    type="number"
+                                                    placeholder="Max"
+                                                    value={columnFilters.maxValue}
+                                                    onChange={(e) => setColumnFilters(prev => ({ ...prev, maxValue: e.target.value }))}
+                                                    className="w-1/2 px-2 py-1 bg-white/70 dark:bg-slate-800/70 border border-slate-200 dark:border-white/10 rounded text-[11px] focus:ring-1 focus:ring-indigo-500 outline-none text-right"
+                                                />
+                                            </div>
+                                        </th>
+                                        <th className="px-4 py-2" />
+                                        <th className="px-4 py-2" />
+                                        <th className="px-4 py-2 text-right">
+                                            {hasActiveFilters && (
+                                                <button onClick={clearAllFilters} className="p-1 rounded hover:bg-rose-50 dark:hover:bg-rose-500/10 text-rose-400 hover:text-rose-500 transition-all" title="Filtreleri Temizle">
+                                                    <X size={14} />
+                                                </button>
+                                            )}
                                         </th>
                                     </tr>
                                 </thead>

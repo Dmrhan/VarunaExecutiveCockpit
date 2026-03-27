@@ -325,8 +325,8 @@ export function OrdersDashboard() {
                     </span>
                 </div>
                 <StatCard label={t('orders.kpis.pendingAmount', { defaultValue: 'Bekleyen Tutar' })} value={formatCurrency(metrics.openValue)} colorClass="text-sky-600 dark:text-sky-400 font-medium" />
-                <StatCard label={t('orders.kpis.totalVolume', { defaultValue: 'Toplam Sipariş Hacmi' })} value={formatCurrency(metrics.totalValue)} colorClass="text-indigo-600 dark:text-indigo-400 font-medium" />
                 <StatCard label={t('orders.kpis.canceledAmount', { defaultValue: 'İptal Siparişler' })} value={formatCurrency(metrics.canceledValue)} colorClass="text-rose-600 dark:text-rose-400 font-medium" />
+                <StatCard label={t('orders.kpis.totalVolume', { defaultValue: 'Toplam Sipariş Hacmi' })} value={formatCurrency(metrics.totalValue)} colorClass="text-indigo-600 dark:text-indigo-400 font-medium" />
                 <StatCard label={t('orders.kpis.totalCount', { defaultValue: 'Sipariş Adeti' })} value={metrics.totalCount.toString()} colorClass="text-slate-900 dark:text-white font-medium" />
             </div>
 

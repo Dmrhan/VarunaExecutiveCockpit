@@ -57,7 +57,7 @@ export function HorizontalBarChart({
                 </div>
             </CardHeader>
             <CardContent className="p-6 flex-1 flex flex-col overflow-hidden">
-                <div className="space-y-4 overflow-y-auto flex-1 pr-2 pb-2">
+                <div className="space-y-4 overflow-y-auto flex-1 pr-2 pb-2 max-h-[340px]">
                     {data.map((item, idx) => {
                         const percentage = (item.value / maxValue) * 100;
                         const isActive = activeId === item.id;

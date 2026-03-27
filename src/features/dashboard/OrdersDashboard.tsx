@@ -193,8 +193,9 @@ export function OrdersDashboard() {
         const statusCountMap: Record<string, number> = {};
         const customerMap: Record<string, number> = {};
 
-        // Calculate Status from BASE (unfiltered by status)
-        baseOrders.forEach(o => {
+        // Calculate Status — müşteri seçiliyse finalOrders, değilse baseOrders (cross-filter)
+        const statusSource = selectedTopCustomer ? finalOrders : baseOrders;
+        statusSource.forEach(o => {
             statusMap[o.status] = (statusMap[o.status] || 0) + o.amount;
             statusCountMap[o.status] = (statusCountMap[o.status] || 0) + 1;
         });
@@ -215,7 +216,7 @@ export function OrdersDashboard() {
             statusCount: toChart(statusCountMap, 'count') as { name: string; count: number }[],
             customer: toChart(customerMap, 'amount'),
         };
-    }, [baseOrders, finalOrders]);
+    }, [baseOrders, finalOrders, selectedTopCustomer]);
 
     const sortedOrders = useMemo(() => {
         let result = [...finalOrders];

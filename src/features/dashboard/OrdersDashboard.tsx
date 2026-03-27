@@ -199,8 +199,8 @@ export function OrdersDashboard() {
             statusCountMap[o.status] = (statusCountMap[o.status] || 0) + 1;
         });
 
-        // Calculate Customer from FILTERED (filtered by status)
-        filteredOrders.forEach(o => {
+        // Calculate Customer from FINAL (filtered by status + customer selection)
+        finalOrders.forEach(o => {
             customerMap[o.customerName] = (customerMap[o.customerName] || 0) + o.amount;
         });
 
@@ -215,7 +215,7 @@ export function OrdersDashboard() {
             statusCount: toChart(statusCountMap, 'count') as { name: string; count: number }[],
             customer: toChart(customerMap, 'amount'),
         };
-    }, [baseOrders, filteredOrders]);
+    }, [baseOrders, finalOrders]);
 
     const sortedOrders = useMemo(() => {
         let result = [...finalOrders];
@@ -350,7 +350,7 @@ export function OrdersDashboard() {
                         {t('orders.productPerformance', { defaultValue: 'Ürün Performansı' })}
                     </h3>
                     <div className="flex-1 min-h-0">
-                        <OrderProductPerformance orders={filteredOrders} />
+                        <OrderProductPerformance orders={finalOrders} />
                     </div>
                 </div>
             </div>

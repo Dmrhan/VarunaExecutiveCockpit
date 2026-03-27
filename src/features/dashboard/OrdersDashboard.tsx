@@ -311,7 +311,7 @@ export function OrdersDashboard() {
 
 
             {/* KPI Row */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
                 {/* Tamamlanan — Hero card (col-span-2) */}
                 <div className="col-span-2 bg-emerald-50/80 dark:bg-emerald-900/30 backdrop-blur-md border border-emerald-200 dark:border-emerald-500/40 shadow-md shadow-emerald-500/10 p-5 rounded-2xl flex flex-col items-center justify-center text-center min-h-[100px]">
                     <span className="text-[10px] uppercase tracking-[0.15em] text-emerald-500 dark:text-emerald-400 font-bold mb-2">
@@ -326,6 +326,7 @@ export function OrdersDashboard() {
                 </div>
                 <StatCard label={t('orders.kpis.pendingAmount', { defaultValue: 'Bekleyen Tutar' })} value={formatCurrency(metrics.openValue)} colorClass="text-sky-600 dark:text-sky-400 font-medium" />
                 <StatCard label={t('orders.kpis.totalVolume', { defaultValue: 'Toplam Sipariş Hacmi' })} value={formatCurrency(metrics.totalValue)} colorClass="text-indigo-600 dark:text-indigo-400 font-medium" />
+                <StatCard label={t('orders.kpis.canceledAmount', { defaultValue: 'İptal Siparişler' })} value={formatCurrency(metrics.canceledValue)} colorClass="text-rose-600 dark:text-rose-400 font-medium" />
                 <StatCard label={t('orders.kpis.totalCount', { defaultValue: 'Sipariş Adeti' })} value={metrics.totalCount.toString()} colorClass="text-slate-900 dark:text-white font-medium" />
             </div>
 

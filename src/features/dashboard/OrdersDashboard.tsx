@@ -275,8 +275,8 @@ export function OrdersDashboard() {
                         { label: t('dateFilters.thisWeek'), value: 'week' },
                         { label: t('dateFilters.thisMonth'), value: 'month' },
                         { label: t('dateFilters.thisQuarter'), value: 'quarter' },
-                        { label: t('dateFilters.ytd'), value: 'ytd' },
                         { label: t('dateFilters.mtd'), value: 'mtd' },
+                        { label: t('dateFilters.ytd'), value: 'ytd' },
                         { label: t('dateFilters.all'), value: 'all' }
                     ].map(f => (
                         <button

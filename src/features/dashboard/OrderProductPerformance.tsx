@@ -2,10 +2,9 @@ import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent } from '../../components/ui/Card';
 import { useData } from '../../context/DataContext';
-import { ArrowUpRight, ArrowDownRight, Package, X, Minimize2, Maximize2, FileSpreadsheet, FileText, TrendingUp, PieChart as PieChartIcon } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { Package, X, Minimize2, Maximize2, FileSpreadsheet, FileText, TrendingUp, PieChart as PieChartIcon } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, Treemap } from 'recharts';
 import { cn } from '../../lib/utils';
 import type { ProductGroup, Order } from '../../types/crm';
 import { PRODUCT_COLORS } from '../../data/mockData';
@@ -24,6 +23,13 @@ export function OrderProductPerformance({ orders: propOrders }: OrderProductPerf
     const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
     const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
     const [isFullScreen, setIsFullScreen] = useState(false);
+    const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
+
+    useEffect(() => {
+        const obs = new MutationObserver(() => setIsDark(document.documentElement.classList.contains('dark')));
+        obs.observe(document.documentElement, { attributeFilter: ['class'] });
+        return () => obs.disconnect();
+    }, []);
 
     // ESC Key Listener
     useEffect(() => {
@@ -131,6 +137,69 @@ export function OrderProductPerformance({ orders: propOrders }: OrderProductPerf
 
     const COLORS = ['#10b981', '#6366f1', '#f43f5e', '#f59e0b'];
 
+    const TREEMAP_COLORS: Record<string, string> = {
+        'ENROUTE':              '#e03e3e',
+        'STOKBAR':              '#4c8ef7',
+        'QUEST':                '#2da868',
+        'CallDesk':             '#8b5cf6',
+        'HOSTING':              '#6b7280',
+        'E-Dönüşüm':           '#f0a732',
+        'Varuna':               '#22d3ee',
+        'Donanım-Endüstriyel': '#f97316',
+        'Outsource - Hizmet':  '#e879f9',
+        'Diğer':                '#94a3b8',
+    };
+
+    const TREEMAP_COLORS_DARK: Record<string, string> = {
+        'ENROUTE':              '#f87171',
+        'STOKBAR':              '#60a5fa',
+        'QUEST':                '#34d399',
+        'CallDesk':             '#a78bfa',
+        'HOSTING':              '#9ca3af',
+        'E-Dönüşüm':           '#fbbf24',
+        'Varuna':               '#67e8f9',
+        'Donanım-Endüstriyel': '#fb923c',
+        'Outsource - Hizmet':  '#f0abfc',
+        'Diğer':                '#cbd5e1',
+    };
+
+    const treemapData = useMemo(() => {
+        const total = productStats.reduce((s, [, st]) => s + st.revenue, 0);
+        return productStats.map(([name, stat]) => ({
+            name,
+            size: stat.revenue,
+            sharePct: total > 0 ? (stat.revenue / total) * 100 : 0,
+            count: stat.count,
+        }));
+    }, [productStats]);
+
+    const TreemapCell = (props: any) => {
+        const { x, y, width, height, name, size, sharePct, count } = props;
+        const palette = isDark ? TREEMAP_COLORS_DARK : TREEMAP_COLORS;
+        const color = palette[name] || PRODUCT_COLORS[name as ProductGroup] || '#64748b';
+        if (!width || !height || width < 2 || height < 2) return null;
+        return (
+            <g style={{ cursor: 'pointer' }} onClick={() => setSelectedProduct(name)}>
+                <rect x={x} y={y} width={width} height={height} fill={color} fillOpacity={0.88} rx={6} stroke="white" strokeWidth={2} />
+                {width > 55 && height > 32 && (
+                    <text x={x + 10} y={y + 20} fill="white" fontSize={Math.min(13, width / 8)} fontWeight="700" style={{ pointerEvents: 'none' }}>
+                        {name}
+                    </text>
+                )}
+                {width > 55 && height > 50 && (
+                    <text x={x + 10} y={y + 36} fill="rgba(255,255,255,0.9)" fontSize={11} fontWeight="600" style={{ pointerEvents: 'none' }}>
+                        ₺{(size / 1000000).toFixed(1)}M
+                    </text>
+                )}
+                {width > 55 && height > 66 && (
+                    <text x={x + 10} y={y + 50} fill="rgba(255,255,255,0.65)" fontSize={9} style={{ pointerEvents: 'none' }}>
+                        %{sharePct?.toFixed(1)} · {count} Sipariş
+                    </text>
+                )}
+            </g>
+        );
+    };
+
     const exportToExcel = () => {
         try {
             const data = filteredOrders.map(o => ({
@@ -188,53 +257,24 @@ export function OrderProductPerformance({ orders: propOrders }: OrderProductPerf
 
     return (
         <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                {productStats.map(([product, stat]) => {
-                    const color = PRODUCT_COLORS[product as ProductGroup] || '#64748b';
-                    return (
-                        <Card
-                            key={product}
-                            onClick={() => setSelectedProduct(product)}
-                            className="flex flex-col justify-between group hover:border-[--hover-color] transition-all cursor-pointer bg-white dark:bg-slate-700 shadow-sm hover:shadow-md"
-                            style={{ '--hover-color': color } as React.CSSProperties}
-                        >
-                            <CardContent className="p-4">
-                                <div className="flex items-start justify-between mb-2">
-                                    <div
-                                        className="p-1.5 rounded-lg transition-colors"
-                                        style={{ backgroundColor: `${color}15`, color: color }}
-                                    >
-                                        <Package size={16} />
-                                    </div>
-                                    <div className={cn(
-                                        "flex items-center text-xs font-bold",
-                                        stat.growth >= 0 ? "text-emerald-500" : "text-rose-500"
-                                    )}>
-                                        {stat.growth >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-                                        {Math.abs(stat.growth)}%
-                                    </div>
-                                </div>
-
-                                <div className="mb-1">
-                                    <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold truncate leading-tight">
-                                        {stat.parentName}
-                                    </p>
-                                    <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
-                                        {stat.productName}
-                                    </h3>
-                                </div>
-                                <div className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                                    {stat.revenue >= 1000000
-                                        ? `${(stat.revenue / 1000000).toFixed(1)}M ₺`
-                                        : `${(stat.revenue / 1000).toFixed(1)}k ₺`}
-                                </div>
-                                <div className="text-xs text-slate-400 mt-1">
-                                    {stat.count} {t('performance.activeOrders', { defaultValue: 'aktif sipariş' })}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    );
-                })}
+            <div className="h-full relative overflow-hidden">
+                <ResponsiveContainer width="100%" height="100%">
+                    <Treemap
+                        key={treemapData.length}
+                        data={treemapData}
+                        dataKey="size"
+                        isAnimationActive={false}
+                        content={<TreemapCell />}
+                    />
+                </ResponsiveContainer>
+                <motion.div
+                    key={treemapData.length + '-overlay'}
+                    className="absolute inset-0 rounded-xl pointer-events-none"
+                    style={{ backgroundColor: isDark ? '#1e293b' : '#f8fafc' }}
+                    initial={{ opacity: 1 }}
+                    animate={{ opacity: 0 }}
+                    transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+                />
             </div>
 
             {/* Portal Modal */}

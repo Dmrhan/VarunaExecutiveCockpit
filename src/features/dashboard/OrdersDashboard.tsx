@@ -5,11 +5,10 @@ import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Ca
 import { useData } from '../../context/DataContext';
 import { cn } from '../../lib/utils';
 import { DateRangePicker } from '../../components/ui/DateRangePicker';
-import { Sparkles, Users, Info, Search, Calendar, ArrowUpRight, ArrowDownRight, LayoutGrid, List as ListIcon } from 'lucide-react';
+import { Sparkles, Search, Calendar, ArrowUpRight, ArrowDownRight, LayoutGrid, List as ListIcon } from 'lucide-react';
 import { OrdersAIInsightPanel } from './OrdersAIInsightPanel';
 import { OrderPoolAnalysis } from './OrderPoolAnalysis';
 import { OrderProductPerformance } from './OrderProductPerformance';
-import { HorizontalBarChart } from '../../components/ui/HorizontalBarChart';
 import type { Order } from '../../types/crm';
 
 const formatCurrency = (value: number) => {
@@ -43,9 +42,6 @@ export function OrdersDashboard() {
 
     // View Mode State
     const [viewMode, setViewMode] = useState<'list' | 'board'>('list');
-
-    // Chart Drilldown State
-    const [selectedTopCustomer, setSelectedTopCustomer] = useState<string | null>(null);
 
     // Advanced Filtering & Sorting State
     const [sortConfig, setSortConfig] = useState<{ key: keyof Order; direction: 'asc' | 'desc' } | null>(null);
@@ -162,14 +158,7 @@ export function OrdersDashboard() {
         return baseOrders.filter(o => o.status === columnFilters.status);
     }, [baseOrders, columnFilters.status]);
 
-    // 3. Final Orders (Base Filtered + Chart Drilldowns) - Used for Cards & Table
-    const finalOrders = useMemo(() => {
-        let result = filteredOrders;
-        if (selectedTopCustomer) {
-            result = result.filter(o => o.customerName === selectedTopCustomer);
-        }
-        return result;
-    }, [filteredOrders, selectedTopCustomer]);
+    const finalOrders = filteredOrders;
 
     // Metrics Calculation
     const metrics = useMemo(() => {
@@ -332,34 +321,22 @@ export function OrdersDashboard() {
                 className="w-full"
             />
 
-            {/* Product Group Performance */}
-            <div>
-                <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-4">{t('orders.productPerformance', { defaultValue: 'Ürün Grubu Performansı' })}</h3>
-                <OrderProductPerformance orders={filteredOrders} />
-            </div>
-
-            {/* Charts Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Charts Row — Pool Analysis + Product Treemap */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 <OrderPoolAnalysis
                     data={charts.status}
                     countData={charts.statusCount}
                     onStatusSelect={(status: string | null) => setColumnFilters(prev => ({ ...prev, status: status || 'all' }))}
                     selectedStatus={columnFilters.status === 'all' ? null : columnFilters.status}
                 />
-                <HorizontalBarChart
-                    title={t('orders.charts.customerVolume')}
-                    data={charts.customer.map((item: any) => ({
-                        id: item.name,
-                        name: item.name,
-                        value: item.amount,
-                        formattedValue: formatCurrency(item.amount)
-                    }))}
-                    color="#0ea5e9"
-                    icon={Users}
-                    insight={t('orders.charts.customerInsight')}
-                    activeId={selectedTopCustomer}
-                    onBarClick={(item) => setSelectedTopCustomer(prev => prev === item.id ? null : item.id)}
-                />
+                <div className="bg-white/60 dark:bg-slate-700/60 backdrop-blur-xl border border-slate-200 dark:border-white/10 shadow-sm rounded-2xl p-4 flex flex-col h-[500px]">
+                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex-shrink-0">
+                        {t('orders.productPerformance', { defaultValue: 'Ürün Performansı' })}
+                    </h3>
+                    <div className="flex-1 min-h-0">
+                        <OrderProductPerformance orders={filteredOrders} />
+                    </div>
+                </div>
             </div>
 
             {/* Bottom Row - List & Recommendations */}

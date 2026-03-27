@@ -312,21 +312,21 @@ export function OrdersDashboard() {
 
             {/* KPI Row */}
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4">
-                {/* Toplam Sipariş Hacmi — Hero card (col-span-2) */}
-                <div className="col-span-2 bg-indigo-50/80 dark:bg-indigo-900/30 backdrop-blur-md border border-indigo-200 dark:border-indigo-500/40 shadow-md shadow-indigo-500/10 p-5 rounded-2xl flex flex-col items-center justify-center text-center min-h-[100px]">
-                    <span className="text-[10px] uppercase tracking-[0.15em] text-indigo-500 dark:text-indigo-400 font-bold mb-2">
-                        Toplam Sipariş Hacmi
+                {/* Tamamlanan — Hero card (col-span-2) */}
+                <div className="col-span-2 bg-emerald-50/80 dark:bg-emerald-900/30 backdrop-blur-md border border-emerald-200 dark:border-emerald-500/40 shadow-md shadow-emerald-500/10 p-5 rounded-2xl flex flex-col items-center justify-center text-center min-h-[100px]">
+                    <span className="text-[10px] uppercase tracking-[0.15em] text-emerald-500 dark:text-emerald-400 font-bold mb-2">
+                        {t('orders.kpis.completedAmount', { defaultValue: 'Tamamlanan' })}
                     </span>
-                    <span className="text-3xl lg:text-4xl font-light tracking-tight text-indigo-600 dark:text-indigo-300">
-                        {formatCurrency(metrics.totalValue)}
+                    <span className="text-3xl lg:text-4xl font-light tracking-tight text-emerald-600 dark:text-emerald-300">
+                        {formatCurrency(metrics.closedValue)}
                     </span>
-                    <span className="text-[10px] text-indigo-400 dark:text-indigo-500 mt-1.5">
-                        {metrics.totalCount} Adet Sipariş
+                    <span className="text-[10px] text-emerald-400 dark:text-emerald-500 mt-1.5">
+                        {finalOrders.filter(o => o.status === 'Closed').length} Adet Sipariş
                     </span>
                 </div>
-                <StatCard label={t('orders.kpis.totalCount')} value={metrics.totalCount.toString()} colorClass="text-slate-900 dark:text-white font-medium" />
-                <StatCard label={t('orders.kpis.pendingAmount')} value={formatCurrency(metrics.openValue)} colorClass="text-sky-600 dark:text-sky-400 font-medium" />
-                <StatCard label={t('orders.kpis.completedAmount')} value={formatCurrency(metrics.closedValue)} colorClass="text-emerald-600 dark:text-emerald-400 font-medium" />
+                <StatCard label={t('orders.kpis.pendingAmount', { defaultValue: 'Bekleyen Tutar' })} value={formatCurrency(metrics.openValue)} colorClass="text-sky-600 dark:text-sky-400 font-medium" />
+                <StatCard label={t('orders.kpis.totalVolume', { defaultValue: 'Toplam Sipariş Hacmi' })} value={formatCurrency(metrics.totalValue)} colorClass="text-indigo-600 dark:text-indigo-400 font-medium" />
+                <StatCard label={t('orders.kpis.totalCount', { defaultValue: 'Sipariş Adeti' })} value={metrics.totalCount.toString()} colorClass="text-slate-900 dark:text-white font-medium" />
             </div>
 
             {/* AI Insight Strip */}

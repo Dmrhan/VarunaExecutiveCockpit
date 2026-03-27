@@ -5,10 +5,12 @@ import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Ca
 import { useData } from '../../context/DataContext';
 import { cn } from '../../lib/utils';
 import { DateRangePicker } from '../../components/ui/DateRangePicker';
-import { Sparkles, Search, Calendar, ArrowUpRight, ArrowDownRight, LayoutGrid, List as ListIcon } from 'lucide-react';
+import { Sparkles, Users, Search, Calendar, ArrowUpRight, ArrowDownRight, LayoutGrid, List as ListIcon } from 'lucide-react';
 import { OrdersAIInsightPanel } from './OrdersAIInsightPanel';
 import { OrderPoolAnalysis } from './OrderPoolAnalysis';
 import { OrderProductPerformance } from './OrderProductPerformance';
+import { GamifiedLeaderboard } from './GamifiedLeaderboard';
+import { HorizontalBarChart } from '../../components/ui/HorizontalBarChart';
 import type { Order } from '../../types/crm';
 
 const formatCurrency = (value: number) => {
@@ -42,6 +44,9 @@ export function OrdersDashboard() {
 
     // View Mode State
     const [viewMode, setViewMode] = useState<'list' | 'board'>('list');
+
+    // Chart Drilldown State
+    const [selectedTopCustomer, setSelectedTopCustomer] = useState<string | null>(null);
 
     // Advanced Filtering & Sorting State
     const [sortConfig, setSortConfig] = useState<{ key: keyof Order; direction: 'asc' | 'desc' } | null>(null);
@@ -158,7 +163,10 @@ export function OrdersDashboard() {
         return baseOrders.filter(o => o.status === columnFilters.status);
     }, [baseOrders, columnFilters.status]);
 
-    const finalOrders = filteredOrders;
+    const finalOrders = useMemo(() => {
+        if (!selectedTopCustomer) return filteredOrders;
+        return filteredOrders.filter(o => o.customerName === selectedTopCustomer);
+    }, [filteredOrders, selectedTopCustomer]);
 
     // Metrics Calculation
     const metrics = useMemo(() => {
@@ -337,6 +345,25 @@ export function OrdersDashboard() {
                         <OrderProductPerformance orders={filteredOrders} />
                     </div>
                 </div>
+            </div>
+
+            {/* Charts Row 2 — Sales Rep Performance + Customer Volume */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <GamifiedLeaderboard dateRange={currentDateRangeStr} />
+                <HorizontalBarChart
+                    title={t('orders.charts.customerVolume', { defaultValue: 'Müşteri Bazlı Sipariş Hacmi' })}
+                    data={charts.customer.map((item: any) => ({
+                        id: item.name,
+                        name: item.name,
+                        value: item.amount,
+                        formattedValue: formatCurrency(item.amount)
+                    }))}
+                    color="#0ea5e9"
+                    icon={Users}
+                    insight={t('orders.charts.customerInsight', { defaultValue: 'En yüksek sipariş hacmine sahip müşteriler' })}
+                    activeId={selectedTopCustomer}
+                    onBarClick={(item) => setSelectedTopCustomer(prev => prev === item.id ? null : item.id)}
+                />
             </div>
 
             {/* Bottom Row - List & Recommendations */}

@@ -57,9 +57,10 @@ export function OpportunityForecast({ deals, onMonthClick, activeFilterMonth }: 
         deals.forEach(deal => {
             if (!deal.expectedCloseDate) return;
 
-            // Only process specific active stages for the forecast
+            // Exclude won and lost deals from forecast
             const mappedStage = getMappedStageInfo(deal.stage).stage;
-            if (mappedStage === 'Kazanıldı' || mappedStage === 'Kaybedildi') return;
+            const closedStages = ['Kazanıldı', 'Kaybedildi', 'Order', 'Lost', 'Onaylandı'];
+            if (closedStages.includes(mappedStage) || closedStages.includes(deal.stage)) return;
 
             const closeDate = new Date(deal.expectedCloseDate);
             // Ignore invalid dates

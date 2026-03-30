@@ -87,7 +87,7 @@ export function OpportunityForecast({ deals, onMonthClick, activeFilterMonth }: 
                     month.overdueCount += 1;
                 }
             } else if (isOverdue) {
-                months[0].totalValue += deal.value;
+                //months[0].totalValue += deal.value;
                 months[0].weightedValue += deal.value * (deal.probability / 100);
                 //months[0].count += 1;
                 months[0].overdueCount += 1;

@@ -300,10 +300,12 @@ export function OpportunitiesDashboard() {
             result = result.filter(d => d.probability <= Number(columnFilters.maxProb));
         }
 
-        // 3. Forecast Month Filter
+        // 3. Forecast Month Filter — Won/Lost hariç (bar ile aynı mantık)
         if (forecastMonthFilter) {
+            const closedStages = ['Kazanıldı', 'Kaybedildi', 'Order', 'Lost', 'Onaylandı'];
             result = result.filter(d => {
                 if (!d.expectedCloseDate) return false;
+                if (closedStages.includes(d.stage) || closedStages.includes(getMappedStageInfo(d.stage).stage)) return false;
                 const closeDate = new Date(d.expectedCloseDate);
                 return closeDate.getMonth() === forecastMonthFilter.getMonth() &&
                     closeDate.getFullYear() === forecastMonthFilter.getFullYear();

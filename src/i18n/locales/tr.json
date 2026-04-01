@@ -124,7 +124,7 @@
             "sourceTitle": "Fırsat Kaynağı",
             "sourceInsight": "Müşteri referansları ve doğrudan satış kanalı, %42 oranla en büyük fırsat havuzunu oluşturuyor.",
             "customerPotentialTitle": "Müşteri Potansiyeli",
-            "customerPotentialInsight": "En büyük potansiyelli müşteriler (kaybedilen fırsatlar hariç). Bu müşterilerle açık veya kazanılmış fırsatlar üzerinden pipeline yoğunlaşmasını izleyin.",
+            "customerPotentialInsight": "Sadece açık (aktif) fırsatlar baz alınır. Kazanılmış ve kaybedilen fırsatlar dahil edilmez.",
             "dealTypeTitle": "Fırsat Tipine Göre Dağılım",
             "dealTypeInsight": "Hangi fırsat tipinin daha fazla gelir getirdiğini inceleyin.",
             "dealTypes": {

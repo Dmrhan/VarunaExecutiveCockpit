@@ -131,7 +131,7 @@
             "sourceTitle": "Opportunity Source",
             "sourceInsight": "Customer referrals and direct sales channels represent the largest opportunity pool at 42%.",
             "customerPotentialTitle": "Customer Potential",
-            "customerPotentialInsight": "Top customers by potential revenue (lost deals excluded). Monitor pipeline concentration across open and won opportunities.",
+            "customerPotentialInsight": "Based on active (open) opportunities only. Won and lost deals are excluded.",
             "dealTypeTitle": "Deal Type Distribution",
             "dealTypeInsight": "Examine index which deal type generates more revenue.",
             "dealTypes": {

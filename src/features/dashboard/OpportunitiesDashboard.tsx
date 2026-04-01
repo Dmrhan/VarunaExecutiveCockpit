@@ -469,8 +469,11 @@ export function OpportunitiesDashboard() {
     }, [filteredDeals, backendStats]);
 
     const chartData = useMemo(() => {
-        // Kaybedilen fırsatlar HARİÇ müşteri bazlı potansiyel
-        const activeDeals = filteredDeals.filter(d => getMappedStageInfo(d.stage).stage !== 'Kaybedildi');
+        // Sadece aktif (açık) fırsatlar — Kaybedildi ve Kazanıldı hariç
+        const activeDeals = filteredDeals.filter(d => {
+            const stage = getMappedStageInfo(d.stage).stage;
+            return stage !== 'Kaybedildi' && stage !== 'Kazanıldı';
+        });
         const activeCustomerRevMap: Record<string, number> = {};
         activeDeals.forEach(d => {
             activeCustomerRevMap[d.customerName] = (activeCustomerRevMap[d.customerName] || 0) + d.value;

@@ -857,7 +857,7 @@ export function ExecutiveDashboardPageV2() {
             gradient: 'bg-gradient-to-br from-emerald-500 to-teal-600',
             dataKey: 'collections_time'
         }
-    ], [deals, quotes, orders, collections]);
+    ], [deals, quotes, orders, collections, filteredData]);
 
     // Drilldown Data Preparation
     const getDrillDownData = (metricKey: string | null): DrillDownRow[] => {

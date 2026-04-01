@@ -472,7 +472,7 @@ export function ExecutiveDashboardPageV2() {
     const { deals, quotes, orders, users, contracts = [] } = useData();
 
     // Filters
-    const [dateFilter, setDateFilter] = useState('all');
+    const [dateFilter, setDateFilter] = useState('ytd');
     const [customRange, setCustomRange] = useState<{ start: Date | null, end: Date | null }>({ start: null, end: null });
 
     // Global Filters

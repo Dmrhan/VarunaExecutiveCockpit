@@ -123,8 +123,8 @@
         "charts": {
             "sourceTitle": "Fırsat Kaynağı",
             "sourceInsight": "Müşteri referansları ve doğrudan satış kanalı, %42 oranla en büyük fırsat havuzunu oluşturuyor.",
-            "customerPotentialTitle": "Kaybedilen Fırsatlar (Müşteri Bazlı)",
-            "customerPotentialInsight": "En fazla kaybedilen müşteriler. Bu müşteriler için kayıp nedenlerini incelemek ve geri kazanım planı oluşturmak önerilir.",
+            "customerPotentialTitle": "Müşteri Potansiyeli",
+            "customerPotentialInsight": "En büyük potansiyelli müşteriler (kaybedilen fırsatlar hariç). Bu müşterilerle açık veya kazanılmış fırsatlar üzerinden pipeline yoğunlaşmasını izleyin.",
             "dealTypeTitle": "Fırsat Tipine Göre Dağılım",
             "dealTypeInsight": "Hangi fırsat tipinin daha fazla gelir getirdiğini inceleyin.",
             "dealTypes": {

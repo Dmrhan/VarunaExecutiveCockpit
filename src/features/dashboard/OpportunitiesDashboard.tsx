@@ -469,13 +469,13 @@ export function OpportunitiesDashboard() {
     }, [filteredDeals, backendStats]);
 
     const chartData = useMemo(() => {
-        // Müşteri bazında kaybedilen fırsatlar (Müşteri Potansiyeli widget'ı için)
-        const lostDeals = filteredDeals.filter(d => getMappedStageInfo(d.stage).stage === 'Kaybedildi');
-        const lostCustomerRevMap: Record<string, number> = {};
-        lostDeals.forEach(d => {
-            lostCustomerRevMap[d.customerName] = (lostCustomerRevMap[d.customerName] || 0) + d.value;
+        // Kaybedilen fırsatlar HARİÇ müşteri bazlı potansiyel
+        const activeDeals = filteredDeals.filter(d => getMappedStageInfo(d.stage).stage !== 'Kaybedildi');
+        const activeCustomerRevMap: Record<string, number> = {};
+        activeDeals.forEach(d => {
+            activeCustomerRevMap[d.customerName] = (activeCustomerRevMap[d.customerName] || 0) + d.value;
         });
-        const sortedLostCustomerRev = Object.entries(lostCustomerRevMap)
+        const sortedActiveCustomerRev = Object.entries(activeCustomerRevMap)
             .map(([name, revenue]) => ({ name, revenue }))
             .sort((a, b) => b.revenue - a.revenue)
             .slice(0, 8);
@@ -484,7 +484,7 @@ export function OpportunitiesDashboard() {
             return {
                 sourceCount: backendStats.charts.sourceCount,
                 sourceRev: backendStats.charts.sourceRev,
-                customerRev: sortedLostCustomerRev,  // ← Kaybedilen bazlı, local hesap
+                customerRev: sortedActiveCustomerRev,  // ← Kaybedildi hariç, local hesap
                 dealTypeRev: backendStats.charts.dealTypeRev || [],
                 ownerRev: [],
                 topicRev: [],
@@ -511,7 +511,6 @@ export function OpportunitiesDashboard() {
                 .sort((a, b) => (b[key] as number) - (a[key] as number))
                 .slice(0, 8);
 
-        // Local calculation for Deal Type distribution
         const dealTypeMap: Record<string, { count: number; revenue: number }> = {};
         filteredDeals.forEach(d => {
             const type = d.dealType || 'Diğer';
@@ -527,7 +526,7 @@ export function OpportunitiesDashboard() {
         return {
             sourceCount: sortAndLimit(dataMaps.sourceCount, 'count'),
             sourceRev: sortAndLimit(dataMaps.sourceRev, 'revenue'),
-            customerRev: sortedLostCustomerRev,  // ← Kaybedilen bazlı
+            customerRev: sortedActiveCustomerRev,  // ← Kaybedildi hariç
             ownerRev: sortAndLimit(dataMaps.ownerRev, 'revenue'),
             topicRev: sortAndLimit(dataMaps.topicRev, 'revenue'),
             statusRev: sortAndLimit(dataMaps.statusRev, 'revenue'),

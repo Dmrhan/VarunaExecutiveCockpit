@@ -179,7 +179,7 @@ export function OrdersDashboard() {
         }
 
         return result;
-    }, [dateFilter, customRange, orders, columnFilters.title, columnFilters.customer, columnFilters.minValue, columnFilters.maxValue]);
+    }, [dateFilter, customRange, orders, selectedOwner, columnFilters.title, columnFilters.customer, columnFilters.minValue, columnFilters.maxValue]);
 
     const filteredOrders = useMemo(() => {
         if (columnFilters.status === 'all') return baseOrders;

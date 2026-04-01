@@ -130,8 +130,8 @@
         "charts": {
             "sourceTitle": "Opportunity Source",
             "sourceInsight": "Customer referrals and direct sales channels represent the largest opportunity pool at 42%.",
-            "customerPotentialTitle": "Customer Potential",
-            "customerPotentialInsight": "The top 3 high-volume customers represent 28% of total pipeline value. Portfolio diversification is recommended.",
+            "customerPotentialTitle": "Lost Deals by Customer",
+            "customerPotentialInsight": "Customers with the most lost opportunities. Consider reviewing loss reasons and creating win-back plans for these accounts.",
             "dealTypeTitle": "Deal Type Distribution",
             "dealTypeInsight": "Examine index which deal type generates more revenue.",
             "dealTypes": {

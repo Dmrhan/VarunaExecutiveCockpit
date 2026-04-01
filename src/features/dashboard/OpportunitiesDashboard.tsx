@@ -469,13 +469,23 @@ export function OpportunitiesDashboard() {
     }, [filteredDeals, backendStats]);
 
     const chartData = useMemo(() => {
+        // Müşteri bazında kaybedilen fırsatlar (Müşteri Potansiyeli widget'ı için)
+        const lostDeals = filteredDeals.filter(d => getMappedStageInfo(d.stage).stage === 'Kaybedildi');
+        const lostCustomerRevMap: Record<string, number> = {};
+        lostDeals.forEach(d => {
+            lostCustomerRevMap[d.customerName] = (lostCustomerRevMap[d.customerName] || 0) + d.value;
+        });
+        const sortedLostCustomerRev = Object.entries(lostCustomerRevMap)
+            .map(([name, revenue]) => ({ name, revenue }))
+            .sort((a, b) => b.revenue - a.revenue)
+            .slice(0, 8);
+
         if (backendStats?.charts) {
             return {
                 sourceCount: backendStats.charts.sourceCount,
                 sourceRev: backendStats.charts.sourceRev,
-                customerRev: backendStats.charts.customerRev,
+                customerRev: sortedLostCustomerRev,  // ← Kaybedilen bazlı, local hesap
                 dealTypeRev: backendStats.charts.dealTypeRev || [],
-                // Fallback for types not yet in backend
                 ownerRev: [],
                 topicRev: [],
                 statusRev: []
@@ -488,11 +498,9 @@ export function OpportunitiesDashboard() {
         filteredDeals.forEach(d => {
             dataMaps.sourceCount[d.source] = (dataMaps.sourceCount[d.source] || 0) + 1;
             dataMaps.sourceRev[d.source] = (dataMaps.sourceRev[d.source] || 0) + d.value;
-            dataMaps.customerRev[d.customerName] = (dataMaps.customerRev[d.customerName] || 0) + d.value;
             const ownerName = d.ownerName || users.find(u => u.id === d.ownerId)?.name || 'Unknown';
             dataMaps.ownerRev[ownerName] = (dataMaps.ownerRev[ownerName] || 0) + d.value;
             dataMaps.topicRev[d.topic] = (dataMaps.topicRev[d.topic] || 0) + d.value;
-            
             const mappedStageName = getMappedStageInfo(d.stage).stage;
             dataMaps.statusRev[mappedStageName] = (dataMaps.statusRev[mappedStageName] || 0) + d.value;
         });
@@ -519,7 +527,7 @@ export function OpportunitiesDashboard() {
         return {
             sourceCount: sortAndLimit(dataMaps.sourceCount, 'count'),
             sourceRev: sortAndLimit(dataMaps.sourceRev, 'revenue'),
-            customerRev: sortAndLimit(dataMaps.customerRev, 'revenue'),
+            customerRev: sortedLostCustomerRev,  // ← Kaybedilen bazlı
             ownerRev: sortAndLimit(dataMaps.ownerRev, 'revenue'),
             topicRev: sortAndLimit(dataMaps.topicRev, 'revenue'),
             statusRev: sortAndLimit(dataMaps.statusRev, 'revenue'),

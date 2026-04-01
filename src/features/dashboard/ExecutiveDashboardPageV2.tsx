@@ -631,7 +631,12 @@ export function ExecutiveDashboardPageV2() {
             orders: filteredOrders,
             contracts: filteredContracts,
             baseDeals,
-            baseOrders
+            baseOrders,
+            // Orders Dashboard ile aynı residual hesabı: Toplam - Faturalandı - İptal = Açık
+            openOrdersValue: filteredOrders.reduce((s, o) => s + o.amount, 0)
+                - filteredOrders.filter(o => o.status === 'Closed').reduce((s, o) => s + o.amount, 0)
+                - filteredOrders.filter(o => o.status === 'Canceled').reduce((s, o) => s + o.amount, 0),
+            openOrdersCount: filteredOrders.filter(o => o.status === 'Open').length,
         };
     }, [deals, quotes, orders, contracts, dateFilter, customRange, selectedOwner, selectedProduct, selectedCustomer, users, selectedTeam, teamMembers]);
 
@@ -1083,8 +1088,8 @@ export function ExecutiveDashboardPageV2() {
                         />
                         <PipelineStep
                             title={t('dashboardV2.pipeline.openOrders')}
-                            count={filteredData.orders.filter(o => o.status === 'Open').length}
-                            value={`${(filteredData.orders.filter(o => o.status === 'Open').reduce((s, o) => s + o.amount, 0) / 1000000).toFixed(1)}M ₺`}
+                            count={filteredData.openOrdersCount}
+                            value={`${(filteredData.openOrdersValue / 1000000).toFixed(1)}M ₺`}
                             index={4} total={6}
                             icon={<ShoppingCart size={16} strokeWidth={2.5} />}
                             iconColorClass="text-purple-500"

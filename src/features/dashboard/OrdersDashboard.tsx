@@ -11,6 +11,7 @@ import { OrderPoolAnalysis } from './OrderPoolAnalysis';
 import { OrderProductPerformance } from './OrderProductPerformance';
 import { GamifiedLeaderboard } from './GamifiedLeaderboard';
 import { HorizontalBarChart } from '../../components/ui/HorizontalBarChart';
+import { MultiSelect } from '../../components/ui/MultiSelect';
 import type { Order } from '../../types/crm';
 
 const formatCurrency = (value: number) => {
@@ -35,7 +36,16 @@ const StatCard = ({ label, value, colorClass }: any) => (
 
 export function OrdersDashboard() {
     const { t } = useTranslation();
-    const { orders } = useData();
+    const { orders, users } = useData();
+
+    // Filters
+    const [selectedOwner, setSelectedOwner] = useState<string[]>(['all']);
+
+    const ownerOptions = useMemo(() => {
+        return users
+            .filter((u: any) => u.role === 'sales_rep' || u.role === 'manager')
+            .map((u: any) => ({ label: u.name, value: u.id }));
+    }, [users]);
 
     // Filter State
     const [dateFilter, setDateFilter] = useState('all');
@@ -146,7 +156,12 @@ export function OrdersDashboard() {
             }
         }
 
-        // 2. Column Filters (Except Status)
+        // 2. Global Filters
+        if (!selectedOwner.includes('all')) {
+            result = result.filter(o => o.salesRepId && selectedOwner.includes(o.salesRepId));
+        }
+
+        // 3. Column Filters (Except Status)
         if (columnFilters.title) {
             const search = columnFilters.title.toLowerCase();
             result = result.filter(o => o.title.toLowerCase().includes(search));
@@ -269,8 +284,21 @@ export function OrdersDashboard() {
 
 
 
-                {/* Date Filter Buttons */}
-                <div className="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-xl items-center gap-1 overflow-x-auto scrollbar-hide">
+                {/* Filters Row */}
+                <div className="flex flex-col sm:flex-row items-end gap-3 w-full md:w-auto">
+                    {/* Owner Filter */}
+                    <div className="w-full sm:w-56 z-20">
+                        <MultiSelect
+                            options={ownerOptions}
+                            selectedValues={selectedOwner}
+                            onChange={setSelectedOwner}
+                            icon={<Users size={14} className="text-slate-400" />}
+                            allLabel={t('filters.allSalesReps', { defaultValue: 'Tüm Satış Temsilcileri' })}
+                        />
+                    </div>
+
+                    {/* Date Filter Buttons */}
+                    <div className="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-xl items-center gap-1 overflow-x-auto scrollbar-hide">
                     {[
                         { label: t('dateFilters.today'), value: 'today' },
                         { label: t('dateFilters.thisWeek'), value: 'week' },
@@ -306,9 +334,8 @@ export function OrdersDashboard() {
                         {t('dateFilters.custom')}
                     </button>
                 </div>
-
             </div>
-
+            </div>
 
             {/* KPI Row */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -359,7 +386,10 @@ export function OrdersDashboard() {
 
             {/* Charts Row 2 — Sales Rep Performance + Customer Volume */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                <GamifiedLeaderboard dateRange={currentDateRangeStr} />
+                <GamifiedLeaderboard 
+                    dateRange={currentDateRangeStr} 
+                    ownerId={selectedOwner.includes('all') ? undefined : selectedOwner} 
+                />
                 <HorizontalBarChart
                     title={t('orders.charts.customerVolume', { defaultValue: 'Müşteri Bazlı Sipariş Hacmi' })}
                     data={charts.customer.map((item: any) => ({

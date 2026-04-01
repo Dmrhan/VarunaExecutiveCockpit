@@ -34,7 +34,8 @@ router.get('/', (req: Request, res: Response) => {
 
         const oppDates = getDateFilter('FirstCreatedDate');
         // Quote dates built directly where needed to add table prefix.
-        const orderDates = getDateFilter('CreateOrderDate');
+        const invoiceDateCol = "COALESCE(CASE WHEN Status = 1 AND InvoiceDate IS NOT NULL THEN InvoiceDate ELSE CreateOrderDate END, CreateOrderDate)";
+        const orderDates = getDateFilter(invoiceDateCol);
         const contractDates = getDateFilter('StartDate');
         const calDates = getDateFilter('StartDate');
 
@@ -85,8 +86,8 @@ router.get('/', (req: Request, res: Response) => {
                 COALESCE(SUM(TotalNetAmountLocalCurrency_Amount), 0) as amount,
                 SUM(CASE WHEN Status != 3 AND InvoiceDate IS NULL THEN 1 ELSE 0 END) as openCount, 
                 COALESCE(SUM(CASE WHEN Status != 3 AND InvoiceDate IS NULL THEN TotalNetAmountLocalCurrency_Amount ELSE 0 END), 0) as openAmount,
-                SUM(CASE WHEN InvoiceDate IS NOT NULL THEN 1 ELSE 0 END) as invoiceCount,
-                COALESCE(SUM(CASE WHEN InvoiceDate IS NOT NULL THEN TotalNetAmountLocalCurrency_Amount ELSE 0 END), 0) as invoiceAmount
+                SUM(CASE WHEN Status = 1 THEN 1 ELSE 0 END) as invoiceCount,
+                COALESCE(SUM(CASE WHEN Status = 1 THEN TotalNetAmountLocalCurrency_Amount ELSE 0 END), 0) as invoiceAmount
             FROM CrmOrder 
             WHERE ProposalOwnerId = ? ${companyFilterSql} ${orderDates.sql}
         `;
@@ -142,9 +143,10 @@ router.get('/', (req: Request, res: Response) => {
                 `, [personId, eom]);
                 if (cRow) tContract.amount = cRow.amount;
 
+                const invoiceDateCol = "COALESCE(CASE WHEN Status = 1 AND InvoiceDate IS NOT NULL THEN InvoiceDate ELSE CreateOrderDate END, CreateOrderDate)";
                 const iRow = db.queryOne<{ amount: number }>(`
                     SELECT COALESCE(SUM(TotalNetAmountLocalCurrency_Amount), 0) as amount
-                    FROM CrmOrder WHERE ProposalOwnerId = ? AND InvoiceDate <= ? AND Status != 3
+                    FROM CrmOrder WHERE ProposalOwnerId = ? AND ${invoiceDateCol} <= ? AND Status = 1
                 `, [personId, eom]);
                 if (iRow) tInvoice.amount = iRow.amount;
 

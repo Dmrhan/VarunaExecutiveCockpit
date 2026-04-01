@@ -579,7 +579,14 @@ export function ExecutiveDashboardPageV2() {
             };
             filteredDeals = filteredDeals.filter(d => filterByDate(d.createdAt));
             filteredQuotes = filteredQuotes.filter(q => filterByDate(q.createdAt));
-            filteredOrders = filteredOrders.filter(o => filterByDate(o.createdAt));
+            filteredOrders = filteredOrders.filter(o => {
+                // Kapalı siparişlerde fatura tarihi, diğerlerinde oluşturma tarihi
+                // → OrdersDashboard'daki baseOrders mantığıyla birebir aynı
+                const refDate = (o.status === 'Closed' && (o as any).invoiceDate)
+                    ? (o as any).invoiceDate
+                    : o.createdAt;
+                return filterByDate(refDate);
+            });
             filteredContracts = filteredContracts.filter(c => filterByDate(c.startDate));
         }
 

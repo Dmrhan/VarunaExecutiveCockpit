@@ -826,18 +826,7 @@ export function ExecutiveDashboardPageV2() {
             gradient: 'bg-gradient-to-br from-blue-500 to-cyan-600',
             dataKey: 'quotes'
         },
-        {
-            id: 'open_orders',
-            title: t('dashboardV2.metrics.openOrders'),
-            value: filteredData.orders.filter(o => o.status === 'Open').length,
-            subValue: `5 ${t('dashboardV2.metrics.criticalActions')}`,
-            trend: 'neutral',
-            trendValue: 'stable',
-            icon: ShoppingCart,
-            color: 'text-amber-500',
-            gradient: 'bg-gradient-to-br from-amber-500 to-orange-600',
-            dataKey: 'orders'
-        },
+
         {
             id: 'collection_risk',
             title: t('dashboardV2.metrics.collectionRisk'),
@@ -1086,17 +1075,7 @@ export function ExecutiveDashboardPageV2() {
                                 </div>
                             }
                         />
-                        <PipelineStep
-                            title={t('dashboardV2.pipeline.openOrders')}
-                            count={filteredData.openOrdersCount}
-                            value={`${(filteredData.openOrdersValue / 1000000).toFixed(1)}M ₺`}
-                            index={4} total={6}
-                            icon={<ShoppingCart size={16} strokeWidth={2.5} />}
-                            iconColorClass="text-purple-500"
-                            unit={t('dashboardV2.pipeline.orderUnit')}
-                            trend={15}
-                            onClick={() => setDrilldownType('orders_open')}
-                        />
+
                         <PipelineStep
                             title={t('dashboardV2.pipeline.invoiced')}
                             count={filteredData.orders.filter(o => o.status === 'Closed').length}

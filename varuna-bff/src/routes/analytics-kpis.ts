@@ -73,14 +73,14 @@ router.get('/', (req: Request, res: Response) => {
         if (req.query.from) {
             whereClauses.push('COALESCE(FirstCreatedDate, CloseDate) >= @from');
             qWhere.push('CreatedOn >= @from');
-            ordWhere.push('CreateOrderDate >= @from');
+            ordWhere.push('COALESCE(CASE WHEN Status = 1 AND InvoiceDate IS NOT NULL THEN InvoiceDate ELSE CreateOrderDate END, CreateOrderDate) >= @from');
             ctrWhere.push('StartDate >= @from');
             params.from = req.query.from;
         }
         if (req.query.to) {
             whereClauses.push('COALESCE(FirstCreatedDate, CloseDate) <= @to');
             qWhere.push('CreatedOn <= @to');
-            ordWhere.push('CreateOrderDate <= @to');
+            ordWhere.push('COALESCE(CASE WHEN Status = 1 AND InvoiceDate IS NOT NULL THEN InvoiceDate ELSE CreateOrderDate END, CreateOrderDate) <= @to');
             ctrWhere.push('StartDate <= @to');
             params.to = req.query.to;
         }
@@ -175,8 +175,8 @@ router.get('/', (req: Request, res: Response) => {
                 COALESCE(SUM(TotalAmountWithTaxLocalCurrency_Amount), 0)                                          AS totalVat,
                 COALESCE(SUM(CASE WHEN Status = 0 THEN 1 ELSE 0 END), 0)                                         AS openCount,
                 COALESCE(SUM(CASE WHEN Status = 0 THEN TotalAmountWithTaxLocalCurrency_Amount ELSE 0 END), 0)     AS openVat,
-                COALESCE(SUM(CASE WHEN InvoiceDate IS NOT NULL THEN 1 ELSE 0 END), 0)                            AS invoicedCount,
-                COALESCE(SUM(CASE WHEN InvoiceDate IS NOT NULL THEN TotalNetAmountLocalCurrency_Amount ELSE 0 END), 0) AS invoicedNet
+                COALESCE(SUM(CASE WHEN Status = 1 THEN 1 ELSE 0 END), 0)                            AS invoicedCount,
+                COALESCE(SUM(CASE WHEN Status = 1 THEN TotalNetAmountLocalCurrency_Amount ELSE 0 END), 0) AS invoicedNet
             FROM CrmOrder
             WHERE 1=1 ${ordExtra}
         `, params)!;

@@ -43,16 +43,25 @@ const formatCurrency = (value: number) => {
 // Remove DashboardGridCard and its dependencies
 
 
-const StatCard = ({ label, value, colorClass, subLabel }: { label: string; value: string; colorClass: string; subLabel?: string }) => (
-    <div className="bg-white/60 dark:bg-slate-700/60 backdrop-blur-md border border-slate-200 dark:border-slate-600 p-5 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm h-full min-h-[100px]">
-        <span className="text-[10px] uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400 font-bold mb-2">
+const StatCard = ({ label, value, colorClass, subLabel, hint }: { label: string; value: string; colorClass: string; subLabel?: string; hint?: string }) => (
+    <div className="relative group bg-white/60 dark:bg-slate-700/60 backdrop-blur-md border border-slate-200 dark:border-slate-600 p-5 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm h-full min-h-[100px]">
+        <span className="text-[10px] uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400 font-bold mb-2 flex items-center gap-1">
             {label}
+            {hint && (
+                <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-300 text-[9px] cursor-help">?</span>
+            )}
         </span>
         <span className={`text-xl lg:text-2xl font-light tracking-tight ${colorClass}`}>
             {value}
         </span>
         {subLabel && (
             <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-1.5">{subLabel}</span>
+        )}
+        {hint && (
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-slate-800 dark:bg-slate-900 text-white text-[11px] leading-relaxed rounded-xl px-3 py-2.5 shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-50 text-left">
+                {hint}
+                <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800 dark:border-t-slate-900" />
+            </div>
         )}
     </div>
 );
@@ -663,7 +672,7 @@ export function OpportunitiesDashboard() {
                 <StatCard label={t('opportunities.count')} value={metrics.count.toString()} colorClass="text-slate-900 dark:text-white font-medium" />
                 <StatCard label={t('opportunities.lostDeals')} value={formatCurrency(metrics.lost)} colorClass="text-rose-600 dark:text-rose-400 font-medium" />
                 <StatCard label={t('opportunities.wonDeals')} value={formatCurrency(metrics.won)} colorClass="text-emerald-600 dark:text-emerald-400 font-medium" />
-                <StatCard label={t('opportunities.conversionRate')} value={metrics.won + metrics.lost > 0 ? `%${((metrics.won / (metrics.won + metrics.lost)) * 100).toFixed(1)}` : '%0'} colorClass="text-violet-600 dark:text-violet-400 font-medium" />
+                <StatCard label={t('opportunities.conversionRate')} value={metrics.won + metrics.lost > 0 ? `%${((metrics.won / (metrics.won + metrics.lost)) * 100).toFixed(1)}` : '%0'} colorClass="text-violet-600 dark:text-violet-400 font-medium" hint={`Kazanma Oranı = Kazanılan / (Kazanılan + Kaybedilen)\nSadece sonuçlanmış fırsatlar kullanılır. Hâlâ açık olan fırsatlar hesaba dahil edilmez.`} />
             </div>
 
             {/* AI Insight Strip */}

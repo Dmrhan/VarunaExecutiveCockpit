@@ -78,7 +78,13 @@ export function OpportunityForecast({ deals, onMonthClick, activeFilterMonth }: 
         for (let i = 0; i < 12; i++) {
             const date = new Date(currentMonthStart);
             date.setMonth(currentMonthStart.getMonth() + i);
-            const monthLabel = date.toLocaleDateString('tr-TR', { month: 'short', year: 'numeric' });
+            const isCurrentMonth = i === 0;
+            const defaultLabel = date.toLocaleDateString('tr-TR', { month: 'short', year: 'numeric' });
+            const shortMonth = date.toLocaleDateString('tr-TR', { month: 'short' });
+            const monthLabel = isCurrentMonth 
+                ? `Bu Ay (${shortMonth})` 
+                : defaultLabel;
+
             months.push({
                 bucketType: 'month',
                 date,
@@ -88,7 +94,7 @@ export function OpportunityForecast({ deals, onMonthClick, activeFilterMonth }: 
                 count: 0,
                 overdueCount: 0,
                 isPast: false,
-                isCurrent: i === 0
+                isCurrent: isCurrentMonth
             });
         }
 

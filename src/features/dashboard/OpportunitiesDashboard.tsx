@@ -22,6 +22,7 @@ import { FunnelChart, STAGE_CONFIG } from './FunnelChart';
 import { OpportunityOwnerDistribution } from './OpportunityOwnerDistribution';
 import { ProductPerformance } from './ProductPerformance';
 import { OpportunityForecast } from './OpportunityForecast';
+import type { ForecastFilterDef } from './OpportunityForecast';
 import { ProductGroupService } from '../../services/ProductGroupService';
 import type { IProductGroup } from '../../types/crm';
 import { HorizontalBarChart } from '../../components/ui/HorizontalBarChart';
@@ -122,7 +123,7 @@ export function OpportunitiesDashboard() {
     });
 
     // --- Forecast State ---
-    const [forecastMonthFilter, setForecastMonthFilter] = useState<Date | null>(null);
+    const [forecastMonthFilter, setForecastMonthFilter] = useState<ForecastFilterDef | null>(null);
 
     // Reset Person filter when Team changes
     useEffect(() => {
@@ -143,13 +144,14 @@ export function OpportunitiesDashboard() {
         setIsResponseModalOpen(true);
     };
 
-    const handleForecastMonthClick = (date: Date) => {
+    const handleForecastMonthClick = (filter: ForecastFilterDef) => {
         if (forecastMonthFilter &&
-            date.getMonth() === forecastMonthFilter.getMonth() &&
-            date.getFullYear() === forecastMonthFilter.getFullYear()) {
+            forecastMonthFilter.type === filter.type &&
+            filter.date.getMonth() === forecastMonthFilter.date.getMonth() &&
+            filter.date.getFullYear() === forecastMonthFilter.date.getFullYear()) {
             setForecastMonthFilter(null);
         } else {
-            setForecastMonthFilter(date);
+            setForecastMonthFilter(filter);
             // Optional: Scroll to list?
             // window.scrollTo({ top: 500, behavior: 'smooth' });
 
@@ -312,12 +314,23 @@ export function OpportunitiesDashboard() {
         // 3. Forecast Month Filter — Won/Lost hariç (bar ile aynı mantık)
         if (forecastMonthFilter) {
             const closedStages = ['Kazanıldı', 'Kaybedildi', 'Order', 'Lost', 'Onaylandı'];
+            const today = new Date();
+            const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            const threeMonthsAgo = new Date(currentMonthStart);
+            threeMonthsAgo.setMonth(currentMonthStart.getMonth() - 3);
+
             result = result.filter(d => {
                 if (!d.expectedCloseDate) return false;
                 if (closedStages.includes(d.stage) || closedStages.includes(getMappedStageInfo(d.stage).stage)) return false;
                 const closeDate = new Date(d.expectedCloseDate);
-                return closeDate.getMonth() === forecastMonthFilter.getMonth() &&
-                    closeDate.getFullYear() === forecastMonthFilter.getFullYear();
+                if (isNaN(closeDate.getTime())) return false;
+
+                if (forecastMonthFilter.type === 'older') {
+                    return closeDate < threeMonthsAgo;
+                } else {
+                    return closeDate.getMonth() === forecastMonthFilter.date.getMonth() &&
+                           closeDate.getFullYear() === forecastMonthFilter.date.getFullYear();
+                }
             });
         }
 

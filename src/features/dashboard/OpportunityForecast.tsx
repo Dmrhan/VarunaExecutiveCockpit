@@ -7,15 +7,21 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
 import type { Deal } from '../../types/crm';
 import { cn } from '../../lib/utils'; // Assuming cn exists, based on other files
 
+export interface ForecastFilterDef {
+    type: 'older' | 'month';
+    date: Date;
+}
+
 interface OpportunityForecastProps {
     deals: Deal[];
-    onMonthClick: (date: Date) => void;
-    activeFilterMonth: Date | null;
+    onMonthClick: (filter: ForecastFilterDef) => void;
+    activeFilterMonth: ForecastFilterDef | null;
 }
 
 interface MonthlyData {
-    date: Date; // First day of the month
-    label: string; // e.g. "Oct 2023"
+    bucketType: 'older' | 'month';
+    date: Date; // First day of the month or reference date
+    label: string;
     totalValue: number;
     weightedValue: number;
     count: number;
@@ -34,14 +40,47 @@ export function OpportunityForecast({ deals, onMonthClick, activeFilterMonth }: 
         const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
         const months: MonthlyData[] = [];
 
-        // Generate next 12 months (including current)
-        for (let i = 0; i < 13; i++) {
+        const threeMonthsAgo = new Date(currentMonthStart);
+        threeMonthsAgo.setMonth(currentMonthStart.getMonth() - 3);
+
+        // 1. "Daha Eski" bucket (Older than 3 months)
+        months.push({
+            bucketType: 'older',
+            date: threeMonthsAgo,
+            label: t('opportunities.forecast.older', 'Daha Eski'),
+            totalValue: 0,
+            weightedValue: 0,
+            count: 0,
+            overdueCount: 0,
+            isPast: true,
+            isCurrent: false
+        });
+
+        // 2. Past 3 Months (-3 to -1)
+        for (let i = -3; i < 0; i++) {
             const date = new Date(currentMonthStart);
             date.setMonth(currentMonthStart.getMonth() + i);
-
-            const monthLabel = date.toLocaleDateString('tr-TR', { month: 'short', year: 'numeric' }); // You might want to use i18n here more dynamically
-
+            const monthLabel = date.toLocaleDateString('tr-TR', { month: 'short', year: 'numeric' });
             months.push({
+                bucketType: 'month',
+                date,
+                label: monthLabel,
+                totalValue: 0,
+                weightedValue: 0,
+                count: 0,
+                overdueCount: 0,
+                isPast: true,
+                isCurrent: false
+            });
+        }
+
+        // 3. Current and Future Months (0 to 11) - Total 12
+        for (let i = 0; i < 12; i++) {
+            const date = new Date(currentMonthStart);
+            date.setMonth(currentMonthStart.getMonth() + i);
+            const monthLabel = date.toLocaleDateString('tr-TR', { month: 'short', year: 'numeric' });
+            months.push({
+                bucketType: 'month',
                 date,
                 label: monthLabel,
                 totalValue: 0,
@@ -66,31 +105,32 @@ export function OpportunityForecast({ deals, onMonthClick, activeFilterMonth }: 
             // Ignore invalid dates
             if (isNaN(closeDate.getTime())) return;
 
-            // Check for overdue (Close date < Today)
-            const isOverdue = closeDate < today;
+            // If it's strictly older than 3 months ago
+            if (closeDate < threeMonthsAgo) {
+                months[0].totalValue += deal.value;
+                months[0].weightedValue += deal.value * (deal.probability / 100);
+                months[0].count += 1;
+                return;
+            }
 
             // Find matching month bucket
             const monthIndex = months.findIndex(m =>
+                m.bucketType === 'month' &&
                 m.date.getFullYear() === closeDate.getFullYear() &&
                 m.date.getMonth() === closeDate.getMonth()
             );
 
             if (monthIndex >= 0) {
                 const month = months[monthIndex];
+                const isOverdue = closeDate < today;
 
                 month.totalValue += deal.value;
                 month.weightedValue += deal.value * (deal.probability / 100);
                 month.count += 1;
 
                 if (isOverdue && month.isCurrent) {
-                    // If it's in the current month bucket but technically the specific date is passed
                     month.overdueCount += 1;
                 }
-            } else if (isOverdue) {
-                //months[0].totalValue += deal.value;
-                months[0].weightedValue += deal.value * (deal.probability / 100);
-                //months[0].count += 1;
-                months[0].overdueCount += 1;
             }
         });
 
@@ -117,6 +157,11 @@ export function OpportunityForecast({ deals, onMonthClick, activeFilterMonth }: 
                                 {data.overdueCount} Geciken
                             </span>
                         )}
+                        {data.isPast && data.bucketType === 'month' && (
+                             <span className="flex items-center gap-1 text-[9px] font-bold text-rose-500 bg-rose-50 dark:bg-rose-900/20 px-1.5 py-0.5 rounded-full border border-rose-100 dark:border-rose-900/30">
+                             Geciken Ay
+                         </span>
+                        )}
                     </p>
                     <p className="text-sm text-slate-600 dark:text-slate-300">
                         Toplam Tutar: <span className="font-bold text-orange-600 dark:text-orange-400">{formatCurrency(data.totalValue) || '₺0'}</span>
@@ -136,9 +181,12 @@ export function OpportunityForecast({ deals, onMonthClick, activeFilterMonth }: 
         const monthData = forecastData[index];
         if (value === 0) return null; // Don't show labels on empty bars
 
+        const labelColor = monthData.isPast ? '#ef4444' : '#f97316'; // red-500 or orange-500
+        const darkLabelColor = monthData.isPast ? 'dark:fill-red-400' : 'dark:fill-orange-400';
+
         return (
             <g transform={`translate(${x + width / 2},${y - 12})`}>
-                <text x={0} y={-8} dy={0} textAnchor="middle" fill="#f97316" fontSize={11} fontWeight={600} className="dark:fill-orange-400">
+                <text x={0} y={-8} dy={0} textAnchor="middle" fill={labelColor} fontSize={11} fontWeight={600} className={darkLabelColor}>
                     {formatCurrency(value)}
                 </text>
                 <text x={0} y={4} dy={0} textAnchor="middle" fill="#64748b" fontSize={9} fontWeight={500}>
@@ -161,7 +209,7 @@ export function OpportunityForecast({ deals, onMonthClick, activeFilterMonth }: 
                                 {t('opportunities.forecast.title', 'Tahmini Kapanış Öngörüsü')}
                             </CardTitle>
                             <p className="text-xs text-slate-500 dark:text-slate-400">
-                                {t('opportunities.forecast.subtitle', 'Önümüzdeki 12 ay için beklenen satış hacmi (Toplam Değer)')}
+                                {t('opportunities.forecast.subtitle', 'Önümüzdeki 12 ay ve geçmiş için beklenen açık satış hacmi')}
                             </p>
                         </div>
                     </div>
@@ -174,7 +222,8 @@ export function OpportunityForecast({ deals, onMonthClick, activeFilterMonth }: 
                         margin={{ top: 40, right: 30, left: 10, bottom: 5 }}
                         onClick={(data: any) => {
                             if (data && data.activePayload) {
-                                onMonthClick(data.activePayload[0].payload.date);
+                                const payload = data.activePayload[0].payload as MonthlyData;
+                                onMonthClick({ type: payload.bucketType, date: payload.date });
                             }
                         }}
                     >
@@ -202,18 +251,23 @@ export function OpportunityForecast({ deals, onMonthClick, activeFilterMonth }: 
                             <LabelList dataKey="totalValue" content={renderCustomBarLabel} />
                             {forecastData.map((entry, index) => {
                                 const isSelected = activeFilterMonth &&
-                                    activeFilterMonth.getMonth() === entry.date.getMonth() &&
-                                    activeFilterMonth.getFullYear() === entry.date.getFullYear();
+                                    activeFilterMonth.type === entry.bucketType &&
+                                    activeFilterMonth.date.getFullYear() === entry.date.getFullYear() &&
+                                    activeFilterMonth.date.getMonth() === entry.date.getMonth();
+
+                                const defaultFill = entry.isPast ? '#ef4444' : '#f97316'; // red-500 or orange-500
+                                const activeFill = entry.isPast ? '#dc2626' : '#ea580c'; // red-600 or orange-600
+                                const strokeColor = entry.isPast ? '#991b1b' : '#9a3412';
 
                                 return (
                                     <Cell
                                         key={`cell-${index}`}
-                                        fill={isSelected ? '#ea580c' : '#f97316'}
+                                        fill={isSelected ? activeFill : defaultFill}
                                         opacity={isSelected ? 1 : 0.85}
                                         style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
-                                        stroke={isSelected ? '#9a3412' : 'transparent'}
+                                        stroke={isSelected ? strokeColor : 'transparent'}
                                         strokeWidth={isSelected ? 2 : 0}
-                                        onClick={() => onMonthClick(entry.date)}
+                                        onClick={() => onMonthClick({ type: entry.bucketType, date: entry.date })}
                                     />
                                 );
                             })}
